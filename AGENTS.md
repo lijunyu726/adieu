@@ -49,6 +49,7 @@
 - 应用自管的目录（CapCut、剪映等的素材缓存）不进文件类扫描：删了会让应用里的项目损坏
 - 腾出空间用“分层 best-fit”：每层（安全 → 需要看一眼）里先找不小于缺口的最小一项，找不到就取最大的继续补，避免为了 5 GB 动 60 GB
 - 自动规则没有后台守护进程，只在 Adieu 运行时（含仅菜单栏）检查；默认只开提醒类，会动文件的规则必须用户自己打开
+- 开机自启（设置里“登录时打开 Adieu”，`SMAppService.mainApp`）时不弹主窗口：`AppDelegate` 从启动时的“打开应用”Apple 事件里认出 `keyAELaunchedAsLogInItem`，关掉 SwiftUI 摆出来的主窗口，并直接调 `scanAll()`——扫描原本挂在窗口内容的 `.task` 上，窗口关了它就不跑，自动规则的计时器（在扫描结束时启动）也就起不来。`AppModel` 因此改由 `AppDelegate` 持有。`scanAll` 用 `scanInFlight` 防止后台扫描还没完时打开窗口又开一遍。真正的登录启动只能重启验证；`-AdieuLaunchHidden YES` 走同一条路径，用来验证“不弹窗口”
 - 没有完全磁盘访问权限时，其他应用的容器读不到：应用数据合计会明显偏小（本机实测 99.5 GB 对命令行 155.7 GB），差额算进“系统与其他”
 - 截图验证只截 Adieu 自己的窗口（`CGWindowListCopyWindowInfo` 取窗口号再 `screencapture -l`），**禁止截整屏**；`pkill` 后立刻 `open` 会报 LaunchServices -600，要等进程完全退出再隔几秒
 - 小组件是沙盒扩展，自己读 `/` 的容量，不和主程序共享数据

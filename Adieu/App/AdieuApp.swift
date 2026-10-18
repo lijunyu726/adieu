@@ -2,7 +2,8 @@ import SwiftUI
 
 @main
 struct AdieuApp: App {
-    @State private var model = AppModel()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+    private var model: AppModel { delegate.model }
     @AppStorage("showMenuBar") private var showMenuBar = true
 
     var body: some Scene {
@@ -44,6 +45,29 @@ struct AdieuApp: App {
                 .preferredColorScheme(.light)
                 .tint(Theme.brand)
         }
+    }
+}
+
+/// 开机时由“登录时打开 Adieu”启动的话，不弹主窗口，只在后台扫描、跑自动规则，待在菜单栏（和 Dock）里；
+/// 点菜单栏的“打开 Adieu”或 Dock 图标再打开窗口。调试参数 `-AdieuLaunchHidden YES` 走同一条路
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    let model = AppModel()
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        guard Self.launchedAtLogin || UserDefaults.standard.bool(forKey: "AdieuLaunchHidden") else { return }
+        // 窗口不在了，扫描就不能指望窗口里的 .task；自动规则的计时器在扫描结束时启动
+        Task { await model.scanAll() }
+        // SwiftUI 在这之后才把主窗口摆出来，下一轮主循环再关
+        DispatchQueue.main.async {
+            for window in NSApp.windows where window.canBecomeMain { window.close() }
+        }
+    }
+
+    /// 登录项启动时，系统发来的“打开应用”事件里带着 keyAELaunchedAsLogInItem
+    private static var launchedAtLogin: Bool {
+        guard let event = NSAppleEventManager.shared().currentAppleEvent, event.eventID == kAEOpenApplication else { return false }
+        return event.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
     }
 }
 

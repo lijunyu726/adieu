@@ -206,8 +206,14 @@ final class AppModel {
     var hasFullDiskAccess = true
     var devLog: [String: String] = [:]
 
-    /// 启动时跑一遍：应用、个人文件、空间分布等互不依赖，一起开始
+    @ObservationIgnored private var scanInFlight = false
+
+    /// 启动时跑一遍：应用、个人文件、空间分布等互不依赖，一起开始。
+    /// 开机后台启动时正在扫，这时打开窗口不会再开一遍（要重扫用 force）
     func scanAll(force: Bool = false) async {
+        if scanInFlight && !force { return }
+        scanInFlight = true
+        defer { scanInFlight = false }
         if useSample {
             apps = Sample.apps
             fileCategories = Sample.fileCategories
