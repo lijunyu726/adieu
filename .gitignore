@@ -1,0 +1,18 @@
+# 构建产物与依赖
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+.swiftpm/
+.build/
+scratch/
+# 环境与本机文件
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# XcodeGen 生成，可随时重建
+Adieu.xcodeproj/

@@ -1,0 +1,62 @@
+name: Adieu
+options:
+  bundleIdPrefix: com.ljy
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Adieu:
+    type: application
+    platform: macOS
+    sources: [Adieu]
+    info:
+      path: Adieu/Info.plist
+      properties:
+        CFBundleDisplayName: Adieu
+        CFBundleDevelopmentRegion: zh-Hans
+        CFBundleLocalizations: [zh-Hans]
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: "26.0"
+        NSHumanReadableCopyright: "Adieu"
+        NSAppleEventsUsageDescription: "Adieu 要通过“系统事件”列出“登录时打开”的应用，你关掉哪个它才能帮你关。不会控制别的东西。"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ljy.adieu
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: NO
+        ENABLE_APP_SANDBOX: NO
+        GENERATE_INFOPLIST_FILE: NO
+    dependencies:
+      - target: AdieuWidget
+        embed: true
+  AdieuWidget:
+    type: app-extension
+    platform: macOS
+    sources: [AdieuWidget]
+    info:
+      path: AdieuWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Adieu
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: AdieuWidget/AdieuWidget.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ljy.adieu.widget
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: NO
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
