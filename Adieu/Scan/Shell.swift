@@ -24,7 +24,13 @@ enum Shell {
         let status: Int32
         let out: String
         let err: String
+        /// 命令说自己在等别的进程放开锁，已经被提前停掉
+        var busy = false
     }
+
+    /// 工具在等别的进程用完缓存时打出的话。看到就停：它会一直等下去，不会自己失败
+    /// （uv：有 uv 进程开着——正在跑的 Python 程序、编辑器插件——`uv cache clean` 就一直等；`--force` 会弄坏它们，不用）
+    static let busyMarkers = ["Cache is currently in-use"]
 
     /// 运行命令并等它结束；超时返回 nil
     static func run(_ exe: String, _ args: [String], timeout: TimeInterval = 600) -> Output? {
@@ -44,13 +50,19 @@ enum Shell {
         err.fileHandleForReading.readabilityHandler = { h in let d = h.availableData; lock.withLock { errData.append(d) } }
         do { try p.run() } catch { return nil }
         let deadline = Date().addingTimeInterval(timeout)
-        while p.isRunning && Date() < deadline { usleep(50_000) }
-        if p.isRunning { p.terminate(); return nil }
+        var busy = false
+        while p.isRunning && Date() < deadline {
+            usleep(50_000)
+            let err = lock.withLock { String(decoding: errData, as: UTF8.self) }
+            if busyMarkers.contains(where: err.contains) { p.terminate(); busy = true; break }
+        }
+        if p.isRunning && !busy { p.terminate(); return nil }
+        if busy { p.waitUntilExit() }
         usleep(50_000)
         out.fileHandleForReading.readabilityHandler = nil
         err.fileHandleForReading.readabilityHandler = nil
         return lock.withLock {
-            Output(status: p.terminationStatus, out: String(decoding: outData, as: UTF8.self), err: String(decoding: errData, as: UTF8.self))
+            Output(status: p.terminationStatus, out: String(decoding: outData, as: UTF8.self), err: String(decoding: errData, as: UTF8.self), busy: busy)
         }
     }
 }

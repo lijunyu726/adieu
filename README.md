@@ -79,7 +79,7 @@ Xcode 归档、模拟器、Rust 工具链、Android SDK、AI 模型（Hugging Fa
 
 ## 安装
 
-1. 到 [Releases](https://github.com/lijunyu726/adieu/releases/latest) 或 [官网](https://adieu.lijunyu.com.cn) 下载 `Adieu-0.1.1.dmg`，打开后把 Adieu 拖进“应用程序”。
+1. 到 [Releases](https://github.com/lijunyu726/adieu/releases/latest) 或 [官网](https://adieu.lijunyu.com.cn) 下载 `Adieu-0.1.2.dmg`，打开后把 Adieu 拖进“应用程序”。
 2. Adieu 还没有经过 Apple 公证，第一次打开如果被拦下：到 **系统设置 › 隐私与安全性**，在页面下方点 **仍要打开**，之后不会再问。
 
 需要 **macOS 26** 和 **Apple 芯片**的 Mac。

@@ -329,39 +329,30 @@ struct FlowLayout: Layout {
     }
 }
 
-/// 文件图标：能预览的（图片、视频、PDF、文档）用访达同一套 Quick Look 预览图，铺满；
-/// 预览不了的（dmg、zip、iso…）用系统图标，完整居中。没有路径（示例数据）时显示扩展名
 /// 快速查看能不能打开：系统解不了的视频（如 utvideo 编码的 AVI）放不了，要交给默认播放器
 func quickLookCanOpen(_ url: URL) async -> Bool {
     guard let t = UTType(filenameExtension: url.pathExtension.lowercased()), t.conforms(to: .movie) else { return true }
     return (try? await AVURLAsset(url: url).load(.isPlayable)) == true
 }
 
+/// 文件图标：和访达一样，能预览的用 Quick Look 预览图，预览不了的用文件自己的图标；
+/// 不论哪种都完整显示、不裁切、不垫底色，保持文件原来的样子。没有路径（示例数据）时显示扩展名
 struct Thumbnail: View {
     let path: String?
     let ext: String
     var tint: Color = .teal
     /// 生成的缩略图尺寸（点）；大卡片用大一点的
     var pixels = CGSize(width: 320, height: 240)
-    @State private var loaded: Loaded?
+    @State private var loaded: NSImage?
 
-    final class Loaded {
-        let image: NSImage
-        /// 系统图标：透明底，不能裁切
-        let isIcon: Bool
-        init(_ image: NSImage, isIcon: Bool) { self.image = image; self.isIcon = isIcon }
-    }
-
-    nonisolated(unsafe) private static let cache = NSCache<NSString, Loaded>()
+    nonisolated(unsafe) private static let cache = NSCache<NSString, NSImage>()
 
     var body: some View {
         // 底下垫一层不占尺寸的颜色，图片只作为覆盖层，不会把外框撑大
-        tint.opacity(loaded?.isIcon == true ? 0 : 0.12)
+        tint.opacity(loaded == nil ? 0.12 : 0)
             .overlay {
-                if let loaded, loaded.isIcon {
-                    Image(nsImage: loaded.image).resizable().scaledToFit().padding(2)
-                } else if let loaded {
-                    Image(nsImage: loaded.image).resizable().scaledToFill()
+                if let loaded {
+                    Image(nsImage: loaded).resizable().scaledToFit()
                 } else {
                     Text(ext).font(.system(.title3, design: .monospaced).bold()).foregroundStyle(tint)
                 }
@@ -370,19 +361,19 @@ struct Thumbnail: View {
         .task(id: path) { loaded = await Self.load(path, size: pixels) }
     }
 
-    private static func load(_ path: String?, size: CGSize) async -> Loaded? {
+    private static func load(_ path: String?, size: CGSize) async -> NSImage? {
         guard let path else { return nil }
         let key = "\(path)#\(Int(size.width))" as NSString
         if let hit = cache.object(forKey: key) { return hit }
         let request = QLThumbnailGenerator.Request(fileAt: URL(filePath: path), size: size,
                                                    scale: 2, representationTypes: .thumbnail)
-        let result: Loaded
+        let result: NSImage
         if let rep = try? await QLThumbnailGenerator.shared.generateBestRepresentation(for: request) {
-            result = Loaded(rep.nsImage, isIcon: false)
+            result = rep.nsImage
         } else if let frame = await blocking({ videoFrame(path, width: Int(size.width * 2)) }) {
-            result = Loaded(frame, isIcon: false)
+            result = frame
         } else {
-            result = Loaded(NSWorkspace.shared.icon(forFile: path), isIcon: true)
+            result = NSWorkspace.shared.icon(forFile: path)
         }
         cache.setObject(result, forKey: key)
         return result

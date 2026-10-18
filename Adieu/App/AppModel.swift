@@ -200,8 +200,8 @@ final class AppModel {
     var devLoading = false
     /// 还有扫描没结束：这时“没有找到”“0 MB”都不可信
     var scanning: Bool { appsLoading || filesLoading || leftoversLoading || devLoading }
-    /// 正在运行清理命令的工具
-    var devRunning: String?
+    /// 正在运行清理命令的工具；不同工具可以同时清，同一个工具不会重复开始
+    var devRunning: Set<String> = []
     /// 每次扫描前检查一次
     var hasFullDiskAccess = true
     var devLog: [String: String] = [:]
@@ -256,12 +256,13 @@ final class AppModel {
         devLoading = false
     }
 
-    /// 依次执行一个工具的清理步骤：命令直接跑，目录直接删除；前后对比记一笔
+    /// 依次执行一个工具的清理步骤：命令直接跑，目录直接删除；前后对比记一笔。
+    /// 几个工具可以同时清，所以腾出的空间按这个工具自己清理前后的占用算，不看磁盘剩余（会混进别的工具腾出的）
     func runDev(_ tool: DevTool) async {
-        guard devRunning == nil, !tool.actions.isEmpty else { return }
-        devRunning = tool.id
-        defer { devRunning = nil }
-        let before = disk.free
+        guard !devRunning.contains(tool.id), !tool.actions.isEmpty else { return }
+        devRunning.insert(tool.id)
+        defer { devRunning.remove(tool.id) }
+        let before = tool.total
         var log: [String] = []
         var trashed: [TrashedFile] = []
         var failed: [String] = []
@@ -270,7 +271,10 @@ final class AppModel {
             switch action {
             case .command(let exe, let args):
                 let out = await blocking { Shell.run(exe, args) }
-                if let out {
+                if let out, out.busy {
+                    log.append("缓存正在被别的程序使用（比如正在运行的 Python 程序或编辑器插件），没有清。关掉它们后再试。")
+                    failed.append(action.display)
+                } else if let out {
                     let text = (out.out + out.err).split(separator: "\n").suffix(4).joined(separator: "\n")
                     if !text.isEmpty { log.append(text) }
                     if out.status != 0 { log.append("（退出码 \(out.status)）"); failed.append(action.display) }
@@ -286,11 +290,13 @@ final class AppModel {
             devLog[tool.id] = log.joined(separator: "\n")
         }
         refreshDisk()
+        await loadDev()
+        let after = devTools.first { $0.id == tool.id }?.total ?? 0
         let commandsRan = tool.actions.contains { if case .command = $0 { return true } else { return false } }
         var entry = HistoryEntry(date: .now, title: "清理 \(tool.name)", source: "开发工具", files: trashed)
         if commandsRan {
             entry.commandNote = "运行了 " + tool.actions.compactMap { if case .command = $0 { return $0.display } else { return nil } }.joined(separator: "、")
-            entry.commandFreed = max(0, disk.free - before)
+            entry.commandFreed = max(0, before - after)
         }
         history.insert(entry, at: 0)
         HistoryStore.save(history)
@@ -298,7 +304,6 @@ final class AppModel {
         if !failed.isEmpty {
             notice = "\(tool.name) 有 \(failed.count) 条命令没有成功，对应的缓存还在：\n" + failed.map { "· \($0)" }.joined(separator: "\n")
         }
-        await loadDev()
     }
 
     private func loadFiles() async {

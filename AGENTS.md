@@ -87,3 +87,6 @@
 - 换图标后替换安装仍显示旧图标：程序坞和聚焦搜索的图标缓存按“标识符 + 构建号”认，重启程序坞没用。make-dmg.sh 每次用时间做构建号（CURRENT_PROJECT_VERSION），并 touch .app
 - 文件类页面的汇总数字、侧边栏数字、首页建议都来自 `fileCategories`，`removedKeys`（删掉的路径）一变就 `rebuildFileCategories()`（排除已删的）；曾经只在列表里隐藏，汇总一直不变
 - `FileReviewDeck` 进入时固定一份列表：页面列表会随删除变短，按序号翻页会跳过下一个
+- `uv cache clean` 遇到别的 uv 进程开着（正在跑的 Python 程序、编辑器插件）会无限等待，界面一直“正在清理”。`Shell.run` 看到 stderr 里的 `Cache is currently in-use` 就停掉命令并标记 `busy`，提示用户关掉占用的程序再试；不加 `--force`，它会弄坏正在运行的环境
+- 开发工具可以同时清多个（`devRunning` 是集合），同一个工具不会重复开始；“清出多少”按该工具清理前后的统计差算，不再用磁盘可用空间的差，否则并行时会互相算进去
+- 文件图标和访达一致：能预览用 Quick Look 预览图，否则用文件自己的图标；一律完整显示（`scaledToFit`），不裁切、不垫底色。用户要求所有文件都保留原来的图标预览

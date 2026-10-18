@@ -14,7 +14,7 @@ struct DevSpaceView: View {
         VStack(alignment: .leading, spacing: 18) {
             PageHeader(.devTools, subtitle: "Docker、Xcode、npm 这类工具留下的缓存。用它们自己的清理命令回收，以后需要时会重新下载。") {
                 Button(model.devLoading ? "统计中…" : "重新统计") { Task { await model.loadDev() } }
-                    .disabled(model.devLoading || model.devRunning != nil)
+                    .disabled(model.devLoading || !model.devRunning.isEmpty)
             }
             HStack(spacing: 10) {
                 StatTile(value: tools.map(\.total).reduce(0, +).gbText, label: "开发工具一共占用")
@@ -56,6 +56,7 @@ struct DevSpaceView: View {
                 HStack {
                     Text(t.name).fontWeight(.semibold)
                     Spacer()
+                    if model.devRunning.contains(t.id) { ProgressView().controlSize(.mini) }
                     Text(t.total.gbText).monospacedDigit().foregroundStyle(.secondary)
                 }
                 SegmentBar(segments: [.init(value: t.reclaimable, color: .green), .init(value: t.total - t.reclaimable, color: .secondary.opacity(0.3))],
@@ -75,7 +76,7 @@ struct DevSpaceView: View {
 
     private func detail(_ t: DevTool) -> some View {
         let done = ran.contains(t.id)
-        let running = model.devRunning == t.id
+        let running = model.devRunning.contains(t.id)
         let steps = steps(t)
         return ScrollView {
             VStack(alignment: .leading, spacing: 18) {
@@ -127,7 +128,7 @@ struct DevSpaceView: View {
                     } else {
                         Button(running ? "正在清理…" : (t.blocked ?? "清理（约回收 \(t.reclaimable.gbText)）")) { confirming = t }
                             .buttonStyle(.borderedProminent)
-                            .disabled(steps.isEmpty || t.blocked != nil || model.devRunning != nil || t.reclaimable <= 0)
+                            .disabled(steps.isEmpty || t.blocked != nil || running || t.reclaimable <= 0)
                     }
                     if running { ProgressView().controlSize(.small) }
                 }
