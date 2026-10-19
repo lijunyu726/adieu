@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="52" viewBox="0 0 240 52">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d8bff"/>
+      <stop offset="1" stop-color="#1f6cf0"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="52" rx="26" fill="url(#g)"/>
+  <text x="120" y="32.5" text-anchor="middle" fill="#fff" font-size="17" font-weight="600"
+        font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">前往 Releases 下载</text>
+</svg>
