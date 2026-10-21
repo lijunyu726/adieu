@@ -80,6 +80,8 @@
 
 还有：按目标“腾出空间”、删除记录与磁盘日记、菜单栏与桌面小组件、自动规则、保护名单。
 
+每个功能怎么用，配图写在 **[使用手册](https://adieu.lijunyu.com.cn/manual/)** 里；软件里点侧边栏底部的“?”或帮助菜单（⌘?）也能打开。
+
 ## 安装
 
 1. 到 [Releases](https://github.com/lijunyu726/adieu/releases) 下载最新的 `Adieu-版本号.dmg`，把 Adieu 拖进“应用程序”。
