@@ -3,13 +3,16 @@ import ServiceManagement
 
 /// 设置窗口（⌘,）
 struct SettingsView: View {
+    /// 启动参数 `-AdieuSettingsTab rules` 打开时直接停在某一页（调试与截图用）
+    @State private var tab = UserDefaults.standard.string(forKey: "AdieuSettingsTab") ?? "safety"
+
     var body: some View {
-        TabView {
-            Tab("安全", systemImage: "lock.shield") { SafetySettings() }
-            Tab("自动规则", systemImage: "wand.and.stars") { RulesView() }
-            Tab("通用", systemImage: "switch.2") { GeneralSettings() }
-            Tab("权限", systemImage: "hand.raised") { PermissionSettings() }
-            Tab("关于", systemImage: "info.circle") { AboutView() }
+        TabView(selection: $tab) {
+            Tab("安全", systemImage: "lock.shield", value: "safety") { SafetySettings() }
+            Tab("自动规则", systemImage: "wand.and.stars", value: "rules") { RulesView() }
+            Tab("通用", systemImage: "switch.2", value: "general") { GeneralSettings() }
+            Tab("权限", systemImage: "hand.raised", value: "permissions") { PermissionSettings() }
+            Tab("关于", systemImage: "info.circle", value: "about") { AboutView() }
         }
         .frame(width: 760, height: 560)
     }

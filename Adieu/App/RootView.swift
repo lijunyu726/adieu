@@ -72,7 +72,11 @@ enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
 /// 不占侧边栏入口、在任何页面都能打开的面板
 enum AppSheet: String, Identifiable, Sendable {
     case goal, history, diary
+    /// 只用于截图，界面上没有入口：`-AdieuSheet menuBar` / `onboarding` 把菜单栏面板、欢迎页直接放在窗口右边显示。
+    /// 后台开的实例里，弹出面板经常截不到图，放在窗口里就稳定
+    case menuBar, onboarding
     var id: String { rawValue }
+    var isPreview: Bool { self == .menuBar || self == .onboarding }
 }
 
 struct RootView: View {
@@ -84,14 +88,20 @@ struct RootView: View {
             Sidebar(selection: $model.section)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 290)
         } detail: {
-            detail(for: model.section)
+            Group {
+                if let preview = model.sheet, preview.isPreview {
+                    sheetContent(preview).frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    detail(for: model.section)
+                }
+            }
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
                 .background { PageBackground() }
         }
         .sheet(isPresented: $model.showOnboarding) {
             OnboardingView()
         }
-        .sheet(item: $model.sheet) { sheet in
+        .sheet(item: Binding(get: { model.sheet?.isPreview == true ? nil : model.sheet }, set: { model.sheet = $0 })) { sheet in
             SheetContainer { sheetContent(sheet) }
                 .background { PageBackground() }
                 .environment(model)
@@ -123,6 +133,8 @@ struct RootView: View {
         case .goal: GoalView().frame(width: 960, height: 640)
         case .history: HistoryView().frame(width: 900, height: 620)
         case .diary: DiaryView().frame(width: 1000, height: 660)
+        case .menuBar: MenuBarView()
+        case .onboarding: OnboardingView()
         }
     }
 }

@@ -30,6 +30,8 @@ struct AppsView: View {
         .searchable(text: $search, placement: .toolbar, prompt: "搜索应用")
         .onChange(of: model.apps.isEmpty, initial: true) {
             if selection == nil { selection = filtered.first?.id }
+            // 启动参数 `-AdieuUninstall YES` 直接打开第一个应用的卸载确认（调试与截图用）
+            if UserDefaults.standard.bool(forKey: "AdieuUninstall"), uninstalling == nil, let first = filtered.first { uninstalling = first }
         }
         .sheet(item: $uninstalling) { app in
             UninstallSheet(app: app, parts: app.parts.filter { isOn(app, $0) })

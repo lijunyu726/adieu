@@ -20,6 +20,8 @@
 
 - 编译：`xcodebuild ... -derivedDataPath scratch/DerivedData build`，要求零 error、零 warning
 - 界面：用 `-didOnboard YES -AdieuSection <页面>` 启动，再用 `screencapture -l <窗口ID>` 截图检查；连续截图时必须等上一个进程完全退出，否则会截到旧窗口；从终端启动的窗口可能不在屏幕上（取不到窗口 ID），先用 System Events 把进程设为前台
+- 截图用启动参数（调试与截图用，正常启动不受影响，界面上没有入口）：`-AdieuFileMode grid|list|cards` 文件页直接进某种查看方式（该页没有这种方式时忽略）；`-AdieuUninstall YES` 应用程序页直接打开第一个应用的卸载确认；`-AdieuSettingsTab safety|rules|general|permissions|about` 设置停在某一页；`-AdieuSheet menuBar|onboarding` 把菜单栏面板、欢迎页放在主窗口右边显示（`AppSheet.isPreview`，不走 sheet）。官网手册（adieu-site 的 `website/manual/`）的图都这样截：`open -n -g <Debug 版> --args -didOnboard YES -AdieuSample YES …`，只 kill 自己开的那个 PID，不动 /Applications 里正在用的 Adieu
+- 后台截图的坑：`CGEventPostToPid` 发的按键能送到后台实例（鼠标点击不行，后台窗口不响应）；窗口上挂着 sheet 或 alert 时 `screencapture -o -l` 一直截不到、不带 `-o` 也时好时坏，要先给该 PID 发几次 Shift 和鼠标移动唤醒，再不带 `-o` 截、按 alpha 裁掉阴影，必要时重开实例；启动时弹出的欢迎页 sheet 始终截不到，所以有了 `-AdieuSheet onboarding`。ScreenCaptureKit 截单窗口报 -3811，不可用
 - **DerivedData 必须放在 `scratch/`（外置盘 S690）**：开发机系统盘只剩个位数 GB，默认的 `~/Library/Developer/Xcode/DerivedData` 会把系统盘挤满
 
 ## 安全边界（不可放松）

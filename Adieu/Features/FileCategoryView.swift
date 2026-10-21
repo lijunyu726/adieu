@@ -39,11 +39,16 @@ struct FileCategoryView: View {
 
     init(category: FileCategory) {
         self.category = category
-        _mode = State(initialValue: category.id == .captures ? .grid : .list)
+        // 启动参数 `-AdieuFileMode cards` 直接进某种查看方式（调试与截图用）
+        let launched = ["grid": Mode.grid, "list": .list, "cards": .cards][UserDefaults.standard.string(forKey: "AdieuFileMode") ?? ""]
+        let fallback: Mode = category.id == .captures ? .grid : .list
+        _mode = State(initialValue: launched.flatMap { Self.modes(for: category).contains($0) ? $0 : nil } ?? fallback)
         _filter = State(initialValue: FileFilter(sort: category.id == .captures ? .newest : .size))
     }
 
-    private var modes: [Mode] {
+    private var modes: [Mode] { Self.modes(for: category) }
+
+    private static func modes(for category: FileCategory) -> [Mode] {
         category.id == .captures ? [.grid, .list, .cards] : (category.reviewable ? [.list, .cards] : [])
     }
 
