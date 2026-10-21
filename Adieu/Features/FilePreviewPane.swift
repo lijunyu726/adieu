@@ -19,9 +19,12 @@ struct FilePreviewPane: View {
     }
 
     private var empty: some View {
-        Text("把鼠标移到一个文件上，\n这里就显示它。")
-            .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack(spacing: 0) {
+            Text("把鼠标移到一个文件上，\n这里就显示它。")
+                .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            keys
+        }
     }
 
     private func detail(_ f: FileItem) -> some View {
@@ -64,8 +67,25 @@ struct FilePreviewPane: View {
             }
             .controlSize(.small)
             Spacer(minLength: 0)
-            Text("按空格放大看，↑↓ 换一个").font(.caption).foregroundStyle(.tertiary)
+            keys
         }
+    }
+
+    /// 指着、点着之外还能用的键，常驻在栏底，不用记
+    private var keys: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 12) {
+                KeyHint("放大看", keys: "空格")
+                KeyHint("换一个", keys: "↑", "↓")
+            }
+            HStack(spacing: 12) {
+                KeyHint("全选", keys: "⌘", "A")
+                KeyHint("删除已勾选", keys: "⌘", "⌫")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 10)
+        .overlay(alignment: .top) { Divider() }
     }
 
     @ViewBuilder private func preview(_ f: FileItem) -> some View {

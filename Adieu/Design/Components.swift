@@ -110,6 +110,59 @@ struct Chip: View {
     }
 }
 
+/// 一颗键帽。快捷键记不住，就把它画在用得到的地方
+struct KeyCap: View {
+    let key: String
+    init(_ key: String) { self.key = key }
+
+    var body: some View {
+        Text(key)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 5)
+            .frame(minWidth: 19, minHeight: 18)
+            .background(.background.opacity(0.8), in: .rect(cornerRadius: 4, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).strokeBorder(.primary.opacity(0.16)))
+            .shadow(color: .black.opacity(0.10), radius: 0, y: 1)
+    }
+}
+
+/// 一条快捷键提示：几颗键帽，后面写它做什么
+struct KeyHint: View {
+    let label: String
+    let keys: [String]
+    init(_ label: String, keys: String...) {
+        self.label = label
+        self.keys = keys
+    }
+
+    var body: some View {
+        HStack(spacing: 3) {
+            ForEach(keys, id: \.self) { KeyCap($0) }
+            Text(label).font(.caption).foregroundStyle(.secondary).padding(.leading, 2)
+        }
+        .fixedSize()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// 按钮文字后面跟一个淡一点的快捷键，像菜单里那样
+struct ShortcutLabel: View {
+    let title: String
+    let shortcut: String
+    init(_ title: String, shortcut: String) {
+        self.title = title
+        self.shortcut = shortcut
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(title)
+            if !shortcut.isEmpty { Text(shortcut).opacity(0.6) }
+        }
+    }
+}
+
 struct EvidenceChip: View {
     let evidence: Evidence
     var body: some View { Chip(text: evidence.label, tint: evidence.tint) }

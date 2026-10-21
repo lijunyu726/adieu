@@ -61,7 +61,7 @@ struct FileCategoryView: View {
     private var paneVisible: Bool { showPane && roomForPane && mode != .cards }
 
     private func total(_ list: [FileItem]) -> Double { list.map(\.size).reduce(0, +) }
-    private func isVideo(_ f: FileItem) -> Bool { f.kind == "屏幕录制" || f.kind == "视频" }
+    private func isVideo(_ f: FileItem) -> Bool { FileSuggestion.isVideo(f) }
 
     var body: some View {
         // 指到新的一行就会刷新整页，分组和顺序每次只算一遍，往下传
@@ -78,6 +78,7 @@ struct FileCategoryView: View {
             }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onAppear(perform: pickFromHome)
         .quickLookPreview($preview, in: sections.flatMap(\.items).compactMap(\.path).map { URL(filePath: $0) })
         .onChange(of: filter) { anchor = nil }
         .onChange(of: selected.isEmpty) { if selected.isEmpty { onlyChosen = false } }
@@ -112,7 +113,10 @@ struct FileCategoryView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .safeAreaInset(edge: .bottom) { actionBar(order: order) }
+        .safeAreaInset(edge: .bottom) {
+            // 逐个看自己有一排键帽提示和待删统计，没勾东西时不用再垫一条
+            if mode != .cards || !selected.isEmpty { actionBar(order: order) }
+        }
     }
 
     // MARK: 顶部
@@ -216,65 +220,21 @@ struct FileCategoryView: View {
 
     // MARK: 建议
 
-    private struct Suggestion {
-        let title: String
-        let detail: String
-        let keys: [String]
-        let button: String
+    /// 每页一句话：哪些可以放心删。点按钮只是勾上，勾完还能改。规则和首页“今日建议”共用
+    private var suggestion: FileSuggestion? { FileSuggestion.make(category.id, files: files) }
+
+    /// 从首页“今日建议”点“去勾选”过来的：替人按一下这页的建议按钮，删不删还是自己定
+    private func pickFromHome() {
+        guard model.pickOnOpen == category.id else { return }
+        model.pickOnOpen = nil
+        guard let s = suggestion else { return }
+        if mode == .cards { mode = modes.first { $0 != .cards } ?? .list }
+        selected.formUnion(s.items.map(key))
     }
 
-    /// 每页一句话：哪些可以放心删。点按钮只是勾上，勾完还能改
-    private var suggestion: Suggestion? {
-        switch category.id {
-        case .installers:
-            let installed = files.filter { $0.group == FileCategorizer.installedGroup }
-            let unzipped = files.filter { $0.group == FileCategorizer.unzippedGroup }
-            let both = installed + unzipped
-            guard !both.isEmpty else { return nil }
-            let title = installed.isEmpty ? "\(unzipped.count) 个压缩包已经解压过了"
-                : unzipped.isEmpty ? "\(installed.count) 个安装包对应的应用都已经装好了"
-                : "\(installed.count) 个安装包的应用已经装好，\(unzipped.count) 个压缩包已经解压过"
-            let tail = installed.isEmpty ? "旁边都有解压好的文件夹。" : "以后要用可以重新下载。"
-            return .init(title: title, detail: "删掉能腾出 \(total(both).gbText)，\(tail)", keys: both.map(key), button: "勾选这 \(both.count) 个")
-        case .captures:
-            let extra = earlierShotsEachDay
-            guard !extra.isEmpty else { return nil }
-            let videos = files.filter(isVideo)
-            let tail = videos.isEmpty ? "。" : "；录屏占了 \(total(videos).gbText)，要不要留，指着看一眼再决定。"
-            return .init(title: "截图每天留最后一张就够", detail: "先勾上每天较早的 \(extra.count) 张（\(total(extra).gbText)）\(tail)",
-                         keys: extra.map(key), button: "每天只留最后一张")
-        case .bigFiles:
-            let again = files.filter { ["安装包", "系统镜像"].contains($0.kind) }
-            guard !again.isEmpty else { return nil }
-            return .init(title: "\(again.count) 个安装包和系统镜像可以重新下载", detail: "共 \(total(again).gbText)。装好以后一般就用不上了，需要时再下载。",
-                         keys: again.map(key), button: "勾选这 \(again.count) 个")
-        case .stale:
-            return staleSuggestion()
-        default:
-            return nil
-        }
-    }
-
-    /// 久未打开：这些文件都半年没碰过，但“没打开”不等于“不要了”，建议要比别的页更保守
-    /// 只建议能重新下载的安装包、系统镜像和已经解压过的压缩包；自己的文档、视频一律不替人勾
-    private func staleSuggestion() -> Suggestion? {
-        let again = files.filter { ["安装包", "系统镜像"].contains($0.kind) || $0.group == FileCategorizer.unzippedGroup }
-        guard !again.isEmpty else { return nil }
-        let rest = files.count - again.count
-        return .init(title: "\(again.count) 个安装包和镜像很久没用了",
-                     detail: "都能重新下载，共 \(total(again).gbText)。" + (rest > 0 ? "其余 \(rest) 个是你自己的文件，指着看一眼再决定。" : ""),
-                     keys: again.map(key), button: "勾选这 \(again.count) 个")
-    }
-
-    /// 每一天除最晚那张以外的截图（不含录屏，录屏大，留给人自己看着决定）
-    private var earlierShotsEachDay: [FileItem] {
-        let shots = files.filter { !isVideo($0) && $0.date != nil }
-        let days = Dictionary(grouping: shots) { Calendar.current.startOfDay(for: $0.date!) }
-        return days.values.flatMap { $0.sorted { $0.date! > $1.date! }.dropFirst() }
-    }
-
-    private func suggestionCard(_ s: Suggestion) -> some View {
-        let done = Set(s.keys).isSubset(of: selected)
+    private func suggestionCard(_ s: FileSuggestion) -> some View {
+        let keys = s.items.map(key)
+        let done = Set(keys).isSubset(of: selected)
         return HStack(spacing: 12) {
             Image(systemName: "sparkles").font(.body.weight(.semibold)).foregroundStyle(.orange)
                 .frame(width: 30, height: 30).background(.orange.opacity(0.14), in: .circle)
@@ -283,7 +243,7 @@ struct FileCategoryView: View {
                 Text(s.detail).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
-            Button(done ? "已勾选" : s.button) { selected.formUnion(s.keys) }
+            Button(done ? "已勾选" : s.button) { selected.formUnion(keys) }
                 .buttonStyle(.borderedProminent)
                 .disabled(done)
         }
@@ -625,11 +585,15 @@ struct FileCategoryView: View {
         let free = model.disk.free
         return HStack(spacing: 10) {
             if chosen.isEmpty {
-                Text(mode == .cards ? "← 保留　↓ 稍后　→ 待删　⌘Z 退回" : "指着就能预览，点一下勾选，按住拖动连选").foregroundStyle(.secondary)
-                if mode != .cards {
-                    Button("全选（\(order.count)）") { selected.formUnion(order) }
-                        .disabled(order.isEmpty)
+                // 预览栏底下已经列了空格和方向键；栏收起时写在这里。放不下就先省掉鼠标那句
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 14) { keyHints; mouseHint }
+                    HStack(spacing: 14) { keyHints }
+                    mouseHint
                 }
+                .padding(.trailing, 4)
+                Button { selected.formUnion(order) } label: { ShortcutLabel("全选（\(order.count)）", shortcut: "⌘A") }
+                    .disabled(order.isEmpty)
             } else {
                 Text("已选 \(chosen.count) 个 · \(size.gbText)").fontWeight(.semibold).monospacedDigit()
                 if mode != .cards {
@@ -649,15 +613,32 @@ struct FileCategoryView: View {
                     }
                     .help("在访达中显示")
                 }
-                Button("删除") { mode == .cards ? model.confirmTrash(request(chosen)) : model.requestTrash(request(chosen)) }
-                    .buttonStyle(.borderedProminent)
-                    .help("删除已勾选的文件（⌘⌫）")
+                Button { mode == .cards ? model.confirmTrash(request(chosen)) : model.requestTrash(request(chosen)) } label: {
+                    ShortcutLabel("删除", shortcut: mode == .cards ? "" : "⌘⌫")
+                }
+                .buttonStyle(.borderedProminent)
+                .help(mode == .cards ? "删除标成待删的文件" : "删除已勾选的文件（⌘⌫）")
             }
         }
         .padding(.leading, 18).padding(.trailing, 8).padding(.vertical, 8)
         .glassEffect(.regular, in: .capsule)
         .padding(.bottom, 16)
         .animation(.smooth, value: chosen.count)
+    }
+
+    /// 列表和缩略图里能用的键；删除和全选的快捷键写在各自的按钮上
+    private var keyHints: some View {
+        HStack(spacing: 12) {
+            if !paneVisible {
+                KeyHint("放大看", keys: "空格")
+                if mode == .grid { KeyHint("换一张", keys: "←", "→") } else { KeyHint("换一个", keys: "↑", "↓") }
+            }
+            KeyHint("点击连选一段", keys: "⇧")
+        }
+    }
+
+    private var mouseHint: some View {
+        Text("点一下勾选，按住拖动连选").font(.caption).foregroundStyle(.secondary).fixedSize()
     }
 
     private func request(_ list: [FileItem]) -> AppModel.TrashRequest {

@@ -159,13 +159,21 @@ struct FileReviewDeck: View {
     }
 
     private var controls: some View {
-        HStack(spacing: 14) {
-            Button { decide(.keep) } label: { Label("保留", systemImage: "arrow.left") }
-            Button { decide(.later) } label: { Label("稍后", systemImage: "arrow.down") }
-            Button { decide(.trash) } label: { Label("待删", systemImage: "arrow.right") }
-                .buttonStyle(.borderedProminent)
+        VStack(spacing: 14) {
+            HStack(spacing: 14) {
+                Button { decide(.keep) } label: { Label("保留", systemImage: "arrow.left") }
+                Button { decide(.later) } label: { Label("稍后", systemImage: "arrow.down") }
+                Button { decide(.trash) } label: { Label("待删", systemImage: "arrow.right") }
+                    .buttonStyle(.borderedProminent)
+            }
+            .controlSize(.extraLarge)
+            // 按钮上的箭头就是键盘上的方向键，写明白，不用记
+            HStack(spacing: 16) {
+                KeyHint("直接按方向键", keys: "←", "↓", "→")
+                KeyHint("放大看", keys: "空格")
+                KeyHint("退回上一张", keys: "⌘", "Z")
+            }
         }
-        .controlSize(.extraLarge)
     }
 
     private var finished: some View {

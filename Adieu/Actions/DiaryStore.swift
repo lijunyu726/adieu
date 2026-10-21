@@ -10,6 +10,8 @@ struct Snapshot: Codable, Sendable {
     let categories: [String: Double]
     /// 最大的 30 个应用：名称 → GB（应用本体 + 数据）
     let apps: [String: Double]
+    /// 分类里能说出名字的那一层：分类 → 文件夹 → GB，如“你的文件 → 下载”。2026-10-21 起才记，旧快照没有
+    var parts: [String: [String: Double]]? = nil
 }
 
 @MainActor
@@ -26,11 +28,17 @@ enum DiaryStore {
         guard !m.useSample, m.space != nil else { return }
         let today = Calendar.current.startOfDay(for: .now)
         var cats: [String: Double] = [:]
-        for c in m.spaceCategories where c.id != "free" { cats[c.label] = c.size }
+        var parts: [String: [String: Double]] = [:]
+        for c in m.spaceCategories where c.id != "free" {
+            cats[c.label] = c.size
+            // 应用数据的细分是“最大的两个应用”，名单会变，应用已经单独记了；“其他”说不出是什么
+            guard c.id == "mine" || c.id == "other" else { continue }
+            for p in c.parts where p.label != "其他" { if let size = p.size { parts[c.label, default: [:]][p.label] = size } }
+        }
         var apps: [String: Double] = [:]
         for a in m.apps.filter(\.isMeasured).sorted(by: { $0.total > $1.total }).prefix(30) { apps[a.name] = a.total }
         var all = load().filter { $0.day != today }
-        all.append(Snapshot(day: today, free: m.disk.free, used: m.disk.used, categories: cats, apps: apps))
+        all.append(Snapshot(day: today, free: m.disk.free, used: m.disk.used, categories: cats, apps: apps, parts: parts))
         all = Array(all.sorted { $0.day < $1.day }.suffix(60))
         try? FileManager.default.createDirectory(at: HistoryStore.folder, withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(all) { try? data.write(to: file, options: .atomic) }
@@ -41,9 +49,18 @@ enum DiaryStore {
         /// 正数表示磁盘多用了
         let change: Double
         let days: [(day: String, gb: Double)]
-        let movers: [(delta: Double, name: String, why: String)]
+        let movers: [Mover]
         let cleaned: Double
         let headline: String
+    }
+
+    /// 这周变化大的一项。能说到应用、文件夹就不只说分类
+    struct Mover {
+        let delta: Double
+        let name: String
+        let why: String
+        /// 去哪一页处理
+        var link: AppSection? = nil
     }
 
     /// 最近 7 天的变化；记录不到两天时返回 nil
@@ -57,23 +74,46 @@ enum DiaryStore {
         for (a, b) in zip(snaps, snaps.dropFirst()) {
             days.append((b.day.formatted(.dateTime.weekday(.abbreviated)), b.used - a.used))
         }
-        // 谁变了：应用优先（更具体），再看分类
-        var movers: [(Double, String, String)] = []
+        // 谁变了：应用、文件夹比分类具体，先列它们；分类只报它们解释不了的那部分
+        let links = Dictionary(m.spaceCategories.compactMap { c in c.link.map { (c.label, $0) } }, uniquingKeysWith: { a, _ in a })
+        var movers: [Mover] = []
         for (name, size) in last.apps {
-            let d = size - (first.apps[name] ?? 0)
-            if abs(d) >= 0.3 { movers.append((d, name, d > 0 ? "应用和它的数据一共长大了这么多。" : "比一周前小了。")) }
+            let before = first.apps[name]
+            let d = size - (before ?? 0)
+            guard abs(d) >= 0.3 else { continue }
+            let why = before == nil ? "一周前还不在最大的 30 个应用里，可能是新装的。" : d > 0 ? "应用和它的数据一共长大了这么多。" : "比一周前小了。"
+            movers.append(.init(delta: d, name: name, why: why, link: .apps))
         }
-        for (name, size) in last.categories where name != "macOS 系统与其他" {
-            let d = size - (first.categories[name] ?? size)
-            if abs(d) >= 0.5 && !movers.contains(where: { $0.1 == name }) {
-                movers.append((d, name, d > 0 ? "这一类整体多了这么多。" : "这一类整体少了。"))
+        // 从名单里消失、现在也找不到的，是卸载了；只是掉出前 30 名的不算
+        for (name, size) in first.apps where size >= 0.3 && last.apps[name] == nil && !m.apps.contains(where: { $0.name == name }) {
+            movers.append(.init(delta: -size, name: name, why: "这周卸载了。"))
+        }
+        // 文件夹只能跟同样记了细分的那天比；新冒出来的（比如刚进前几名的隐藏文件夹）没有对照，不报。
+        // 对照的那天晚于这周第一天时（刚开始记细分），写明从哪天算起，分类照旧整段报，不相减
+        var explained: [String: Double] = [:]
+        if let base = snaps.first(where: { $0.parts != nil }), base.day < last.day, let then = base.parts, let now = last.parts {
+            let since = base.day == first.day ? "" : "从 \(base.day.formatted(.dateTime.month().day())) 起"
+            for (cat, folders) in now {
+                for (label, size) in folders {
+                    guard let before = then[cat]?[label], abs(size - before) >= 0.5 else { continue }
+                    let d = size - before
+                    movers.append(.init(delta: d, name: label, why: "在“\(cat)”里，这个文件夹\(since)" + (d > 0 ? "多了这么多。" : "少了这么多。"), link: links[cat]))
+                    if since.isEmpty { explained[cat, default: 0] += d }
+                }
             }
         }
-        movers.sort { abs($0.0) > abs($1.0) }
+        for (name, size) in last.categories where name != "macOS 系统与其他" {
+            let d = size - (first.categories[name] ?? size) - (explained[name] ?? 0)
+            guard abs(d) >= 0.5, !movers.contains(where: { $0.name == name }) else { continue }
+            let why = explained[name] == nil ? (d > 0 ? "这一类整体多了这么多。" : "这一类整体少了。")
+                : (d > 0 ? "上面几项以外，这一类别处还多了这么多。" : "上面几项以外，这一类别处少了这么多。")
+            movers.append(.init(delta: d, name: name, why: why, link: links[name]))
+        }
+        movers.sort { abs($0.delta) > abs($1.delta) }
         let cleaned = m.history.filter { $0.date >= start && !$0.restored }.map(\.total).reduce(0, +)
-        let top = movers.first { $0.0 > 0 }
+        let top = movers.first { $0.delta > 0 }
         let headline = change > 0.05
-            ? "磁盘多用了 \(change.gbText)" + (top.map { "，变化最大的是\($0.1)" } ?? "") + "。"
+            ? "磁盘多用了 \(change.gbText)" + (top.map { "，最多的是\($0.name)（+\($0.delta.gbText)）" } ?? "") + "。"
             : (change < -0.05 ? "磁盘空出了 \((-change).gbText)。" : "磁盘几乎没有变化。")
         let range = "\(first.day.formatted(.dateTime.month().day())) – \(last.day.formatted(.dateTime.month().day()))"
         return Week(range: range, change: change, days: days, movers: Array(movers.prefix(5)), cleaned: cleaned, headline: headline)

@@ -87,67 +87,88 @@ struct HomeView: View {
                     .foregroundStyle(.secondary).padding(.vertical, 8)
             }
             ForEach(list) { s in
-                SuggestionCard(title: s.title, size: s.size, detail: s.detail, action: "去 \(s.target.title)") { model.section = s.target }
+                SuggestionCard(title: s.title, size: s.size, detail: s.detail,
+                               action: s.picks ? "去 \(s.target.title) 勾选" : "去 \(s.target.title)") {
+                    if s.picks { model.pickOnOpen = s.target }
+                    model.section = s.target
+                }
             }
             Spacer()
             diaryCard
         }
     }
 
-    private var diaryLine: String {
-        if model.useSample { return "这一周，磁盘少了 18.6 GB。将近一半是 Docker。" }
-        return DiaryStore.week(model).map { "这一周，\($0.headline)" } ?? "日记从今天开始记。过两天再来看，空间去哪了。"
+    /// 最近 7 天的日期和一句话；记录不到两天时没有
+    private var diary: (range: String, line: String)? {
+        if model.useSample { return ("10 月 5 日 – 10 月 11 日", "这一周，磁盘少了 18.6 GB。将近一半是 Docker。") }
+        return DiaryStore.week(model).map { ($0.range, "这一周，\($0.headline)") }
     }
 
-    private var diaryCard: some View {
-        Button { model.sheet = .diary } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("本周存储日记").font(.caption.weight(.semibold)).foregroundStyle(.orange)
-                Text(diaryLine)
-                    .font(.system(size: 15, weight: .semibold, design: .serif))
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("读完整日记 →").font(.caption).foregroundStyle(.secondary)
+    /// 有两天以上的记录才占一张卡；之前只留一行字，不拿空卡片占地方
+    @ViewBuilder private var diaryCard: some View {
+        if let diary {
+            Button { model.sheet = .diary } label: {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("存储日记 · \(diary.range)").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                    Text(diary.line)
+                        .font(.system(size: 15, weight: .semibold, design: .serif))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("看是谁用掉的 →").font(.caption).foregroundStyle(.secondary)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.orange.opacity(0.08), in: .rect(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.orange.opacity(0.22)))
+                .contentShape(.rect)
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.orange.opacity(0.08), in: .rect(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.orange.opacity(0.22)))
-            .contentShape(.rect)
+            .buttonStyle(.plain)
+        } else {
+            Label("存储日记从今天开始记，过两天就能看到空间去哪了。", systemImage: "book.closed")
+                .font(.caption).foregroundStyle(.secondary)
         }
-        .buttonStyle(.plain)
     }
 }
 
-/// 首页右侧的建议：从扫描结果里挑最值得做的几件事
+/// 首页右侧的建议：从扫描结果里挑最值得做的几件事。
+/// 文件类的和各页顶上的建议卡是同一套规则（FileSuggestion），点过去会替人勾好
 private struct Suggestion: Identifiable {
     let title: String
     let size: Double?
     let detail: String
     let target: AppSection
+    /// 跳过去时顺手勾上这页的建议
+    var picks = false
+    /// 用来去重：同一个文件可能同时在“安装包”“大文件”“久未打开”里
+    var files: Set<String> = []
     var id: String { title }
 
     @MainActor
     static func make(_ model: AppModel) -> [Suggestion] {
-        if model.useSample {
-            return [.init(title: "Docker 里有没在用的镜像", size: 14.2, detail: "Docker 自己统计的可回收量，以后需要时会重新拉取。", target: .devTools),
-                    .init(title: "刚装好的 3 个应用，安装包还在下载里", size: 1.4, detail: "微信、WorkBuddy、MiniMax Design 都已经装好。", target: .installers)]
-        }
         var list: [Suggestion] = []
         if let dev = model.devTools.filter({ $0.reclaimable > 0.1 }).max(by: { $0.reclaimable < $1.reclaimable }) {
             list.append(.init(title: "\(dev.name) 里有可以回收的缓存", size: dev.reclaimable, detail: dev.note, target: .devTools))
         }
-        if let c = model.category(.installers) {
-            let done = c.items.filter { $0.modified.hasSuffix("已安装") || $0.modified.hasPrefix("旁边已经有") }
-            if !done.isEmpty {
-                let names = done.prefix(3).map(\.name).joined(separator: "、")
-                list.append(.init(title: "\(done.count) 个安装包或压缩包已经用过了", size: done.map(\.size).reduce(0, +),
-                                  detail: "对应的应用已经装好，或者已经解压：\(names)。", target: .installers))
-            }
+        for id in [AppSection.installers, .captures, .bigFiles, .stale] {
+            guard let c = model.category(id) else { continue }
+            // 和文件页一样：不算汇总行，也不算刚删掉的
+            let files = c.items.filter { !$0.isSummary && !model.removedKeys.contains($0.path ?? "\(id.rawValue).\($0.id)") }
+            guard let s = FileSuggestion.make(id, files: files) else { continue }
+            list.append(.init(title: s.title, size: s.size, detail: s.detail, target: id, picks: true,
+                              files: Set(s.items.map { $0.path ?? $0.name })))
         }
-        if let left = Optional(model.leftovers.flatMap(\.items).filter(\.defaultOn)), !left.isEmpty {
+        let left = model.leftovers.flatMap(\.items).filter(\.defaultOn)
+        if !left.isEmpty {
             list.append(.init(title: "\(left.count) 项应用残留", size: left.compactMap(\.size).reduce(0, +), detail: "对应的应用已经删掉了，数据还在。", target: .leftovers))
         }
-        return Array(list.sorted { ($0.size ?? 0) > ($1.size ?? 0) }.prefix(3))
+        // 大的先上；和已经列出的有同一个文件的跳过，免得一批文件算两遍
+        var picked: [Suggestion] = []
+        var seen: Set<String> = []
+        for s in list.sorted(by: { ($0.size ?? 0) > ($1.size ?? 0) }) where s.files.isDisjoint(with: seen) {
+            picked.append(s)
+            seen.formUnion(s.files)
+            if picked.count == 3 { break }
+        }
+        return picked
     }
 }
 

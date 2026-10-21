@@ -58,6 +58,12 @@ struct DiaryView: View {
                                 Text(x.name).fontWeight(.semibold)
                                 Text(x.why).font(.callout).foregroundStyle(.secondary)
                             }
+                            Spacer(minLength: 0)
+                            // 多出来的才需要去处理
+                            if x.delta > 0, let link = x.link {
+                                Button("去\(link.title)看看") { model.sheet = nil; model.section = link }
+                                    .buttonStyle(.link).font(.callout)
+                            }
                         }
                         .padding(.vertical, 12)
                     }

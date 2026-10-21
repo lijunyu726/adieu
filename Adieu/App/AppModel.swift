@@ -6,6 +6,8 @@ import SwiftUI
 final class AppModel {
     /// 启动参数 `-AdieuSection apps` 可直接打开某页（调试与截图用）
     var section: AppSection = AppSection(rawValue: UserDefaults.standard.string(forKey: "AdieuSection") ?? "") ?? .home
+    /// 首页“今日建议”点了“去勾选”：跳到的那一页打开时替人勾上它的建议
+    var pickOnOpen: AppSection?
     /// 当前弹出的面板；启动参数 `-AdieuSheet goal` 可直接打开（截图用）
     var sheet: AppSheet? = AppSheet(rawValue: UserDefaults.standard.string(forKey: "AdieuSheet") ?? "")
     /// 已开启的自动规则（Sample.rules 的 id）。设置里和各页面底部共用这一份
