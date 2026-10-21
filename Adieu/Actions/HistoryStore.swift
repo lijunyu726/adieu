@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 /// 一次清理操作。存在 ~/Library/Application Support/Adieu/history.json
 struct HistoryEntry: Identifiable, Codable, Hashable, Sendable {
@@ -34,5 +34,29 @@ enum HistoryStore {
     static func save(_ entries: [HistoryEntry]) {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(entries) { try? data.write(to: file, options: .atomic) }
+    }
+}
+
+/// 卸载掉的应用在“最近”里还显示原来的图标：删之前存一张 128 像素的 PNG，按应用包的名字存
+enum IconStore {
+    private static var folder: URL { HistoryStore.folder.appending(path: "icons") }
+    private static func file(_ path: String) -> URL { folder.appending(path: (path as NSString).lastPathComponent + ".png") }
+
+    static func remember(_ path: String) {
+        guard path.hasSuffix(".app"), FileManager.default.fileExists(atPath: path),
+              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 128, pixelsHigh: 128, bitsPerSample: 8,
+                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        NSWorkspace.shared.icon(forFile: path).draw(in: NSRect(x: 0, y: 0, width: 128, height: 128))
+        NSGraphicsContext.restoreGraphicsState()
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? rep.representation(using: .png, properties: [:])?.write(to: file(path), options: .atomic)
+    }
+
+    static func load(_ path: String) -> NSImage? {
+        guard path.hasSuffix(".app") else { return nil }
+        return NSImage(contentsOf: file(path))
     }
 }

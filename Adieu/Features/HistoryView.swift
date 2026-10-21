@@ -61,7 +61,8 @@ struct HistoryView: View {
                 Chip(text: state.0, tint: state.1)
             }
             ForEach(Array(e.files.prefix(8).enumerated()), id: \.offset) { _, f in
-                HStack {
+                HStack(spacing: 8) {
+                    FileIcon(path: f.originalPath, folder: f.folder, size: 20)
                     Text(f.name).font(.callout).lineLimit(1).truncationMode(.middle)
                     Spacer()
                     Text(f.size.gbText).font(.callout).foregroundStyle(.secondary).monospacedDigit()

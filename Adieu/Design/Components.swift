@@ -262,6 +262,44 @@ struct AppIcon: View {
     }
 }
 
+/// 和访达里一样的图标：文件还在就取它自己的图标；已经删掉的，卸载掉的应用用删之前存下的图标，
+/// 文件夹用文件夹图标，其余按扩展名取系统的类型图标。没有扩展名、或扩展名系统不认识的（com.tencent.xinWeChat）当文件夹
+struct FileIcon: View {
+    let path: String
+    /// 删除记录里存了是不是文件夹；不知道时按扩展名猜
+    var folder: Bool? = nil
+    var size: CGFloat = 26
+
+    nonisolated(unsafe) private static let cache = NSCache<NSString, NSImage>()
+
+    var body: some View {
+        Image(nsImage: Self.image(path, folder: folder))
+            .resizable()
+            .interpolation(.high)
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
+    }
+
+    static func image(_ raw: String, folder: Bool? = nil) -> NSImage {
+        let path = (raw as NSString).expandingTildeInPath
+        // 取过一次就记住：删掉以后也还是原来那个图标
+        if let hit = cache.object(forKey: path as NSString) { return hit }
+        let image: NSImage
+        if FileManager.default.fileExists(atPath: path) {
+            image = NSWorkspace.shared.icon(forFile: path)
+        } else if let saved = IconStore.load(path) {
+            image = saved
+        } else {
+            let ext = (path as NSString).pathExtension
+            let type = ext.isEmpty ? nil : UTType(filenameExtension: ext)
+            let isFolder = folder ?? (type == nil || type!.isDynamic)
+            image = NSWorkspace.shared.icon(for: isFolder ? .folder : type!)
+        }
+        cache.setObject(image, forKey: path as NSString)
+        return image
+    }
+}
+
 /// 筛选用的小胶囊：点一下选上，再点取消，右边是个数
 struct FilterChip: View {
     let text: String

@@ -1,23 +1,32 @@
 import SwiftUI
 import QuickLook
 
-/// 逐个看：一次只看一个文件，← 保留，↓ 稍后，→ 删除（直接删，不进废纸篓）。
+/// 逐个看：一次只看一个文件，← 保留，↓ 稍后，→ 待删，⌘Z 退回上一张。
+/// → 只是标记（和列表共用一份勾选），看完列出待删的，确认一次才真删——直接删除不能撤销，不能一按方向键就没了。
 /// 用在“截图与录屏”“大文件”“久未打开”页面的“逐个看”模式里。卡片上是缩略图，空格键用快速查看打开。
 struct FileReviewDeck: View {
     /// 进入时固定一份：移走的文件会从页面的列表里消失，按序号往后翻时不能跟着变短，否则会跳过下一个
     @State private var deck: [FileItem]
-    /// 决定删除时立即执行
-    var onDelete: (FileItem) -> Void
+    /// 和列表共用的勾选
+    @Binding var marked: Set<String>
+    let key: (FileItem) -> String
+    /// 删除已标记的（走页面的确认）
+    var onDelete: () -> Void
+    /// 回到列表复核
+    var onList: () -> Void
 
-    init(deck: [FileItem], onDelete: @escaping (FileItem) -> Void) {
+    init(deck: [FileItem], marked: Binding<Set<String>>, key: @escaping (FileItem) -> String,
+         onDelete: @escaping () -> Void, onList: @escaping () -> Void) {
         _deck = State(initialValue: deck)
+        _marked = marked
+        self.key = key
         self.onDelete = onDelete
+        self.onList = onList
     }
 
     @State private var index = 0
-    @State private var freed = 0.0
-    @State private var kept = 0
-    @State private var later = 0
+    /// 每一步的决定，以及这个文件原来有没有勾着；⌘Z 按它恢复原状
+    @State private var history: [(decision: Decision, was: Bool)] = []
     @FocusState private var focused: Bool
     @State private var preview: URL?
 
@@ -45,6 +54,11 @@ struct FileReviewDeck: View {
         .onKeyPress(.rightArrow) { decide(.trash); return .handled }
         .onKeyPress(.downArrow) { decide(.later); return .handled }
         .onKeyPress(.space) { quickLook(); return .handled }
+        .onKeyPress(keys: ["z"]) { press in
+            guard press.modifiers.contains(.command) else { return .ignored }
+            undo()
+            return .handled
+        }
         .quickLookPreview($preview)
     }
 
@@ -58,17 +72,31 @@ struct FileReviewDeck: View {
         Task { if await quickLookCanOpen(url) { preview = url } else { NSWorkspace.shared.open(url) } }
     }
 
+    private var pending: [FileItem] { deck.filter { marked.contains(key($0)) } }
+    private var kept: Int { history.filter { $0.decision == .keep }.count }
+    private var later: Int { history.filter { $0.decision == .later }.count }
+
     private func decide(_ d: Decision) {
         guard let file = current else { return }
+        let k = key(file)
         withAnimation(.smooth) {
+            history.append((d, marked.contains(k)))
             switch d {
-            case .keep: kept += 1
-            case .later: later += 1
-            case .trash:
-                freed += file.size
-                onDelete(file)
+            case .keep: marked.remove(k)
+            case .later: break
+            case .trash: marked.insert(k)
             }
             index += 1
+        }
+    }
+
+    private func undo() {
+        guard index > 0, let last = history.last else { return }
+        withAnimation(.smooth) {
+            history.removeLast()
+            index -= 1
+            let k = key(deck[index])
+            if last.was { marked.insert(k) } else { marked.remove(k) }
         }
     }
 
@@ -77,8 +105,12 @@ struct FileReviewDeck: View {
             ProgressView(value: Double(min(index, deck.count)), total: Double(deck.count)).frame(maxWidth: 320)
             Text(current == nil ? "完成" : "第 \(index + 1) / \(deck.count) 个").foregroundStyle(.secondary).monospacedDigit()
             Spacer()
-            Text("已删除 \(Text(freed.gbText).bold().foregroundStyle(.green))").foregroundStyle(.secondary)
+            Text("待删 \(pending.count) 个 · \(Text(pending.map(\.size).reduce(0, +).gbText).bold())").foregroundStyle(.secondary)
             Text("保留 \(kept) · 稍后 \(later)").foregroundStyle(.secondary)
+            Button("退回上一张", systemImage: "arrow.uturn.backward", action: undo)
+                .labelStyle(.iconOnly).buttonStyle(.borderless)
+                .help("退回上一张（⌘Z）")
+                .disabled(index == 0)
         }
     }
 
@@ -130,20 +162,26 @@ struct FileReviewDeck: View {
         HStack(spacing: 14) {
             Button { decide(.keep) } label: { Label("保留", systemImage: "arrow.left") }
             Button { decide(.later) } label: { Label("稍后", systemImage: "arrow.down") }
-            Button { decide(.trash) } label: { Label("删除", systemImage: "arrow.right") }
+            Button { decide(.trash) } label: { Label("待删", systemImage: "arrow.right") }
                 .buttonStyle(.borderedProminent)
         }
         .controlSize(.extraLarge)
     }
 
     private var finished: some View {
-        ContentUnavailableView {
-            Label("这一轮整理完了", systemImage: "checkmark.circle")
+        let pending = pending
+        return ContentUnavailableView {
+            Label("这一轮看完了", systemImage: "checkmark.circle")
         } description: {
-            Text("删除 \(freed.gbText) · 保留 \(kept) 个 · 留到下次 \(later) 个")
+            Text(pending.isEmpty ? "没有要删的。保留 \(kept) 个 · 留到下次 \(later) 个"
+                 : "待删 \(pending.count) 个，共 \(pending.map(\.size).reduce(0, +).gbText)。保留 \(kept) 个 · 留到下次 \(later) 个")
         } actions: {
-            Button("重新开始") { withAnimation { index = 0; freed = 0; kept = 0; later = 0 } }
-                .buttonStyle(.borderedProminent)
+            if !pending.isEmpty {
+                Button("删除这 \(pending.count) 个…", action: onDelete)
+                    .buttonStyle(.borderedProminent)
+                Button("在列表里复核", action: onList)
+            }
+            Button("重新开始") { withAnimation { index = 0; history = [] } }
         }
     }
 

@@ -50,15 +50,6 @@ enum PartKind: String, Sendable, CaseIterable {
         case .shared: .gray
         }
     }
-
-    var symbol: String {
-        switch self {
-        case .app: "app"
-        case .data: "folder"
-        case .background: "power"
-        case .shared: "link"
-        }
-    }
 }
 
 // MARK: - 应用
@@ -154,6 +145,10 @@ struct FileItem: Identifiable, Hashable, Sendable {
     var path: String? = nil
     /// 修改时间；示例数据为 nil。modified 有时是状态说明（“微信已安装”），筛选和精确时间用这个
     var date: Date? = nil
+    /// 安装包页的分组（应用已经装好了 / 已经解压过 / 其他）
+    var group: String? = nil
+    /// 多少天没打开过；示例数据为 nil
+    var idleDays: Int? = nil
 
     /// 所在的顶层文件夹（下载、文稿…），筛选“位置”用
     var root: String { location.components(separatedBy: " › ").first ?? location }

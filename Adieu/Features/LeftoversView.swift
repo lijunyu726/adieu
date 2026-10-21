@@ -75,6 +75,7 @@ struct LeftoversView: View {
         HStack(spacing: 14) {
             Toggle(isOn: Binding(get: { isOn(item) }, set: { overrides[item.id] = $0 })) { EmptyView() }
                 .toggleStyle(.checkbox).labelsHidden().accessibilityLabel(item.name)
+            FileIcon(path: item.paths.first ?? item.path, size: 30)
             VStack(alignment: .leading, spacing: 3) {
                 NameAndPath(name: item.name, path: item.path)
                 Text(item.evidence).font(.caption).foregroundStyle(.secondary)

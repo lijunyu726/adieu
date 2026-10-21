@@ -5,6 +5,11 @@ enum FileCategorizer {
     static let big = 50.0 / 1000
     static let staleDays = 180
 
+    /// 安装包页的三组
+    static let installedGroup = "应用已经装好了"
+    static let unzippedGroup = "已经解压过"
+    static let otherGroup = "其他"
+
     // MARK: 安装包对应的应用是否已装好
 
     /// 只留字母、数字和汉字，转小写
@@ -93,7 +98,9 @@ enum FileCategorizer {
         return FileItem(id: f.path, name: f.name, ext: f.isPackage ? "DIR" : (f.ext.isEmpty ? "—" : f.ext.uppercased()),
                         kind: kind(f), location: location(f.path),
                         modified: modifiedNote ?? dateText(f.modified), size: f.size,
-                        reason: reason(f, installedApp: installed, extractedFolder: extracted), path: f.path, date: f.modified)
+                        reason: reason(f, installedApp: installed, extractedFolder: extracted), path: f.path, date: f.modified,
+                        group: installed != nil ? installedGroup : extracted != nil ? unzippedGroup : otherGroup,
+                        idleDays: days(since: f.lastTouched))
     }
 
     /// 压缩包旁边有同名文件夹，就认为已经解压过

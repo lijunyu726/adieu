@@ -119,10 +119,10 @@ enum Sample {
     static let bigFiles: [FileItem] = [
         .init(id: "win", name: "26200.9457.260913-0221.25h2_ge_release_svc_refresh_CLIENTCONSUMER_RET_A64FRE_zh-cn.iso", ext: "ISO", kind: "系统镜像", location: "下载", modified: "2026 年 9 月", size: 6.7, reason: "Windows 11 的安装镜像。虚拟机已经装好的话就用不上了，需要时可以从微软官网重新下载。"),
         .init(id: "avi", name: "2026-06-14 17-01-54.avi", ext: "AVI", kind: "视频", location: "影片", modified: "2026 年 6 月 14 日", size: 4.5, reason: "没有压缩的 AVI 录像。如果还想留着，转成 MP4 通常只占现在的一小部分。"),
-        .init(id: "kali", name: "kali-linux-2026.1-installer-arm64.iso", ext: "ISO", kind: "系统镜像", location: "jingxiang", modified: "2026 年 3 月 20 日", size: 3.7, reason: "199 天没有改动，也从没在访达里打开过。靶场环境搭好后，安装镜像一般就不再需要了。"),
+        .init(id: "kali", name: "kali-linux-2026.1-installer-arm64.iso", ext: "ISO", kind: "系统镜像", location: "jingxiang", modified: "2026 年 3 月 20 日", size: 3.7, reason: "199 天没有改动，也从没在访达里打开过。靶场环境搭好后，安装镜像一般就不再需要了。", idleDays: 199),
         .init(id: "rec", name: "录屏2026-09-17 16.01.27.mov", ext: "MOV", kind: "屏幕录制", location: "文稿", modified: "2026 年 9 月 17 日", size: 3.3, reason: "一段屏幕录制。已经剪辑或导出过的话，原片可以删掉。"),
         .init(id: "zip", name: "大创赛视频.zip", ext: "ZIP", kind: "压缩包", location: "文稿 › 国创校赛演讲", modified: "2026 年 9 月", size: 0.18, reason: "旁边已经有解压后的“大创赛视频”文件夹，两份内容相同。"),
-        .init(id: "php", name: "phpStudy_64.zip", ext: "ZIP", kind: "压缩包", location: "下载", modified: "约 3 年前", size: 0.079, reason: "1106 天没有改动的安装包压缩文件。")
+        .init(id: "php", name: "phpStudy_64.zip", ext: "ZIP", kind: "压缩包", location: "下载", modified: "约 3 年前", size: 0.079, reason: "1106 天没有改动的安装包压缩文件。", idleDays: 1106)
     ]
 
     // MARK: 文件分类
@@ -134,12 +134,12 @@ enum Sample {
                     .init(label: "其中应用已装好", value: "24 个 · 3.5 GB", highlight: true),
                     .init(label: "已解压的压缩包", value: "15 个 · 377 MB", highlight: true)],
             items: [
-                .init(id: "wx-dmg", name: "WeChatMac_4.1.15.dmg", ext: "DMG", kind: "安装包", location: "下载", modified: "微信已安装", size: 541.0 / 1000, reason: "微信已经装好了。"),
-                .init(id: "wb-dmg", name: "WorkBuddy-darwin-arm64-5.6.2….dmg", ext: "DMG", kind: "安装包", location: "下载", modified: "WorkBuddy AI 已安装", size: 533.0 / 1000, reason: "WorkBuddy AI 已经装好了。"),
-                .init(id: "mm-dmg", name: "MiniMax Design-3.0.20-arm64.dmg", ext: "DMG", kind: "安装包", location: "下载", modified: "MiniMax Design 已安装", size: 406.0 / 1000, reason: "MiniMax Design 已经装好了。"),
-                .init(id: "pkg-rest", name: "其余 21 个应用已装好的安装包", ext: "PKG", kind: "安装包", location: "下载", modified: "对应的应用都在“应用程序”里", size: 2.06, reason: "", isSummary: true),
-                .init(id: "zip", name: "大创赛视频.zip", ext: "ZIP", kind: "压缩包", location: "文稿 › 国创校赛演讲", modified: "旁边已经有解压后的同名文件夹", size: 0.18, reason: "旁边已经有解压后的“大创赛视频”文件夹，两份内容相同。"),
-                .init(id: "zip-rest", name: "其余 14 个已解压的压缩包", ext: "ZIP", kind: "压缩包", location: "下载与文稿", modified: "旁边都已经有解压后的文件夹", size: 193.0 / 1000, reason: "", isSummary: true)
+                .init(id: "wx-dmg", name: "WeChatMac_4.1.15.dmg", ext: "DMG", kind: "安装包", location: "下载", modified: "微信已安装", size: 541.0 / 1000, reason: "微信已经装好了。", group: FileCategorizer.installedGroup),
+                .init(id: "wb-dmg", name: "WorkBuddy-darwin-arm64-5.6.2….dmg", ext: "DMG", kind: "安装包", location: "下载", modified: "WorkBuddy AI 已安装", size: 533.0 / 1000, reason: "WorkBuddy AI 已经装好了。", group: FileCategorizer.installedGroup),
+                .init(id: "mm-dmg", name: "MiniMax Design-3.0.20-arm64.dmg", ext: "DMG", kind: "安装包", location: "下载", modified: "MiniMax Design 已安装", size: 406.0 / 1000, reason: "MiniMax Design 已经装好了。", group: FileCategorizer.installedGroup),
+                .init(id: "pkg-rest", name: "其余 21 个应用已装好的安装包", ext: "PKG", kind: "安装包", location: "下载", modified: "对应的应用都在“应用程序”里", size: 2.06, reason: "", isSummary: true, group: FileCategorizer.installedGroup),
+                .init(id: "zip", name: "大创赛视频.zip", ext: "ZIP", kind: "压缩包", location: "文稿 › 国创校赛演讲", modified: "旁边已经有解压后的同名文件夹", size: 0.18, reason: "旁边已经有解压后的“大创赛视频”文件夹，两份内容相同。", group: FileCategorizer.unzippedGroup),
+                .init(id: "zip-rest", name: "其余 14 个已解压的压缩包", ext: "ZIP", kind: "压缩包", location: "下载与文稿", modified: "旁边都已经有解压后的文件夹", size: 193.0 / 1000, reason: "", isSummary: true, group: FileCategorizer.unzippedGroup)
             ],
             reviewable: false, ruleID: "pkg"),
         FileCategory(

@@ -165,10 +165,7 @@ private struct AppInspector: View {
                         .toggleStyle(.checkbox)
                         .labelsHidden()
                         .accessibilityLabel(p.label)
-                    Image(systemName: p.kind.symbol)
-                        .foregroundStyle(p.kind.color)
-                        .frame(width: 26, height: 26)
-                        .background(p.kind.color.opacity(0.12), in: .rect(cornerRadius: 7))
+                    FileIcon(path: p.path, size: 28)
                     NameAndPath(name: p.label, path: p.path).opacity(isOn(p) ? 1 : 0.55)
                     Spacer()
                     EvidenceChip(evidence: p.evidence)
@@ -240,7 +237,12 @@ struct UninstallSheet: View {
             }
             VStack(spacing: 0) {
                 ForEach(parts) { p in
-                    HStack { Text(p.label); Spacer(); Text(p.size.gbText).foregroundStyle(.secondary).monospacedDigit() }
+                    HStack(spacing: 8) {
+                        FileIcon(path: p.path, size: 18)
+                        Text(p.label)
+                        Spacer()
+                        Text(p.size.gbText).foregroundStyle(.secondary).monospacedDigit()
+                    }
                         .font(.callout).padding(.vertical, 6)
                     Divider()
                 }

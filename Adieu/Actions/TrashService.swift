@@ -8,6 +8,8 @@ struct TrashedFile: Codable, Hashable, Sendable {
     let trashedPath: String?
     /// GB
     let size: Double?
+    /// 是不是文件夹，“最近”里按它显示图标；旧记录没有
+    var folder: Bool? = nil
 
     var isInTrash: Bool { trashedPath.map { FileManager.default.fileExists(atPath: $0) } ?? false }
 }
@@ -85,8 +87,11 @@ enum TrashService {
             do {
                 try check(url, protected: protected)
                 let size = sizes[url.path] ?? AppScanner.allocatedSize(url)
+                let folder = isFolder(url)
+                // 要管理员密码的应用也先走到这里，图标在这一步就存好
+                IconStore.remember(url.path)
                 try FileManager.default.removeItem(at: url)
-                out.done.append(TrashedFile(name: name, originalPath: url.path, trashedPath: nil, size: size))
+                out.done.append(TrashedFile(name: name, originalPath: url.path, trashedPath: nil, size: size, folder: folder))
             } catch Refusal.missing {
                 continue
             } catch let r as Refusal {
@@ -107,19 +112,25 @@ enum TrashService {
     /// 用管理员身份删除（系统弹出密码窗口，只问一次）。路径照样先过安全检查
     static func deleteAsAdmin(_ urls: [URL], sizes: [String: Double] = [:], protected: [String]) -> Outcome {
         let targets = urls.filter { (try? check($0, protected: protected)) != nil }
-        let jobs = targets.map { (src: $0, size: sizes[$0.path] ?? AppScanner.allocatedSize($0)) }
+        let jobs = targets.map { (src: $0, size: sizes[$0.path] ?? AppScanner.allocatedSize($0), folder: isFolder($0)) }
         guard !jobs.isEmpty else { return Outcome() }
         let shell = jobs.map { "/bin/rm -rf \(quote($0.src.path))" }.joined(separator: "; ")
         let cancelled = runAsAdmin(shell, prompt: "Adieu 要删除 \(displayNames(targets))。它们归系统管理员所有，需要输入你的开机密码。")
         var out = Outcome()
         for j in jobs {
             if !FileManager.default.fileExists(atPath: j.src.path) {
-                out.done.append(TrashedFile(name: j.src.lastPathComponent, originalPath: j.src.path, trashedPath: nil, size: j.size))
+                out.done.append(TrashedFile(name: j.src.lastPathComponent, originalPath: j.src.path, trashedPath: nil, size: j.size, folder: j.folder))
             } else {
                 out.failed.append((j.src.lastPathComponent, cancelled ? "没有输入管理员密码，留在原处" : "用管理员身份也没能删除"))
             }
         }
         return out
+    }
+
+    /// 应用包算文件，不算文件夹（图标要用应用的）
+    private static func isFolder(_ url: URL) -> Bool {
+        let v = try? url.resourceValues(forKeys: [.isDirectoryKey, .isPackageKey])
+        return v?.isDirectory == true && v?.isPackage != true
     }
 
     private static func quote(_ s: String) -> String { "'" + s.replacing("'", with: "'\\''") + "'" }

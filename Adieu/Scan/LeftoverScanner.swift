@@ -97,6 +97,8 @@ enum LeftoverScanner {
             }
         }
 
+        // 正在运行的程序（可能装在别处、或者是命令行工具起的）的数据一律不算残留
+        let running = NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier?.lowercased() }
         var gone: [LeftoverItem] = []
         for (key, paths) in byKey {
             let lower = key.lowercased()
@@ -104,6 +106,7 @@ enum LeftoverScanner {
             // 应用本身或它的扩展、辅助程序
             if o.ids.contains(where: { lower == $0.lowercased() || lower.hasPrefix($0.lowercased() + ".") }) { continue }
             if NSWorkspace.shared.urlForApplication(withBundleIdentifier: key) != nil { continue }
+            if running.contains(where: { lower == $0 || lower.hasPrefix($0 + ".") }) { continue }
             // 标识符里藏着应用名，如 com.citrolabs.EgoUpdater
             let words = key.split(separator: ".").dropFirst(2).map { FileCategorizer.normalize(String($0)) }
             if words.contains(where: { $0.count >= 4 && o.names.contains($0) }) { continue }
@@ -112,7 +115,13 @@ enum LeftoverScanner {
             let home = fm.homeDirectoryForCurrentUser.path
             let shown = paths.map { "~" + $0.dropFirst(home.count) }
             let display = shown[0] + (paths.count > 1 ? " 等 \(paths.count) 处" : "")
-            gone.append(.init(id: key, name: "\(readableName(key)) 的数据", path: display, evidence: "标识符 \(key) 找不到对应的应用", size: size, defaultOn: true, paths: paths))
+            // 找不到应用不等于没人在用：最近 30 天还有改动的照样列出来，但不替人勾上
+            let touched = paths.compactMap { try? URL(filePath: $0).resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }.max()
+            let idle = touched.map { FileCategorizer.days(since: $0) }
+            let fresh = idle.map { $0 < 30 } ?? false
+            let evidence = fresh ? "标识符 \(key) 找不到对应的应用，但 \(idle!) 天前还有改动，可能还有程序在用"
+                                 : "标识符 \(key) 找不到对应的应用"
+            gone.append(.init(id: key, name: "\(readableName(key)) 的数据", path: display, evidence: evidence, size: size, defaultOn: !fresh, paths: paths))
         }
 
         let broken = LaunchScanner.scan().first { $0.id == "broken" }?.items.filter(\.isUser) ?? []
@@ -123,7 +132,7 @@ enum LeftoverScanner {
 
         func sorted(_ items: [LeftoverItem]) -> [LeftoverItem] { items.sorted { ($0.size ?? 0) > ($1.size ?? 0) } }
         return [
-            LeftoverGroup(id: "gone", title: "应用已经不在了", subtitle: "标识符找不到任何已装应用，默认勾选", items: sorted(gone))
+            LeftoverGroup(id: "gone", title: "应用已经不在了", subtitle: "标识符找不到任何已装应用，默认勾选；最近还有改动的不勾", items: sorted(gone))
         ].filter { !$0.items.isEmpty }
     }
 }

@@ -55,6 +55,11 @@ final class AppModel {
         if !useSample, let d = DiskInfo.current() { disk = d }
     }
 
+    /// 不管设置怎样都先确认：键盘快捷键和“逐个看”里攒下来的一批，都不能一按就删掉
+    func confirmTrash(_ request: TrashRequest) {
+        pendingTrash = request
+    }
+
     /// 设置里开了“删除前总是再确认一次”就先弹确认，否则直接执行
     func requestTrash(_ request: TrashRequest) {
         if UserDefaults.standard.object(forKey: "confirmAlways") as? Bool ?? true {
@@ -300,7 +305,8 @@ final class AppModel {
         }
         history.insert(entry, at: 0)
         HistoryStore.save(history)
-        if !trashed.isEmpty { DeleteSound.play() }
+        // 只跑了命令（npm cache clean 之类）也算删完了，和删文件响同一声
+        if !trashed.isEmpty || (commandsRan && failed.isEmpty) { DeleteSound.play() }
         if !failed.isEmpty {
             notice = "\(tool.name) 有 \(failed.count) 条命令没有成功，对应的缓存还在：\n" + failed.map { "· \($0)" }.joined(separator: "\n")
         }
