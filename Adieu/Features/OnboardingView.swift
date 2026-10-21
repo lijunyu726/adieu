@@ -39,7 +39,7 @@ struct OnboardingView: View {
             Text("每一个要删除的文件，都会告诉你它为什么属于那个应用。\n删除都是直接删干净，不用再清空废纸篓，删之前会确认。")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary)
             HStack(alignment: .top, spacing: 12) {
-                promise("有证据才建议", "按应用标识和开发者身份匹配，只是名字像的不自动勾选。")
+                promise("有证据才建议", "按应用标识符找它留下的文件；只是名字像的文件夹不列出来，也不会删。")
                 promise("删之前先确认", "删除不进废纸篓、不能放回，所以每次删之前都会列出要删的东西让你确认。")
                 promise("只在本机运行", "扫描结果不上传，不需要账号。")
             }

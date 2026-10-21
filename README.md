@@ -13,7 +13,7 @@
 
 <a href="https://github.com/lijunyu726/adieu/releases"><img src="docs/images/download.svg" width="240" alt="前往 Releases 下载"></a>
 
-<sub>免费开源 · macOS 26 · Apple 芯片 · <a href="https://adieu.lijunyu.com.cn">官网</a></sub>
+<sub>免费开源 · macOS 26 · Apple 芯片 · <a href="https://adieu.lijunyu.com.cn">官网</a> · <a href="https://adieu.lijunyu.com.cn/manual/">使用手册</a></sub>
 
 <br><br>
 
