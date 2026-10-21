@@ -1,5 +1,10 @@
 import SwiftUI
 
+extension URL {
+    /// 官网上的使用手册。Adieu 本身不联网，这里只是交给浏览器打开
+    static let adieuManual = URL(string: "https://adieu.lijunyu.com.cn/manual/")!
+}
+
 @main
 struct AdieuApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
@@ -27,6 +32,11 @@ struct AdieuApp: App {
             CommandGroup(after: .newItem) {
                 Button("重新扫描") { Task { await model.scanAll(force: true) } }
                     .keyboardShortcut("r")
+            }
+            // 没有本地帮助文档，系统默认的“Adieu 帮助”会提示找不到，换成官网手册
+            CommandGroup(replacing: .help) {
+                Link("Adieu 使用手册", destination: .adieuManual)
+                    .keyboardShortcut("?")
             }
         }
 

@@ -189,6 +189,10 @@ private struct Sidebar: View {
                         Label("最近", systemImage: "clock.arrow.circlepath")
                     }
                     .help("最近操作：每次删了什么")
+                    // 系统标准的“?”帮助按钮，侧边栏窄，放不下文字
+                    HelpLink(destination: .adieuManual)
+                        .controlSize(.small)
+                        .help("使用手册（在官网打开）")
                 }
                 .buttonStyle(.borderless)
                 .padding(.horizontal, 6)

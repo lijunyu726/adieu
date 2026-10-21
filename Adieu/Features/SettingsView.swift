@@ -241,6 +241,7 @@ private struct AboutView: View {
             Text("好好告别，不留遗憾也不留残渣。").foregroundStyle(.secondary)
             Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—") · 只在本机运行，不需要账号")
                 .font(.caption).foregroundStyle(.tertiary)
+            Link("使用手册 ↗", destination: .adieuManual).padding(.top, 6)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
