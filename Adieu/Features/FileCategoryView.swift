@@ -3,7 +3,7 @@ import QuickLook
 
 /// “文件”分组下的通用页面：安装包与压缩包、截图与录屏、大文件、久未打开。
 /// 鼠标指着哪个，右边预览栏就显示哪个；整行（整张缩略图）都能点着勾选，按住拖动连选，按住 Shift 连选一段。
-/// 列表有焦点时：空格放大预览，↑↓ 换一个，⌘A 全选，⌘⌫ 删除已勾选（照样先确认）。
+/// 列表有焦点时：空格放大预览，↑↓ 换一个，回车勾选或取消这一个，⌘A 全选（再按一次全不选），esc 全部取消，⌘⌫ 删除已勾选（照样先确认）。
 /// 顶上一张建议卡一键勾选可以放心删的；列表按组排，每组可以一起勾。
 struct FileCategoryView: View {
     let category: FileCategory
@@ -32,6 +32,8 @@ struct FileCategoryView: View {
     @FocusState private var listFocused: Bool
 
     private static let space = "files"
+    /// Mac 键盘上的删除键发的是 U+007F；SwiftUI 的 `.delete` 是 U+0008，onKeyPress 只认后者会接不到 ⌘⌫
+    private static let backspace = KeyEquivalent("\u{7F}")
     /// 比这窄就放不下预览栏，原因改写在每一行里
     private static let paneMinWidth: CGFloat = 900
 
@@ -346,7 +348,7 @@ struct FileCategoryView: View {
                 .focusable()
                 .focused($listFocused)
                 .focusEffectDisabled()
-                .onKeyPress(keys: [.space, .upArrow, .downArrow, .leftArrow, .rightArrow, .delete, "a"]) { press in
+                .onKeyPress(keys: [.space, .upArrow, .downArrow, .leftArrow, .rightArrow, .return, .escape, .delete, Self.backspace, "a"]) { press in
                     handleKey(press, order: order, proxy: proxy)
                 }
                 .onAppear {
@@ -557,12 +559,22 @@ struct FileCategoryView: View {
             hovered = nil
             withAnimation(.smooth(duration: 0.2)) { proxy.scrollTo(order[i]) }
             return .handled
-        case .delete where press.modifiers.contains(.command):
-            guard !chosen.isEmpty else { return .ignored }
+        case .return:
+            guard let current, files.contains(where: { key($0) == current }) else { return .ignored }
+            toggle(current)
+            return .handled
+        case .delete, Self.backspace:
+            guard press.modifiers.contains(.command), !chosen.isEmpty else { return .ignored }
             model.confirmTrash(request(chosen))
             return .handled
         case "a" where press.modifiers.contains(.command):
-            selected.formUnion(order)
+            // 已经全勾上了，再按一次就全不选
+            if Set(order).isSubset(of: selected) { selected.subtract(order); anchor = nil } else { selected.formUnion(order) }
+            return .handled
+        case .escape:
+            guard !selected.isEmpty else { return .ignored }
+            selected = []
+            anchor = nil
             return .handled
         default:
             return .ignored
@@ -603,9 +615,9 @@ struct FileCategoryView: View {
                 Text("删完可用 \(free.gbText) → \(Text((free + size).gbText).fontWeight(.semibold).foregroundStyle(.green))")
                     .foregroundStyle(.secondary).monospacedDigit()
                 if mode != .cards, !Set(order).isSubset(of: selected) {
-                    Button("全选（\(order.count)）") { selected.formUnion(order) }
+                    Button { selected.formUnion(order) } label: { ShortcutLabel("全选（\(order.count)）", shortcut: "⌘A") }
                 }
-                Button("清除") { selected = []; anchor = nil }
+                Button { selected = []; anchor = nil } label: { ShortcutLabel("清除", shortcut: mode == .cards ? "" : "esc") }
                 Divider().frame(height: 18)
                 if chosen.contains(where: { $0.path != nil }) {
                     Button { NSWorkspace.shared.activateFileViewerSelecting(chosen.compactMap(\.path).map { URL(filePath: $0) }) } label: {
@@ -632,6 +644,7 @@ struct FileCategoryView: View {
             if !paneVisible {
                 KeyHint("放大看", keys: "空格")
                 if mode == .grid { KeyHint("换一张", keys: "←", "→") } else { KeyHint("换一个", keys: "↑", "↓") }
+                KeyHint("勾选", keys: "↩")
             }
             KeyHint("点击连选一段", keys: "⇧")
         }

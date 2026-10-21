@@ -73,13 +73,17 @@ struct FilePreviewPane: View {
 
     /// 指着、点着之外还能用的键，常驻在栏底，不用记
     private var keys: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(spacing: 12) {
+        Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 7) {
+            GridRow {
                 KeyHint("放大看", keys: "空格")
                 KeyHint("换一个", keys: "↑", "↓")
             }
-            HStack(spacing: 12) {
-                KeyHint("全选", keys: "⌘", "A")
+            GridRow {
+                KeyHint("勾选 / 取消", keys: "↩")
+                KeyHint("全选，再按取消", keys: "⌘", "A")
+            }
+            GridRow {
+                KeyHint("全部取消", keys: "esc")
                 KeyHint("删除已勾选", keys: "⌘", "⌫")
             }
         }
