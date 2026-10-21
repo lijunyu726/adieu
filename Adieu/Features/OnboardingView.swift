@@ -36,11 +36,11 @@ struct OnboardingView: View {
         VStack(spacing: 20) {
             AdieuLogo(size: 112)
             Text("好好告别，不留遗憾也不留残渣。").font(.system(size: 30, weight: .bold))
-            Text("每一个要删除的文件，都会告诉你它为什么属于那个应用。\n删除都是直接删干净，不用再清空废纸篓，删之前会确认。")
+            Text("每一个要删除的文件，都会告诉你它为什么属于那个应用。\n删除都是直接删干净，不用再清空废纸篓。")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary)
             HStack(alignment: .top, spacing: 12) {
                 promise("有证据才建议", "按应用标识符找它留下的文件；只是名字像的文件夹不列出来，也不会删。")
-                promise("删之前先确认", "删除不进废纸篓、不能放回，所以每次删之前都会列出要删的东西让你确认。")
+                promise("删之前说清楚", "删除不进废纸篓、不能放回。卸载应用、删文件前默认先确认；菜单栏里的“删除”和清掉失效的后台程序，点了就做。")
                 promise("只在本机运行", "扫描结果不上传，不需要账号。")
             }
             .padding(.horizontal, 40)
