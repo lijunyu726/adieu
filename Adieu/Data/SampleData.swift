@@ -240,12 +240,15 @@ enum Sample {
 
     // MARK: 最近操作（10 月 5 日的真实记录）
     static let history: [HistoryEntry] = [
-        HistoryEntry(date: Date(timeIntervalSince1970: 1_791_190_440), title: "移到废纸篓 1 个文件", source: "大文件",
-                     files: [.init(name: "新小文件 copy.pdf", originalPath: "~/Downloads/新小文件 copy.pdf", trashedPath: nil, size: 2.0 / 1000)]),
-        HistoryEntry(date: Date(timeIntervalSince1970: 1_791_189_840), title: "移到废纸篓 3 个安装包", source: "安装包与压缩包",
+        // 和真实记录一样：直接删除，标题用删除时确认框里的那句
+        HistoryEntry(date: Date(timeIntervalSince1970: 1_791_190_440), title: "删除“新小文件 copy.pdf”", source: "大文件",
+                     files: [.init(name: "新小文件 copy.pdf", originalPath: "~/Downloads/新小文件 copy.pdf", trashedPath: nil, size: 2.0 / 1000)],
+                     deleted: true),
+        HistoryEntry(date: Date(timeIntervalSince1970: 1_791_189_840), title: "删除 3 个安装包与压缩包里的文件", source: "安装包与压缩包",
                      files: [.init(name: "Cursor-darwin-arm64.dmg", originalPath: "~/Downloads/Cursor-darwin-arm64.dmg", trashedPath: nil, size: 292.0 / 1000),
                              .init(name: "Crow5_1.3.22_universal.dmg", originalPath: "~/Downloads/Crow5_1.3.22_universal.dmg", trashedPath: nil, size: 279.0 / 1000),
-                             .init(name: "QiuChenAppStore-v1.4.4-2026-08-18.dmg", originalPath: "~/Downloads/QiuChenAppStore-v1.4.4-2026-08-18.dmg", trashedPath: nil, size: 233.0 / 1000)])
+                             .init(name: "QiuChenAppStore-v1.4.4-2026-08-18.dmg", originalPath: "~/Downloads/QiuChenAppStore-v1.4.4-2026-08-18.dmg", trashedPath: nil, size: 233.0 / 1000)],
+                     deleted: true)
     ]
 
     // MARK: 自动规则
