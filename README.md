@@ -23,6 +23,16 @@
 
 <br>
 
+## English overview
+
+Adieu is a free, MIT-licensed macOS uninstaller and cleanup app built with SwiftUI. It finds app caches, container data, and background services by Bundle ID, and explains why each item can be removed before you delete it. It also helps you review app leftovers, old installers, screenshots, screen recordings, large files, and developer caches.
+
+Adieu works offline, makes no network requests, and has no subscriptions, ads, or in-app purchases. Requires **macOS 26 and Apple silicon**.
+
+[Download from GitHub Releases](https://github.com/lijunyu726/adieu/releases) · [Website](https://adieu.lijunyu.com.cn) · [User manual (Chinese)](https://adieu.lijunyu.com.cn/manual/)
+
+**Deletion is permanent: items do not go to the Trash.** Most deletions ask for confirmation by default, but the menu bar delete action and removal of invalid background services act immediately. The app is not notarized; macOS may require you to allow it in System Settings → Privacy & Security on first launch.
+
 ## 为什么是 Adieu
 
 把应用拖进废纸篓，只删掉了它的一半：缓存、容器数据、后台服务还留在资源库里。装完没删的安装包、几个月前的录屏、编译缓存，也在悄悄占满磁盘。
