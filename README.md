@@ -27,11 +27,11 @@
 
 Adieu is a free, MIT-licensed macOS uninstaller and cleanup app built with SwiftUI. It finds app caches, container data, and background services by Bundle ID, and explains why each item can be removed before you delete it. It also helps you review app leftovers, old installers, screenshots, screen recordings, large files, and developer caches.
 
-Adieu works offline, makes no network requests, and has no subscriptions, ads, or in-app purchases. Requires **macOS 26 and Apple silicon**.
+Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay on your Mac. It has no subscriptions, ads, or in-app purchases. Requires **macOS 26 and Apple silicon**. If a newer version is available, Adieu asks first, then downloads it and replaces itself.
 
 [Download from GitHub Releases](https://github.com/lijunyu726/adieu/releases) · [Website](https://adieu.lijunyu.com.cn) · [User manual (Chinese)](https://adieu.lijunyu.com.cn/manual/)
 
-**Deletion is permanent: items do not go to the Trash.** Most deletions ask for confirmation by default, but the menu bar delete action and removal of invalid background services act immediately. The app is not notarized; macOS may require you to allow it in System Settings → Privacy & Security on first launch.
+**Deletion is permanent: items do not go to the Trash.** Most deletions ask for confirmation by default, but the menu bar delete action and removal of invalid background services act immediately. The app is not notarized; macOS may require you to allow it in System Settings → Privacy & Security on first launch, and again after it replaces itself.
 
 ## 为什么是 Adieu
 
@@ -39,7 +39,7 @@ Adieu works offline, makes no network requests, and has no subscriptions, ads, o
 
 | 免费、开源 | 只在你的 Mac 上 | 先说清楚，再删 | 删就删干净 |
 |:--|:--|:--|:--|
-| 无订阅、无内购、无广告 | 不联网，不收集数据 | 写明来由，拿不准的不显示 | 直接删除，立刻腾出空间 |
+| 无订阅、无内购、无广告 | 只在检查更新时联网，不收集数据 | 写明来由，拿不准的不显示 | 直接删除，立刻腾出空间 |
 
 ## 功能
 
@@ -97,7 +97,7 @@ Adieu works offline, makes no network requests, and has no subscriptions, ads, o
 1. 到 [Releases](https://github.com/lijunyu726/adieu/releases) 下载最新的 `Adieu-版本号.dmg`，把 Adieu 拖进“应用程序”。
 2. 第一次打开如果被拦下（还没有经过 Apple 公证）：到 **系统设置 › 隐私与安全性**，点 **仍要打开**。
 
-Adieu 只在这个仓库的 Releases 发布，别处下载的都不是官方版本。它免费、不订阅、不联网，也不会弹窗催你升级。
+Adieu 只在这个仓库的 Releases 发布，别处下载的都不是官方版本。它免费、不订阅，只在检查更新时联网。有新版本会问你要不要更新。同意的话，它自己下载并换上，然后重新打开。还没有公证，所以换上之后第一次打开可能要再点一次“仍要打开”，完全磁盘访问权限也可能要重新允许。
 
 > [!WARNING]
 > Adieu 的所有删除都是**直接删除，不进废纸篓**，删了不能放回。卸载应用、删文件前默认会确认一次；菜单栏面板的“删除”和清掉失效的后台程序点了就做。“最近”里能看到每次删了什么。

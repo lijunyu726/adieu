@@ -20,7 +20,7 @@
 
 - 编译：`xcodebuild ... -derivedDataPath scratch/DerivedData build`，要求零 error、零 warning
 - 界面：用 `-didOnboard YES -AdieuSection <页面>` 启动，再用 `screencapture -l <窗口ID>` 截图检查；连续截图时必须等上一个进程完全退出，否则会截到旧窗口；从终端启动的窗口可能不在屏幕上（取不到窗口 ID），先用 System Events 把进程设为前台
-- 截图用启动参数（调试与截图用，正常启动不受影响，界面上没有入口）：`-AdieuFileMode grid|list|cards` 文件页直接进某种查看方式（该页没有这种方式时忽略）；`-AdieuUninstall YES` 应用程序页直接打开第一个应用的卸载确认；`-AdieuSettingsTab safety|rules|general|permissions|about` 设置停在某一页；`-AdieuSheet menuBar|onboarding` 把菜单栏面板、欢迎页放在主窗口右边显示（`AppSheet.isPreview`，不走 sheet）。官网手册（adieu-site 的 `website/manual/`）的图都这样截：`open -n -g <Debug 版> --args -didOnboard YES -AdieuSample YES …`，只 kill 自己开的那个 PID，不动 /Applications 里正在用的 Adieu
+- 截图用启动参数（调试与截图用，正常启动不受影响，界面上没有入口）：`-AdieuFileMode grid|list|cards` 文件页直接进某种查看方式（该页没有这种方式时忽略）；`-AdieuUninstall YES` 应用程序页直接打开第一个应用的卸载确认；`-AdieuSettingsTab safety|rules|general|permissions|about` 设置停在某一页；`-AdieuSheet menuBar|onboarding` 把菜单栏面板、欢迎页放在主窗口右边显示（`AppSheet.isPreview`，不走 sheet）；`-AdieuUpdatePreview YES` 只弹出更新进度条，不下载、不替换。官网手册（adieu-site 的 `website/manual/`）的图都这样截：`open -n -g <Debug 版> --args -didOnboard YES -AdieuSample YES …`，只 kill 自己开的那个 PID，不动 /Applications 里正在用的 Adieu
 - 后台截图的坑：`CGEventPostToPid` 发的按键能送到后台实例（鼠标点击不行，后台窗口不响应）；窗口上挂着 sheet 或 alert 时 `screencapture -o -l` 一直截不到、不带 `-o` 也时好时坏，要先给该 PID 发几次 Shift 和鼠标移动唤醒，再不带 `-o` 截、按 alpha 裁掉阴影，必要时重开实例；启动时弹出的欢迎页 sheet 始终截不到，所以有了 `-AdieuSheet onboarding`。ScreenCaptureKit 截单窗口报 -3811，不可用
 - **DerivedData 必须放在 `scratch/`（外置盘 S690）**：开发机系统盘只剩个位数 GB，默认的 `~/Library/Developer/Xcode/DerivedData` 会把系统盘挤满
 
@@ -82,7 +82,8 @@
 - 快捷键要画在页面上（用户反馈记不住）：键帽用 `Components.swift` 里的 `KeyCap` / `KeyHint`，按钮自带的快捷键用 `ShortcutLabel` 写在按钮文字后面（全选 ⌘A、删除 ⌘⌫）。预览栏底部常驻空格、↑↓、回车、⌘A、esc、⌘⌫；底栏没勾东西时写 ⇧ 连选和鼠标用法，预览栏收起时再加空格、方向键和回车，“清除”按钮带 esc，放不下用 `ViewThatFits` 依次省掉；“逐个看”在三个按钮下面一排键帽，没勾东西时不显示底栏。新增快捷键时同步加提示
 - 每页顶上的建议卡只是一键勾上，规则在 `FileSuggestion`（首页“今日建议”共用这一份，两边数字对得上），规则保守：安装包页勾“应用已经装好 / 已经解压过”，截图页每天只留最晚一张（不含录屏），大文件页勾安装包和系统镜像，久未打开页只勾能重新下载的。分组：安装包按 `FileItem.group`（`FileCategorizer` 里三组），截图按天（全都没日期的示例数据不分天），久未打开按 `idleDays`；大文件不分组，从大到小一列
 - 首页“今日建议”：开发工具最大的可回收项、四个文件页的建议、默认勾选的残留，按大小取前三；同一个文件可能同时在安装包、大文件、久未打开里，和已列出的有重叠就跳过。文件类的按钮是“去 X 勾选”：设 `AppModel.pickOnOpen`，那一页 `onAppear` 时替人按一下建议按钮（逐个看模式会切回列表），删不删还是用户自己点
-- 使用手册在官网 `https://adieu.lijunyu.com.cn/manual/`（`URL.adieuManual`，定义在 `AdieuApp.swift`）：帮助菜单“Adieu 使用手册”（⌘?，替换系统默认的帮助项）、侧边栏底部系统样式的“?”按钮（`HelpLink`）、设置的“关于”页。官网改路径时这里要一起改。只是交给浏览器打开，Adieu 本身仍不联网
+- 使用手册在官网 `https://adieu.lijunyu.com.cn/manual/`（`URL.adieuManual`，定义在 `AdieuApp.swift`）：帮助菜单“Adieu 使用手册”（⌘?，替换系统默认的帮助项）、侧边栏底部系统样式的“?”按钮（`HelpLink`）、设置的“关于”页。官网改路径时这里要一起改。手册交给浏览器打开
+- 检查更新只问 GitHub Releases，不上传、不打开浏览器。打开后自动看一次：有新版本才问。同意后下载该版本的 `Adieu-版本号.dmg`（只收 `github.com/lijunyu726/adieu/releases/download/` 上同名文件），进度条在单独小窗口里：总长度未知时先转圈，知道字节数后下载占前 80%，然后挂载、核对 `com.ljy.adieu` 和版本号，再换上正在运行的这一份并重新打开。先复制到旁边，再挪开旧的；复制或换上失败会把旧的放回去并重新打开。下载还没完成时可以取消。选“以后再说”下次打开再问。设置「关于」的“检查更新”有没有新版本都告诉你。`-AdieuSample YES` 不检查。从安装盘（`/Volumes`）打开、或所在文件夹不能写时不换。ad-hoc 签名每次构建都变，换上之后第一次打开可能再次要到系统设置点“仍要打开”，完全磁盘访问权限也可能要重新允许
 - 存储日记（`DiaryStore`）：每次扫描完记当天快照，留 60 天。“谁用掉了空间”先列应用（新进前 30 名的写“可能是新装的”，消失且已不在本机的写“卸载了”），再列文件夹（`parts`：只记“你的文件”和“隐藏文件与开发缓存”的细分，不记“其他”），分类只报文件夹解释不了的那部分。`parts` 从 2026-10-21 起才有，旧快照没有：对照日晚于这周第一天时写明“从 X 起”，分类照旧整段报、不相减。首页记录不到两天时只留一行字，不放空卡片
 - 自定义 `Layout`（`FlowLayout`）量最小尺寸时宽度会给 0，若照常换行会算出极高的最小高度，把整个窗口内容顶出窗口；已按一行处理，详情区也加了 `minHeight: 0` 兜底
 - 扫描卡在 `open()` 不动时，多半是系统权限弹窗在等用户（ad-hoc 签名重编译后会重新问）。可用 `CGWindowListCopyWindowInfo` 只看窗口所属进程名（`UserNotificationCenter`）确认，不要截整屏，也不要替用户点

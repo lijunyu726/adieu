@@ -253,13 +253,23 @@ private struct PermissionRow: View {
 }
 
 private struct AboutView: View {
+    @State private var checking = false
+
     var body: some View {
         VStack(spacing: 10) {
             AdieuLogo(size: 96)
             Text("Adieu").font(.title.bold())
             Text("好好告别，不留遗憾也不留残渣。").foregroundStyle(.secondary)
-            Text("版本 \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—") · 只在本机运行，不需要账号")
+            Text("版本 \(UpdateCheck.currentVersion) · 只在本机运行，不需要账号")
                 .font(.caption).foregroundStyle(.tertiary)
+            Button(checking ? "正在检查…" : "检查更新") {
+                checking = true
+                Task {
+                    await UpdatePrompt.manual()
+                    checking = false
+                }
+            }
+            .disabled(checking)
             Link("使用手册 ↗", destination: .adieuManual).padding(.top, 6)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

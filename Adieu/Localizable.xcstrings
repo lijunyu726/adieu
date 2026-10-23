@@ -37856,6 +37856,494 @@
           }
         }
       }
+    },
+    "有新版本 %@。去下载吗？": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有新版本 %@。去下载吗？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有新版本 %@。要下載嗎？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ is out. Download it?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいバージョン %@ があります。ダウンロードしますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 버전 %@이 있습니다. 다운로드할까요?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay una versión %@. ¿La descargas?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La version %@ est disponible. La télécharger ?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ ist da. Herunterladen?"
+          }
+        }
+      }
+    },
+    "下载后拖进“应用程序”，替换现在这个。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载后拖进“应用程序”，替换现在这个。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載後拖進「應用程式」，換掉現在這個。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After downloading, drag it into Applications and replace this one."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードしたら「アプリケーション」にドラッグして、今のものと入れ替えてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "받은 다음 응용 프로그램으로 끌어다 지금 것을 바꾸면 됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Después de descargarlo, arrástralo a Aplicaciones y sustituye este."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Après le téléchargement, glissez-le dans Applications pour remplacer celui-ci."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lade sie herunter, ziehe sie in Programme und ersetze diese hier."
+          }
+        }
+      }
+    },
+    "去下载": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去下载"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去下載"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다운로드"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Télécharger"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laden"
+          }
+        }
+      }
+    },
+    "以后再说": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后再说"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以後再說"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あとで"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나중에"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora no"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Später"
+          }
+        }
+      }
+    },
+    "已经是最新的。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经是最新的。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已經是最新的。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is the latest."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すでに最新です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미 최신 버전입니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya es la última versión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C’est déjà la dernière version."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist die neueste Version."
+          }
+        }
+      }
+    },
+    "没连上 GitHub，过会儿再试。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没连上 GitHub，过会儿再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒連上 GitHub，過一會兒再試。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't reach GitHub. Try again in a bit."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub につながらなかった。少ししてからもう一度。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub에 연결되지 않았어요. 잠시 후 다시 해보세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar con GitHub. Prueba más tarde."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub ne répond pas. Réessayez dans un moment."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub ist nicht erreichbar. Versuch es gleich noch einmal."
+          }
+        }
+      }
+    },
+    "检查更新": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查更新"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檢查更新"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップデートを確認"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트 확인"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar actualización"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chercher une mise à jour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Updates suchen"
+          }
+        }
+      }
+    },
+    "正在检查…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在檢查…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認しています…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인 중…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherche…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird geprüft…"
+          }
+        }
+      }
+    },
+    "有新版本 %@。现在更新吗？": {
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "有新版本 %@。现在更新吗？" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "有新版本 %@。現在更新嗎？" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Version %@ is out. Update now?" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "新しいバージョン %@ があります。今更新しますか？" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "새 버전 %@이 있습니다. 지금 업데이트할까요?" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Hay una versión %@. ¿La actualizas ahora?" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "La version %@ est disponible. La mettre à jour maintenant ?" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Version %@ ist da. Jetzt aktualisieren?" } }
+      }
+    },
+    "会下载并换上，然后重新打开。": {
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "会下载并换上，然后重新打开。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "會下載並換上，然後重新打開。" } },
+        "en": { "stringUnit": { "state": "translated", "value": "It will download, replace this copy, and reopen." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ダウンロードして入れ替え、もう一度開きます。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "받아서 바꾼 다음 다시 엽니다." } },
+        "es": { "stringUnit": { "state": "translated", "value": "La descarga, sustituye esta copia y vuelve a abrirse." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Adieu télécharge la nouvelle version, la met en place, puis se rouvre." } },
+        "de": { "stringUnit": { "state": "translated", "value": "Sie wird geladen, ersetzt diese Version und öffnet sich neu." } }
+      }
+    },
+    "更新": {
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "更新" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "更新" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Update" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "アップデート" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "업데이트" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Actualizar" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Mettre à jour" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Aktualisieren" } }
+      }
+    },
+    "正在下载…": {
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "正在下载…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "正在下載…" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Downloading…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ダウンロードしています…" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "받는 중…" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Descargando…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Téléchargement…" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Wird geladen…" } }
+      }
+    },
+    "正在换上…": {
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "正在换上…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "正在換上…" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Replacing…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "入れ替えています…" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "바꾸는 중…" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Sustituyendo…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Remplacement…" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Wird ersetzt…" } }
+      }
+    },
+    "没换上，过会儿再试。": {
+      "localizations": {
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "没换上，过会儿再试。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "沒換上，過一會兒再試。" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Couldn't replace it. Try again in a bit." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "入れ替えられませんでした。少ししてからもう一度お試しください。" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "바꾸지 못했어요. 잠시 후 다시 시도해 주세요." } },
+        "es": { "stringUnit": { "state": "translated", "value": "No se ha podido sustituir. Prueba otra vez dentro de un rato." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Le remplacement n'a pas abouti. Réessayez dans un moment." } },
+        "de": { "stringUnit": { "state": "translated", "value": "Ersetzen hat nicht geklappt. Versuch es gleich noch einmal." } }
+      }
     }
   },
   "version": "1.0"

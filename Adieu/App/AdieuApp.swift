@@ -1,7 +1,7 @@
 import SwiftUI
 
 extension URL {
-    /// 官网上的使用手册。Adieu 本身不联网，这里只是交给浏览器打开
+    /// 官网上的使用手册。交给浏览器打开；Adieu 自己只在检查更新时访问 GitHub
     static let adieuManual = URL(string: "https://adieu.lijunyu.com.cn/manual/")!
 }
 
@@ -70,6 +70,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if UserDefaults.standard.bool(forKey: "AdieuUpdatePreview") {
+            UpdatePrompt.preview()
+        }
+        Task { await UpdatePrompt.automatic() }
         guard Self.launchedAtLogin || UserDefaults.standard.bool(forKey: "AdieuLaunchHidden") else { return }
         // 窗口不在了，扫描就不能指望窗口里的 .task；自动规则的计时器在扫描结束时启动
         Task { await model.scanAll() }
