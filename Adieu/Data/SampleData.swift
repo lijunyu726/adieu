@@ -279,7 +279,7 @@ extension Double {
         if self >= 1 { return String(format: "%.1f GB", self) }
         if self <= 0 { return "0 MB" }
         let mb = self * 1000
-        return mb < 1 ? "不到 1 MB" : "\(Int(mb.rounded())) MB"
+        return mb < 1 ? String(localized: "不到 1 MB") : "\(Int(mb.rounded())) MB"
     }
 }
 

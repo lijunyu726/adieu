@@ -46,7 +46,7 @@ struct RulesView: View {
         return VStack(alignment: .leading, spacing: 14) {
             HStack {
                 SymbolTile(symbol: r.symbol, tint: r.color, size: 30)
-                Text(r.name).fontWeight(.semibold)
+                Text(Copy.text(r.name)).fontWeight(.semibold)
                 Spacer()
                 Toggle(r.name, isOn: Binding(get: { on }, set: { model.setRule(r.id, on: $0) }))
                     .toggleStyle(.switch).labelsHidden()
@@ -69,15 +69,15 @@ struct RulesView: View {
         for t in tokens {
             switch t {
             case .text(let s):
-                text += AttributedString(s)
+                text += AttributedString(Copy.text(s))
             case .condition(let s):
-                var a = AttributedString(" \(s) ")
+                var a = AttributedString(" \(Copy.text(s)) ")
                 a.foregroundColor = .blue
                 a.backgroundColor = .blue.opacity(0.12)
                 a.font = .body.weight(.semibold)
                 text += a
             case .action(let s):
-                var a = AttributedString(" \(s) ")
+                var a = AttributedString(" \(Copy.text(s)) ")
                 a.foregroundColor = .green
                 a.backgroundColor = .green.opacity(0.12)
                 a.font = .body.weight(.semibold)

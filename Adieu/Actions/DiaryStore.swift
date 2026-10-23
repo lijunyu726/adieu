@@ -81,40 +81,55 @@ enum DiaryStore {
             let before = first.apps[name]
             let d = size - (before ?? 0)
             guard abs(d) >= 0.3 else { continue }
-            let why = before == nil ? "一周前还不在最大的 30 个应用里，可能是新装的。" : d > 0 ? "应用和它的数据一共长大了这么多。" : "比一周前小了。"
+            let why = before == nil ? String(localized: "一周前还不在最大的 30 个应用里，可能是新装的。") : d > 0 ? String(localized: "应用和它的数据一共长大了这么多。") : String(localized: "比一周前小了。")
             movers.append(.init(delta: d, name: name, why: why, link: .apps))
         }
         // 从名单里消失、现在也找不到的，是卸载了；只是掉出前 30 名的不算
         for (name, size) in first.apps where size >= 0.3 && last.apps[name] == nil && !m.apps.contains(where: { $0.name == name }) {
-            movers.append(.init(delta: -size, name: name, why: "这周卸载了。"))
+            movers.append(.init(delta: -size, name: name, why: String(localized: "这周卸载了。")))
         }
         // 文件夹只能跟同样记了细分的那天比；新冒出来的（比如刚进前几名的隐藏文件夹）没有对照，不报。
         // 对照的那天晚于这周第一天时（刚开始记细分），写明从哪天算起，分类照旧整段报，不相减
         var explained: [String: Double] = [:]
         if let base = snaps.first(where: { $0.parts != nil }), base.day < last.day, let then = base.parts, let now = last.parts {
-            let since = base.day == first.day ? "" : "从 \(base.day.formatted(.dateTime.month().day())) 起"
+            let sameDay = base.day == first.day
+            let sinceDate = base.day.formatted(.dateTime.month().day())
             for (cat, folders) in now {
                 for (label, size) in folders {
                     guard let before = then[cat]?[label], abs(size - before) >= 0.5 else { continue }
                     let d = size - before
-                    movers.append(.init(delta: d, name: label, why: "在“\(cat)”里，这个文件夹\(since)" + (d > 0 ? "多了这么多。" : "少了这么多。"), link: links[cat]))
-                    if since.isEmpty { explained[cat, default: 0] += d }
+                    let catName = Copy.text(cat)
+                    let why: String
+                    if sameDay {
+                        why = d > 0 ? String(localized: "在“\(catName)”里，这个文件夹多了这么多。") : String(localized: "在“\(catName)”里，这个文件夹少了这么多。")
+                    } else {
+                        why = d > 0 ? String(localized: "在“\(catName)”里，这个文件夹从 \(sinceDate) 起多了这么多。") : String(localized: "在“\(catName)”里，这个文件夹从 \(sinceDate) 起少了这么多。")
+                    }
+                    movers.append(.init(delta: d, name: label, why: why, link: links[cat]))
+                    if sameDay { explained[cat, default: 0] += d }
                 }
             }
         }
         for (name, size) in last.categories where name != "macOS 系统与其他" {
             let d = size - (first.categories[name] ?? size) - (explained[name] ?? 0)
             guard abs(d) >= 0.5, !movers.contains(where: { $0.name == name }) else { continue }
-            let why = explained[name] == nil ? (d > 0 ? "这一类整体多了这么多。" : "这一类整体少了。")
-                : (d > 0 ? "上面几项以外，这一类别处还多了这么多。" : "上面几项以外，这一类别处少了这么多。")
+            let why = explained[name] == nil ? (d > 0 ? String(localized: "这一类整体多了这么多。") : String(localized: "这一类整体少了。"))
+                : (d > 0 ? String(localized: "上面几项以外，这一类别处还多了这么多。") : String(localized: "上面几项以外，这一类别处少了这么多。"))
             movers.append(.init(delta: d, name: name, why: why, link: links[name]))
         }
         movers.sort { abs($0.delta) > abs($1.delta) }
         let cleaned = m.history.filter { $0.date >= start && !$0.restored }.map(\.total).reduce(0, +)
         let top = movers.first { $0.delta > 0 }
-        let headline = change > 0.05
-            ? "磁盘多用了 \(change.gbText)" + (top.map { "，最多的是\($0.name)（+\($0.delta.gbText)）" } ?? "") + "。"
-            : (change < -0.05 ? "磁盘空出了 \((-change).gbText)。" : "磁盘几乎没有变化。")
+        let headline: String
+        if change > 0.05, let top {
+            headline = String(localized: "磁盘多用了 \(change.gbText)，最多的是\(Copy.text(top.name))（+\(top.delta.gbText)）。")
+        } else if change > 0.05 {
+            headline = String(localized: "磁盘多用了 \(change.gbText)。")
+        } else if change < -0.05 {
+            headline = String(localized: "磁盘空出了 \((-change).gbText)。")
+        } else {
+            headline = String(localized: "磁盘几乎没有变化。")
+        }
         let range = "\(first.day.formatted(.dateTime.month().day())) – \(last.day.formatted(.dateTime.month().day()))"
         return Week(range: range, change: change, days: days, movers: Array(movers.prefix(5)), cleaned: cleaned, headline: headline)
     }

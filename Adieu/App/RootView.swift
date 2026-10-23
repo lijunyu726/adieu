@@ -12,15 +12,15 @@ enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .home: "概览"
-        case .apps: "已安装"
-        case .leftovers: "残留文件"
-        case .launch: "开机与后台"
-        case .installers: "安装包与压缩包"
-        case .captures: "截图与录屏"
-        case .bigFiles: "大文件"
-        case .stale: "久未打开"
-        case .devTools: "开发工具"
+        case .home: String(localized: "概览")
+        case .apps: String(localized: "已安装")
+        case .leftovers: String(localized: "残留文件")
+        case .launch: String(localized: "开机与后台")
+        case .installers: String(localized: "安装包与压缩包")
+        case .captures: String(localized: "截图与录屏")
+        case .bigFiles: String(localized: "大文件")
+        case .stale: String(localized: "久未打开")
+        case .devTools: String(localized: "开发工具")
         }
     }
 
@@ -185,7 +185,7 @@ private struct Sidebar: View {
                             .tag(s)
                     }
                 } header: {
-                    if let title { Text(title) }
+                    if let title { Text(Copy.text(title)) }
                 }
             }
         }

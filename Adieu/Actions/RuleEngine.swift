@@ -12,20 +12,24 @@ enum RuleEngine {
         switch id {
         case "pkg":
             let fs = oldInstallers(m)
-            return fs.isEmpty ? "目前没有符合的" : "目前有 \(fs.count) 个符合，共 \(fs.map(\.size).reduce(0, +).gbText)"
+            let n = fs.count
+            let size = fs.map(\.size).reduce(0, +).gbText
+            return fs.isEmpty ? String(localized: "目前没有符合的") : String(localized: "目前有 \(n) 个符合，共 \(size)")
         case "low":
             let pct = Int((m.disk.free / m.disk.total * 100).rounded())
-            return "现在可用 \(pct)%" + (pct < 10 ? "，已触发" : "")
+            return String(localized: "现在可用 \(pct)%") + (pct < 10 ? String(localized: "，已触发") : "")
         case "cache":
             let r = m.devTools.filter { ["brew", "node", "python"].contains($0.id) }.map(\.reclaimable).reduce(0, +)
             let last = defaults.object(forKey: "rule.cache.lastRun") as? Date
-            return "现在可回收约 \(r.gbText)" + (last.map { " · 上次 \($0.formatted(.dateTime.month().day()))" } ?? "")
+            let size = r.gbText
+            let when = last.map { String(localized: " · 上次 \($0.formatted(.dateTime.month().day()))") } ?? ""
+            return String(localized: "现在可回收约 \(size)") + when
         case "shot":
             let n = oldScreenshots().count
-            return n == 0 ? "桌面上没有放了 30 天的截图 · 只移动，不删除" : "\(n) 张截图可以归档 · 只移动，不删除"
+            return n == 0 ? String(localized: "桌面上没有放了 30 天的截图 · 只移动，不删除") : String(localized: "\(n) 张截图可以归档 · 只移动，不删除")
         case "wx":
             let wx = m.apps.first { $0.id == "com.tencent.xinWeChat" }?.dataSize
-            return wx.map { "现在是 \($0.gbText)" } ?? "没有找到微信"
+            return wx.map { let size = $0.gbText; return String(localized: "现在是 \(size)") } ?? String(localized: "没有找到微信")
         default: return ""
         }
     }
@@ -46,9 +50,7 @@ enum RuleEngine {
         let month = Date.now.addingTimeInterval(-30 * 86400)
         let urls = (try? FileManager.default.contentsOfDirectory(at: desktop, includingPropertiesForKeys: [.creationDateKey], options: [.skipsHiddenFiles])) ?? []
         return urls.filter { u in
-            let lower = u.lastPathComponent.lowercased()
-            guard FileScanner.captureExts.contains(u.pathExtension.lowercased()),
-                  FileScanner.capturePrefixes.contains(where: { lower.hasPrefix($0) }),
+            guard FileScanner.screenshotExts.contains(u.pathExtension.lowercased()),
                   let d = try? u.resourceValues(forKeys: [.creationDateKey]).creationDate else { return false }
             return d < month
         }
@@ -66,18 +68,18 @@ enum RuleEngine {
         guard !m.useSample else { return }
         let on = m.enabledRules
         if on.contains("low"), m.disk.free / m.disk.total < 0.1 {
-            remindOnce("low", title: "磁盘空间只剩 \(m.disk.free.gbText)",
-                       body: "低于 10% 时系统会变慢，更新也可能装不上。打开 Adieu，用“腾出空间”一键处理。")
+            remindOnce("low", title: String(localized: "磁盘空间只剩 \(m.disk.free.gbText)"),
+                       body: String(localized: "低于 10% 时系统会变慢，更新也可能装不上。打开 Adieu，用“腾出空间”一键处理。"))
         }
         if on.contains("pkg") {
             let fs = oldInstallers(m)
             if !fs.isEmpty {
-                remindOnce("pkg", title: "\(fs.count) 个安装包可以删了", body: "对应的应用都已经装好超过 7 天，共 \(fs.map(\.size).reduce(0, +).gbText)。")
+                remindOnce("pkg", title: String(localized: "\(fs.count) 个安装包可以删了"), body: String(localized: "对应的应用都已经装好超过 7 天，共 \(fs.map(\.size).reduce(0, +).gbText)。"))
             }
         }
         if on.contains("wx"), let wx = m.apps.first(where: { $0.id == "com.tencent.xinWeChat" }), wx.dataSize > 20 {
-            remindOnce("wx", every: 7 * 86400, title: "微信的数据有 \(wx.dataSize.gbText) 了",
-                       body: "在微信的“设置 › 通用 › 存储空间”里可以按聊天清理。")
+            remindOnce("wx", every: 7 * 86400, title: String(localized: "微信的数据有 \(wx.dataSize.gbText) 了"),
+                       body: String(localized: "在微信的“设置 › 通用 › 存储空间”里可以按聊天清理。"))
         }
         if on.contains("shot") { archiveScreenshots(m) }
         if on.contains("cache") { await weeklyCache(m) }
@@ -94,7 +96,7 @@ enum RuleEngine {
         for tool in m.devTools where ["brew", "node", "python"].contains(tool.id) && tool.blocked == nil {
             await m.runDev(tool)
         }
-        Notifier.post(id: "rule.cache", title: "每周清理开发缓存：完成", body: "腾出约 \(max(0, m.disk.free - before).gbText)。记录在“最近”里。")
+        Notifier.post(id: "rule.cache", title: String(localized: "每周清理开发缓存：完成"), body: String(localized: "腾出约 \(max(0, m.disk.free - before).gbText)。记录在“最近”里。"))
     }
 
     /// 桌面上放了 30 天的截图移到“图片/截图归档/年-月”，只移动
@@ -112,8 +114,8 @@ enum RuleEngine {
             if !fm.fileExists(atPath: dest.path), (try? fm.moveItem(at: u, to: dest)) != nil { moved += 1 }
         }
         if moved > 0 {
-            var entry = HistoryEntry(date: .now, title: "把 \(moved) 张截图移到“截图归档”", source: "自动规则", files: [])
-            entry.commandNote = "只移动，没有删除：~/Pictures/截图归档"
+            var entry = HistoryEntry(date: .now, title: String(localized: "把 \(moved) 张截图移到“截图归档”"), source: "自动规则", files: [])
+            entry.commandNote = String(localized: "只移动，没有删除：~/Pictures/截图归档")
             entry.commandFreed = 0
             m.history.insert(entry, at: 0)
             HistoryStore.save(m.history)

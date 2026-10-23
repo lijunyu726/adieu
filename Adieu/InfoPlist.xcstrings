@@ -1,0 +1,59 @@
+{
+  "sourceLanguage" : "zh-Hans",
+  "strings" : {
+    "NSAppleEventsUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu nutzt System Events, um Apps aufzulisten, die sich beim Anmelden öffnen, und nur die von dir gewählten zu beenden. Sonst steuert es nichts."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu uses System Events to list apps that open at login, so it can turn off the ones you choose. It doesn't control anything else."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu usa Eventos del sistema para listar las apps que se abren al iniciar sesión, y así desactivar las que elijas. No controla nada más."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu utilise Événements système pour lister les apps qui s'ouvrent à la connexion, afin de désactiver celles que vous choisissez. Il ne contrôle rien d'autre."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu は「システムイベント」で、ログイン時に開くアプリを一覧します。止めるよう選んだものだけを止め、それ以外は操作しません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu는 '시스템 이벤트'로 로그인할 때 열리는 앱을 나열합니다. 끄라고 고른 것만 끄며, 그 밖은 건드리지 않습니다."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu 要通过“系统事件”列出“登录时打开”的应用，你关掉哪个它才能帮你关。不会控制别的东西。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adieu 要透過「系統事件」列出「登入時打開」的應用程式，你關掉哪個它才能幫你關。不會控制別的東西。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

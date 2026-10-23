@@ -64,10 +64,10 @@ enum FileCategorizer {
         case "dmg", "pkg", "mpkg", "xip": return "安装包"
         case "iso", "img": return "系统镜像"
         case _ where FileScanner.archiveExts.contains(f.ext): return "压缩包"
-        case "mov", "mp4", "avi", "mkv", "m4v", "wmv", "flv":
-            return f.isScreenCapture ? "屏幕录制" : "视频"
-        case "png", "jpg", "jpeg", "heic", "gif", "tiff", "psd":
-            return f.isScreenCapture ? "截图" : "图片"
+        case _ where FileScanner.recordingExts.contains(f.ext): return "屏幕录制"
+        case "avi", "mkv", "m4v", "wmv", "flv": return "视频"
+        case _ where FileScanner.screenshotExts.contains(f.ext): return "截图"
+        case "tiff", "psd": return "图片"
         case "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "key", "pages", "numbers": return "文档"
         case "vmdk", "qcow2", "vdi", "vhd", "vhdx", "utm": return "虚拟磁盘"
         default: return f.ext.isEmpty ? "文件" : f.ext.uppercased() + " 文件"
@@ -76,19 +76,41 @@ enum FileCategorizer {
 
     static func reason(_ f: FileScanner.File, installedApp: String?, extractedFolder: String?) -> String {
         let idle = days(since: f.lastTouched)
-        let idleText = idle >= staleDays ? "\(idle) 天没有打开过。" : ""
+        let stale = idle >= staleDays
         switch kind(f) {
         case "安装包":
-            return installedApp.map { "\($0) 已经装好了，安装包可以删，需要时能重新下载。" } ?? "安装包。没找到对应的应用，确认不再需要再删。"
-        case "系统镜像": return "系统安装镜像。装好以后一般就用不上了，需要时可以重新下载。" + idleText
+            if let installedApp {
+                return String(localized: "\(installedApp) 已经装好了，安装包可以删，需要时能重新下载。")
+            }
+            return String(localized: "安装包。没找到对应的应用，确认不再需要再删。")
+        case "系统镜像":
+            if stale { return String(localized: "系统安装镜像。装好以后一般就用不上了，需要时可以重新下载。\(idle) 天没有打开过。") }
+            return String(localized: "系统安装镜像。装好以后一般就用不上了，需要时可以重新下载。")
         case "压缩包":
-            return extractedFolder.map { "旁边已经有解压后的“\($0)”文件夹。" } ?? ("压缩包，旁边没有解压后的同名文件夹。" + idleText)
-        case "屏幕录制": return "一段屏幕录制。看过或已经导出的话，原片可以删掉。"
-        case "截图": return "截图。用完就可以删。"
-        case "视频": return (f.ext == "avi" ? "没有压缩的 AVI 视频，转成 MP4 通常能小很多。" : "") + idleText
-        case "虚拟磁盘": return "虚拟机的磁盘文件。还在用这台虚拟机的话不要删。"
-        case "资源库": return "一个资源库（如剪辑工程），里面是一整套文件。" + idleText
-        default: return idleText.isEmpty ? "比较大的文件。" : idleText
+            if let extractedFolder {
+                return String(localized: "旁边已经有解压后的“\(extractedFolder)”文件夹。")
+            }
+            if stale { return String(localized: "压缩包，旁边没有解压后的同名文件夹。\(idle) 天没有打开过。") }
+            return String(localized: "压缩包，旁边没有解压后的同名文件夹。")
+        case "屏幕录制":
+            return String(localized: "一段屏幕录制。看过或已经导出的话，原片可以删掉。")
+        case "截图":
+            return String(localized: "截图。用完就可以删。")
+        case "视频":
+            if f.ext == "avi" {
+                if stale { return String(localized: "没有压缩的 AVI 视频，转成 MP4 通常能小很多。\(idle) 天没有打开过。") }
+                return String(localized: "没有压缩的 AVI 视频，转成 MP4 通常能小很多。")
+            }
+            if stale { return String(localized: "\(idle) 天没有打开过。") }
+            return ""
+        case "虚拟磁盘":
+            return String(localized: "虚拟机的磁盘文件。还在用这台虚拟机的话不要删。")
+        case "资源库":
+            if stale { return String(localized: "一个资源库（如剪辑工程），里面是一整套文件。\(idle) 天没有打开过。") }
+            return String(localized: "一个资源库（如剪辑工程），里面是一整套文件。")
+        default:
+            if stale { return String(localized: "\(idle) 天没有打开过。") }
+            return String(localized: "比较大的文件。")
         }
     }
 
@@ -116,7 +138,11 @@ enum FileCategorizer {
 
     static func categories(_ scan: FileScanner.Result, apps: [AppItem]) -> [FileCategory] {
         let files = scan.files
-        func count(_ fs: [FileScanner.File]) -> String { "\(fs.count) 个 · \(fs.map(\.size).reduce(0, +).gbText)" }
+        func count(_ fs: [FileScanner.File]) -> String {
+            let n = fs.count
+            let size = fs.map(\.size).reduce(0, +).gbText
+            return String(localized: "\(n) 个 · \(size)")
+        }
         let template = Dictionary(uniqueKeysWithValues: Sample.fileCategories.map { ($0.id, $0) })
 
         // 安装包与压缩包：已装好的、已解压的排前面
@@ -155,7 +181,10 @@ enum FileCategorizer {
             FileCategory(id: .captures, subtitle: template[.captures]!.subtitle,
                          stats: [.init(label: "截图与录屏", value: count(captures)),
                                  .init(label: "最大的一个", value: captures.first?.size.gbText ?? "—", highlight: !captures.isEmpty),
-                                 .init(label: "其中录屏", value: "\(captures.filter { kind($0) == "屏幕录制" }.count) 个")],
+                                 .init(label: "其中录屏", value: {
+                                     let n = captures.filter { kind($0) == "屏幕录制" }.count
+                                     return String(localized: "\(n) 个")
+                                 }())],
                          items: captures.map { item($0, apps: apps) }, reviewable: true, ruleID: "shot"),
             FileCategory(id: .bigFiles, subtitle: "50 MB 以上的文件，按体积排序。每个都说明它是什么、能不能重新下载。",
                          stats: [.init(label: "50 MB 以上", value: count(bigs)),
@@ -164,7 +193,7 @@ enum FileCategorizer {
                          items: bigs.map { item($0, apps: apps) }, reviewable: true, ruleID: "s690"),
             FileCategory(id: .stale, subtitle: template[.stale]!.subtitle,
                          stats: [.init(label: "半年没打开", value: count(stale)),
-                                 .init(label: "最久的", value: oldest.map { "\($0) 天" } ?? "—")],
+                                 .init(label: "最久的", value: oldest.map { let n = $0; return String(localized: "\(n) 天") } ?? "—")],
                          items: stale.map { item($0, apps: apps, modifiedNote: "\(days(since: $0.lastTouched)) 天没打开") }, reviewable: true, ruleID: nil)
         ]
     }

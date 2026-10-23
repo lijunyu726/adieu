@@ -114,20 +114,20 @@ enum LeftoverScanner {
             guard size >= 1.0 / 1000 else { continue }
             let home = fm.homeDirectoryForCurrentUser.path
             let shown = paths.map { "~" + $0.dropFirst(home.count) }
-            let display = shown[0] + (paths.count > 1 ? " 等 \(paths.count) 处" : "")
+            let display = shown[0] + (paths.count > 1 ? String(localized: " 等 \(paths.count) 处") : "")
             // 找不到应用不等于没人在用：最近 30 天还有改动的照样列出来，但不替人勾上
             let touched = paths.compactMap { try? URL(filePath: $0).resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }.max()
             let idle = touched.map { FileCategorizer.days(since: $0) }
             let fresh = idle.map { $0 < 30 } ?? false
-            let evidence = fresh ? "标识符 \(key) 找不到对应的应用，但 \(idle!) 天前还有改动，可能还有程序在用"
-                                 : "标识符 \(key) 找不到对应的应用"
-            gone.append(.init(id: key, name: "\(readableName(key)) 的数据", path: display, evidence: evidence, size: size, defaultOn: !fresh, paths: paths))
+            let evidence = fresh ? String(localized: "标识符 \(key) 找不到对应的应用，但 \(idle!) 天前还有改动，可能还有程序在用")
+                                 : String(localized: "标识符 \(key) 找不到对应的应用")
+            gone.append(.init(id: key, name: String(localized: "\(readableName(key)) 的数据"), path: display, evidence: evidence, size: size, defaultOn: !fresh, paths: paths))
         }
 
         let broken = LaunchScanner.scan().first { $0.id == "broken" }?.items.filter(\.isUser) ?? []
         gone += broken.compactMap { item in
-            item.plist.map { .init(id: $0, name: "\(item.owner) 的开机启动项", path: "~/Library/LaunchAgents/" + ($0 as NSString).lastPathComponent,
-                                   evidence: "它要启动的程序已经不存在", size: nil, defaultOn: true, paths: [$0]) }
+            item.plist.map { .init(id: $0, name: String(localized: "\(item.owner) 的开机启动项"), path: "~/Library/LaunchAgents/" + ($0 as NSString).lastPathComponent,
+                                   evidence: String(localized: "它要启动的程序已经不存在"), size: nil, defaultOn: true, paths: [$0]) }
         }
 
         func sorted(_ items: [LeftoverItem]) -> [LeftoverItem] { items.sorted { ($0.size ?? 0) > ($1.size ?? 0) } }

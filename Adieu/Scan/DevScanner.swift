@@ -39,7 +39,7 @@ enum DevScanner {
                     let total = parseSize(row["Size"] as? String ?? "")
                     let reclaim = parseSize(row["Reclaimable"] as? String ?? "")
                     let count = row["TotalCount"].map { "\($0)" } ?? ""
-                    let label = ["Images": "镜像 \(count) 个", "Containers": "容器 \(count) 个", "Local Volumes": "数据卷 \(count) 个", "Build Cache": "构建缓存"][type] ?? type
+                    let label = ["Images": String(localized: "镜像 \(count) 个"), "Containers": String(localized: "容器 \(count) 个"), "Local Volumes": String(localized: "数据卷 \(count) 个"), "Build Cache": String(localized: "构建缓存")][type] ?? type
                     // 数据卷可能有数据库，永远不清理
                     parts.append(DevPart(label: label, size: total, reclaimable: type == "Local Volumes" ? 0 : reclaim))
                 }
@@ -118,8 +118,8 @@ enum DevScanner {
             if !old.isEmpty { actions.append(.trash(paths: old)) }
             if vsixSize > 0 { actions.append(.trash(paths: [vsix])) }
             tools.append(DevTool(id: "vscode", name: "VS Code", location: "~/.vscode · ~/Library/Application Support/Code",
-                                 note: old.isEmpty ? "扩展都是最新的一份。扩展安装包缓存可以清。" : "有 \(old.count) 个扩展存了旧版本，正在用的是最新的那个。",
-                                 parts: [.init(label: "旧版扩展 \(old.count) 个", size: oldSize, reclaimable: oldSize),
+                                 note: old.isEmpty ? "扩展都是最新的一份。扩展安装包缓存可以清。" : String(localized: "有 \(old.count) 个扩展存了旧版本，正在用的是最新的那个。"),
+                                 parts: [.init(label: String(localized: "旧版扩展 \(old.count) 个"), size: oldSize, reclaimable: oldSize),
                                          .init(label: "扩展安装包缓存", size: vsixSize, reclaimable: vsixSize),
                                          .init(label: "正在使用的扩展", size: max(0, all - oldSize), reclaimable: 0)],
                                  commands: [], never: nil, actions: actions))
@@ -136,8 +136,8 @@ enum DevScanner {
             if !old.isEmpty { actions.append(.trash(paths: old)) }
             if cacheSize > 0 { actions.append(.trash(paths: [cache])) }
             tools.append(DevTool(id: id, name: name, location: "~/\(dot) · ~/Library/Application Support/\(support)",
-                                 note: old.isEmpty ? "扩展都是最新的一份。" : "有 \(old.count) 个扩展存了旧版本，正在用的是最新的那个。",
-                                 parts: [.init(label: "旧版扩展 \(old.count) 个", size: oldSize, reclaimable: oldSize),
+                                 note: old.isEmpty ? "扩展都是最新的一份。" : String(localized: "有 \(old.count) 个扩展存了旧版本，正在用的是最新的那个。"),
+                                 parts: [.init(label: String(localized: "旧版扩展 \(old.count) 个"), size: oldSize, reclaimable: oldSize),
                                          .init(label: "扩展安装包缓存", size: cacheSize, reclaimable: cacheSize),
                                          .init(label: "正在使用的扩展", size: max(0, size(dir) - oldSize), reclaimable: 0)],
                                  commands: [], never: nil, actions: actions))

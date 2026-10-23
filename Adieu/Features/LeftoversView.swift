@@ -60,7 +60,7 @@ struct LeftoversView: View {
         for i in items where i.paths.first?.contains("/LaunchAgents/") == true {
             LaunchScanner.unload(LaunchItem(owner: i.name, label: "", plist: i.paths[0], isUser: true))
         }
-        model.requestTrash(.init(title: "删除 \(items.count) 项残留", source: "残留文件",
+        model.requestTrash(.init(title: String(localized: "删除 \(items.count) 项残留"), source: "残留文件",
                                  urls: items.flatMap(\.paths).map { URL(filePath: $0) }, sizes: sizes, onDone: { _ in
             withAnimation {
                 // 只去掉真的删掉了的（取消输密码、没权限的留在列表里）

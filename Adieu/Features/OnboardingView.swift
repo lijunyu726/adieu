@@ -50,8 +50,8 @@ struct OnboardingView: View {
 
     private func promise(_ title: String, _ detail: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).fontWeight(.semibold)
-            Text(detail).font(.caption).foregroundStyle(.secondary)
+            Text(Copy.text(title)).fontWeight(.semibold)
+            Text(Copy.text(detail)).font(.caption).foregroundStyle(.secondary)
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
         .card()
@@ -91,7 +91,7 @@ struct OnboardingView: View {
             Text("正在认识你的 Mac").font(.system(size: 28, weight: .bold))
             ForEach(scanRows, id: \.0) { row in
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack { Text(row.0); Spacer(); Text(row.2 ? row.1 : "扫描中…").foregroundStyle(.secondary) }
+                    HStack { Text(Copy.text(row.0)); Spacer(); Text(row.2 ? row.1 : Copy.text("扫描中…")).foregroundStyle(.secondary) }
                     if row.2 { ProgressView(value: 1) } else { ProgressView().progressViewStyle(.linear) }
                 }
             }
@@ -113,10 +113,10 @@ struct OnboardingView: View {
         let broken = m.launchGroups.first { $0.id == "broken" }?.items.count ?? 0
         let files = m.fileCategories.first { $0.id == .bigFiles }?.items.count ?? 0
         return [
-            ("应用程序", "找到 \(m.apps.count) 个应用及其数据", !m.apps.isEmpty && !m.appsLoading),
-            ("残留文件", leftover > 0 ? "约 \(leftover.gbText) 可能已无主" : "没有发现残留", !m.leftoversLoading && (m.useSample || m.fileScan != nil)),
-            ("后台项目", "\(launch) 个" + (broken > 0 ? "，其中 \(broken) 个已失效" : ""), !m.launchLoading && launch > 0),
-            ("你的文件", "\(files) 个 50 MB 以上的大文件", !m.filesLoading && !m.fileCategories.isEmpty),
+            ("应用程序", String(localized: "找到 \(m.apps.count) 个应用及其数据"), !m.apps.isEmpty && !m.appsLoading),
+            ("残留文件", leftover > 0 ? String(localized: "约 \(leftover.gbText) 可能已无主") : String(localized: "没有发现残留"), !m.leftoversLoading && (m.useSample || m.fileScan != nil)),
+            ("后台项目", broken > 0 ? String(localized: "\(launch) 个，其中 \(broken) 个已失效") : String(localized: "\(launch) 个"), !m.launchLoading && launch > 0),
+            ("你的文件", String(localized: "\(files) 个 50 MB 以上的大文件"), !m.filesLoading && !m.fileCategories.isEmpty),
             ("开发工具", m.devTools.map(\.name).prefix(3).joined(separator: "、") + (m.devTools.count > 3 ? "…" : ""), !m.devLoading && !m.devTools.isEmpty)
         ]
     }

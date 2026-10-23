@@ -216,7 +216,7 @@ struct LaunchItemsView: View {
     private func removeBroken() {
         let items = broken
         for item in items where item.isUser { LaunchScanner.unload(item) }
-        model.perform(.init(title: "清掉失效的后台程序 \(items.count) 个", source: "开机与后台",
+        model.perform(.init(title: String(localized: "清掉失效的后台程序 \(items.count) 个"), source: "开机与后台",
                             urls: items.compactMap(\.plist).map { URL(filePath: $0) },
                             onDone: { _ in Task { await model.loadLaunch() } }))
     }

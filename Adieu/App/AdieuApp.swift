@@ -64,6 +64,11 @@ struct AdieuApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = AppModel()
 
+    override init() {
+        super.init()
+        AppLanguage.captureLaunch()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard Self.launchedAtLogin || UserDefaults.standard.bool(forKey: "AdieuLaunchHidden") else { return }
         // 窗口不在了，扫描就不能指望窗口里的 .task；自动规则的计时器在扫描结束时启动

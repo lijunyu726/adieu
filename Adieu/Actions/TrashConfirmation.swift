@@ -16,8 +16,10 @@ struct TrashConfirmation: ViewModifier {
                 Button("取消", role: .cancel) { model.pendingTrash = nil }
             } message: { req in
                 let size = req.sizes.values.reduce(0, +)
-                let what = "\(req.urls.count) 项\(size > 0 ? "、共 \(size.gbText)" : "")"
-                Text("将直接删除 \(what)，不进废纸篓，删了不能放回。")
+                let what = size > 0
+                    ? String(localized: "\(req.urls.count) 项、共 \(size.gbText)")
+                    : String(localized: "\(req.urls.count) 项")
+                Text(String(localized: "将直接删除 \(what)，不进废纸篓，删了不能放回。"))
             }
             .alert("提示", isPresented: Binding(
                 get: { active && model.notice != nil },

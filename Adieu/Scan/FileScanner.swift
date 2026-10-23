@@ -44,10 +44,10 @@ enum FileScanner {
 
     static let installerExts: Set<String> = ["dmg", "pkg", "mpkg", "xip"]
     static let archiveExts: Set<String> = ["zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "xz"]
-    static let captureExts: Set<String> = ["png", "jpg", "jpeg", "heic", "gif", "mov", "mp4"]
-    /// 文件名能看出是截图或录屏的前缀
-    static let capturePrefixes = ["截屏", "屏幕快照", "截图", "录屏", "屏幕录制", "screenshot", "screen shot",
-                                  "screen recording", "screenrecording", "cleanshot", "pixpin"]
+    /// 截图、录屏只看后缀
+    static let screenshotExts: Set<String> = ["png", "jpg", "jpeg", "heic", "gif"]
+    static let recordingExts: Set<String> = ["mov", "mp4"]
+    static let captureExts: Set<String> = screenshotExts.union(recordingExts)
 
     static func scan() -> Result {
         let home = FileManager.default.homeDirectoryForCurrentUser
@@ -81,7 +81,7 @@ enum FileScanner {
                 let allocated = v.totalFileAllocatedSize ?? 0
                 rootBytes += allocated
                 let ext = url.pathExtension.lowercased()
-                // 只留下后面会用到的：1 MB 以上的（大文件、久未打开）和安装包、压缩包、截图
+                // 只留下后面会用到的：1 MB 以上的（大文件、久未打开），以及按后缀认的安装包、压缩包、截图、录屏
                 let downloadable = downloadRoots.contains(root.dir) && (installerExts.contains(ext) || archiveExts.contains(ext))
                 let interesting = allocated >= 1 << 20 || downloadable || captureExts.contains(ext)
                 if interesting {
@@ -95,15 +95,11 @@ enum FileScanner {
 
     private static func file(_ url: URL, size: Double, bytes: Int, modified: Date?, package: Bool) -> File {
         var lastUsed: Date?
-        var capture = false
         if let item = MDItemCreateWithURL(nil, url as CFURL) {
             lastUsed = MDItemCopyAttribute(item, kMDItemLastUsedDate) as? Date
-            capture = (MDItemCopyAttribute(item, "kMDItemIsScreenCapture" as CFString) as? Bool) ?? false
         }
-        let lower = url.lastPathComponent.lowercased()
-        if !capture, captureExts.contains(url.pathExtension.lowercased()) {
-            capture = capturePrefixes.contains { lower.hasPrefix($0) }
-        }
+        let ext = url.pathExtension.lowercased()
+        let capture = screenshotExts.contains(ext) || recordingExts.contains(ext)
         return File(path: url.path, size: size, bytes: bytes, modified: modified ?? .distantPast,
                     lastUsed: lastUsed, isScreenCapture: capture, isPackage: package)
     }

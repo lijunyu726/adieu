@@ -101,7 +101,7 @@ struct Chip: View {
     var tint: Color = .secondary
 
     var body: some View {
-        Text(text)
+        Text(Copy.text(text))
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 7)
             .padding(.vertical, 2)
@@ -157,7 +157,7 @@ struct ShortcutLabel: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(title)
+            Text(Copy.text(title))
             if !shortcut.isEmpty { Text(shortcut).opacity(0.6) }
         }
     }
@@ -193,8 +193,8 @@ struct PageHeader<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.system(size: 28, weight: .bold))
-                Text(subtitle).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(Copy.text(title)).font(.system(size: 28, weight: .bold))
+                Text(Copy.text(subtitle)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
             trailing
@@ -210,8 +210,8 @@ struct StatTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(value).font(.title2.bold()).monospacedDigit().foregroundStyle(tint)
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(Copy.text(value)).font(.title2.bold()).monospacedDigit().foregroundStyle(tint)
+            Text(Copy.text(label)).font(.caption).foregroundStyle(.secondary)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

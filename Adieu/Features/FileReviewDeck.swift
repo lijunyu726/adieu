@@ -118,7 +118,7 @@ struct FileReviewDeck: View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
                 Thumbnail(path: f.path, ext: f.ext, tint: tint(f), pixels: CGSize(width: 1120, height: 560))
-                Chip(text: f.kind, tint: tint(f)).padding(16)
+                Chip(text: Copy.kind(f.kind), tint: tint(f)).padding(16)
             }
             .frame(height: 280)
             .overlay(alignment: .bottomTrailing) {
@@ -139,7 +139,7 @@ struct FileReviewDeck: View {
                 }
                 HStack(spacing: 24) {
                     Label(f.location, systemImage: "folder")
-                    Label(f.modified, systemImage: "calendar")
+                    Label(Copy.status(f.modified), systemImage: "calendar")
                 }
                 .font(.callout).foregroundStyle(.secondary)
                 Text(f.reason).font(.callout)

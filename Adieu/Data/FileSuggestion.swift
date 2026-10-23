@@ -18,31 +18,44 @@ struct FileSuggestion {
             let unzipped = files.filter { $0.group == FileCategorizer.unzippedGroup }
             let both = installed + unzipped
             guard !both.isEmpty else { return nil }
-            let title = installed.isEmpty ? "\(unzipped.count) 个压缩包已经解压过了"
-                : unzipped.isEmpty ? "\(installed.count) 个安装包对应的应用都已经装好了"
-                : "\(installed.count) 个安装包的应用已经装好，\(unzipped.count) 个压缩包已经解压过"
-            let tail = installed.isEmpty ? "旁边都有解压好的文件夹。" : "以后要用可以重新下载。"
-            return .init(title: title, detail: "删掉能腾出 \(total(both).gbText)，\(tail)", items: both, button: "勾选这 \(both.count) 个")
+            let title = installed.isEmpty ? String(localized: "\(unzipped.count) 个压缩包已经解压过了")
+                : unzipped.isEmpty ? String(localized: "\(installed.count) 个安装包对应的应用都已经装好了")
+                : String(localized: "\(installed.count) 个安装包的应用已经装好，\(unzipped.count) 个压缩包已经解压过")
+            let tail = installed.isEmpty ? String(localized: "旁边都有解压好的文件夹。") : String(localized: "以后要用可以重新下载。")
+            let size = total(both).gbText
+            return .init(title: title, detail: String(localized: "删掉能腾出 \(size)，\(tail)"), items: both, button: String(localized: "勾选这 \(both.count) 个"))
         case .captures:
             let extra = earlierShotsEachDay(files)
             guard !extra.isEmpty else { return nil }
             let videos = files.filter(isVideo)
-            let tail = videos.isEmpty ? "。" : "；录屏占了 \(total(videos).gbText)，要不要留，指着看一眼再决定。"
-            return .init(title: "截图每天留最后一张就够", detail: "先勾上每天较早的 \(extra.count) 张（\(total(extra).gbText)）\(tail)",
-                         items: extra, button: "每天只留最后一张")
+            let extraCount = extra.count
+            let extraSize = total(extra).gbText
+            let videoSize = total(videos).gbText
+            let detail = videos.isEmpty
+                ? String(localized: "先勾上每天较早的 \(extraCount) 张（\(extraSize)）。")
+                : String(localized: "先勾上每天较早的 \(extraCount) 张（\(extraSize)）；录屏占了 \(videoSize)，要不要留，指着看一眼再决定。")
+            return .init(title: String(localized: "截图每天留最后一张就够"), detail: detail,
+                         items: extra, button: String(localized: "每天只留最后一张"))
         case .bigFiles:
             let again = files.filter { ["安装包", "系统镜像"].contains($0.kind) }
             guard !again.isEmpty else { return nil }
-            return .init(title: "\(again.count) 个安装包和系统镜像可以重新下载", detail: "共 \(total(again).gbText)。装好以后一般就用不上了，需要时再下载。",
-                         items: again, button: "勾选这 \(again.count) 个")
+            let n = again.count
+            let size = total(again).gbText
+            return .init(title: String(localized: "\(n) 个安装包和系统镜像可以重新下载"), detail: String(localized: "共 \(size)。装好以后一般就用不上了，需要时再下载。"),
+                         items: again, button: String(localized: "勾选这 \(n) 个"))
         case .stale:
             // 这些都半年没碰过，但“没打开”不等于“不要了”，所以比别的页更保守
             let again = files.filter { ["安装包", "系统镜像"].contains($0.kind) || $0.group == FileCategorizer.unzippedGroup }
             guard !again.isEmpty else { return nil }
             let rest = files.count - again.count
-            return .init(title: "\(again.count) 个安装包和镜像很久没用了",
-                         detail: "都能重新下载，共 \(total(again).gbText)。" + (rest > 0 ? "其余 \(rest) 个是你自己的文件，指着看一眼再决定。" : ""),
-                         items: again, button: "勾选这 \(again.count) 个")
+            let n = again.count
+            let size = total(again).gbText
+            let detail = rest > 0
+                ? String(localized: "都能重新下载，共 \(size)。其余 \(rest) 个是你自己的文件，指着看一眼再决定。")
+                : String(localized: "都能重新下载，共 \(size)。")
+            return .init(title: String(localized: "\(n) 个安装包和镜像很久没用了"),
+                         detail: detail,
+                         items: again, button: String(localized: "勾选这 \(n) 个"))
         default:
             return nil
         }

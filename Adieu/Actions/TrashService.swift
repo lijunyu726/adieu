@@ -24,9 +24,9 @@ enum TrashService {
 
         var errorDescription: String? {
             switch self {
-            case .protected(let p): "在保护名单里（\(p)），已跳过"
+            case .protected(let p): String(localized: "在保护名单里（\(p)），已跳过")
             case .notAllowed(let why): why
-            case .missing: "文件已经不在了"
+            case .missing: String(localized: "文件已经不在了")
             }
         }
     }
@@ -115,13 +115,13 @@ enum TrashService {
         let jobs = targets.map { (src: $0, size: sizes[$0.path] ?? AppScanner.allocatedSize($0), folder: isFolder($0)) }
         guard !jobs.isEmpty else { return Outcome() }
         let shell = jobs.map { "/bin/rm -rf \(quote($0.src.path))" }.joined(separator: "; ")
-        let cancelled = runAsAdmin(shell, prompt: "Adieu 要删除 \(displayNames(targets))。它们归系统管理员所有，需要输入你的开机密码。")
+        let cancelled = runAsAdmin(shell, prompt: String(localized: "Adieu 要删除 \(displayNames(targets))。它们归系统管理员所有，需要输入你的开机密码。"))
         var out = Outcome()
         for j in jobs {
             if !FileManager.default.fileExists(atPath: j.src.path) {
                 out.done.append(TrashedFile(name: j.src.lastPathComponent, originalPath: j.src.path, trashedPath: nil, size: j.size, folder: j.folder))
             } else {
-                out.failed.append((j.src.lastPathComponent, cancelled ? "没有输入管理员密码，留在原处" : "用管理员身份也没能删除"))
+                out.failed.append((j.src.lastPathComponent, cancelled ? String(localized: "没有输入管理员密码，留在原处") : String(localized: "用管理员身份也没能删除")))
             }
         }
         return out
@@ -157,7 +157,7 @@ enum TrashService {
     /// 从废纸篓放回原处；原位置已经有同名文件时不覆盖
     static func restore(_ f: TrashedFile) throws {
         guard let from = f.trashedPath, FileManager.default.fileExists(atPath: from) else {
-            throw Refusal.notAllowed("“\(f.name)”已经不在废纸篓里了")
+            throw Refusal.notAllowed(String(localized: "“\(f.name)”已经不在废纸篓里了"))
         }
         if FileManager.default.fileExists(atPath: f.originalPath) {
             // 归档时留下的替身：先把替身移到废纸篓，再放回原件
@@ -165,7 +165,7 @@ enum TrashService {
             if (try? existing.resourceValues(forKeys: [.isAliasFileKey]).isAliasFile) == true {
                 try FileManager.default.trashItem(at: existing, resultingItemURL: nil)
             } else {
-                throw Refusal.notAllowed("原位置已经有一个“\(f.name)”，没有覆盖")
+                throw Refusal.notAllowed(String(localized: "原位置已经有一个“\(f.name)”，没有覆盖"))
             }
         }
         let parent = URL(filePath: f.originalPath).deletingLastPathComponent()

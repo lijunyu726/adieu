@@ -67,16 +67,19 @@ struct GoalView: View {
 
     private var explanation: String {
         if model.scanning && plan.total < target {
-            return "还在扫描，找到的可清理项会陆续加进计划里。"
+            return String(localized: "还在扫描，找到的可清理项会陆续加进计划里。")
         }
         if plan.total < target {
             let biggest = model.apps.max { $0.total < $1.total }
-            return "只靠清理，最多能腾出约 \(maxPossible.gbText)。再多就要卸载应用了" + (biggest.map { "：最大的是 \($0.name)，它占了 \($0.total.gbText)。" } ?? "。")
+            if let biggest {
+                return String(localized: "只靠清理，最多能腾出约 \(maxPossible.gbText)。再多就要卸载应用了：最大的是 \(biggest.name)，它占了 \(biggest.total.gbText)。")
+            }
+            return String(localized: "只靠清理，最多能腾出约 \(maxPossible.gbText)。再多就要卸载应用了。")
         }
         if plan.reviewCount == 0 {
-            return "只做 \(plan.items.count) 件稳妥的事就够了，全是缓存和能重新下载的东西，不会碰你的文件。"
+            return String(localized: "只做 \(plan.items.count) 件稳妥的事就够了，全是缓存和能重新下载的东西，不会碰你的文件。")
         }
-        return "稳妥的部分加起来只有 \(plan.safeTotal.gbText)，还需要 \(plan.reviewCount) 项要你确认的内容，理由都写在旁边了。"
+        return String(localized: "稳妥的部分加起来只有 \(plan.safeTotal.gbText)，还需要 \(plan.reviewCount) 项要你确认的内容，理由都写在旁边了。")
     }
 
     private var planColumn: some View {
@@ -115,8 +118,8 @@ struct GoalView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text("\(i + 1)").font(.caption.bold()).foregroundStyle(.secondary).frame(width: 18)
                         VStack(alignment: .leading, spacing: 3) {
-                            HStack { Text(item.title).fontWeight(.semibold); Chip(text: item.safety.label, tint: item.safety.color) }
-                            Text(item.detail).font(.callout).foregroundStyle(.secondary)
+                            HStack { Text(Copy.text(item.title)).fontWeight(.semibold); Chip(text: item.safety.label, tint: item.safety.color) }
+                            Text(Copy.text(item.detail)).font(.callout).foregroundStyle(.secondary)
                         }
                         Spacer()
                         Text(item.size.gbText).fontWeight(.semibold).monospacedDigit()

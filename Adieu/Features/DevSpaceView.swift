@@ -19,7 +19,7 @@ struct DevSpaceView: View {
             HStack(spacing: 10) {
                 StatTile(value: tools.map(\.total).reduce(0, +).gbText, label: "开发工具一共占用")
                 StatTile(value: tools.map(\.reclaimable).reduce(0, +).gbText, label: "可以放心回收", tint: .green)
-                StatTile(value: "\(tools.count) 个", label: "检测到的工具")
+                StatTile(value: String(localized: "\(tools.count) 个"), label: "检测到的工具")
             }
             if tools.isEmpty {
                 Group {
@@ -61,7 +61,7 @@ struct DevSpaceView: View {
                 }
                 SegmentBar(segments: [.init(value: t.reclaimable, color: .green), .init(value: t.total - t.reclaimable, color: .secondary.opacity(0.3))],
                            total: max(t.total, 0.001), height: 5)
-                Text(t.blocked ?? (t.reclaimable > 0.01 ? "可回收 \(t.reclaimable.gbText)" : "没有可回收的"))
+                Text(t.blocked.map(Copy.text) ?? (t.reclaimable > 0.01 ? String(localized: "可回收 \(t.reclaimable.gbText)") : String(localized: "没有可回收的")))
                     .font(.caption).foregroundStyle(t.blocked != nil ? .orange : .secondary)
             }
             .padding(10)
@@ -85,13 +85,13 @@ struct DevSpaceView: View {
                         Text(t.name).font(.title2.bold())
                         Text(t.location).font(.callout).foregroundStyle(.secondary)
                     }
-                    Text(t.note).foregroundStyle(.secondary)
+                    Text(Copy.text(t.note)).foregroundStyle(.secondary)
                 }
                 Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 8) {
                     GridRow { Text("里面有什么"); Text("占用"); Text("可以回收") }.font(.caption).foregroundStyle(.secondary)
                     ForEach(t.parts, id: \.label) { p in
                         GridRow {
-                            Text(p.label)
+                            Text(Copy.text(p.label))
                             Text(p.size.gbText).monospacedDigit().foregroundStyle(.secondary)
                             Text(p.reclaimable > 0 ? p.reclaimable.gbText : "留着").monospacedDigit()
                                 .foregroundStyle(p.reclaimable > 0 ? .green : .secondary)
@@ -114,19 +114,19 @@ struct DevSpaceView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.quaternary.opacity(0.35), in: .rect(cornerRadius: 10))
                     if let never = t.never {
-                        Label("不会执行：\(never)", systemImage: "hand.raised.fill").font(.callout).foregroundStyle(.red)
+                        Label("不会执行：\(Copy.text(never))", systemImage: "hand.raised.fill").font(.callout).foregroundStyle(.red)
                     }
                 }
 
                 HStack {
                     if model.useSample {
-                        Button(steps.isEmpty ? "不用清理" : (done ? "已完成 · 撤销演示" : "清理（回收 \(t.reclaimable.gbText)）")) {
+                        Button(steps.isEmpty ? String(localized: "不用清理") : (done ? String(localized: "已完成 · 撤销演示") : String(localized: "清理（回收 \(t.reclaimable.gbText)）"))) {
                             if done { ran.remove(t.id) } else { ran.insert(t.id) }
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(steps.isEmpty)
                     } else {
-                        Button(running ? "正在清理…" : (t.blocked ?? "清理（约回收 \(t.reclaimable.gbText)）")) { confirming = t }
+                        Button(running ? String(localized: "正在清理…") : (t.blocked.map(Copy.text) ?? String(localized: "清理（约回收 \(t.reclaimable.gbText)）"))) { confirming = t }
                             .buttonStyle(.borderedProminent)
                             .disabled(steps.isEmpty || t.blocked != nil || running || t.reclaimable <= 0)
                     }

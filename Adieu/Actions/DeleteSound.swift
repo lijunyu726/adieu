@@ -9,13 +9,13 @@ enum DeleteSound: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .emptyTrash: "清空废纸篓"
-        case .moveToTrash: "移到废纸篓"
-        case .poof: "一阵烟（程序坞移除图标）"
-        case .pop: "啵"
-        case .glass: "玻璃"
-        case .purr: "呼噜"
-        case .none: "不播放"
+        case .emptyTrash: String(localized: "清空废纸篓")
+        case .moveToTrash: String(localized: "移到废纸篓")
+        case .poof: String(localized: "一阵烟（程序坞移除图标）")
+        case .pop: String(localized: "啵")
+        case .glass: String(localized: "玻璃")
+        case .purr: String(localized: "呼噜")
+        case .none: String(localized: "不播放")
         }
     }
 

@@ -81,7 +81,7 @@ struct MenuBarView: View {
     private func clean() {
         if model.useSample { cleaned = true; return }
         let items = packages
-        let entry = model.perform(.init(title: "删除 \(items.count) 个安装包", source: "菜单栏",
+        let entry = model.perform(.init(title: String(localized: "删除 \(items.count) 个安装包"), source: "菜单栏",
                                         urls: items.compactMap(\.path).map { URL(filePath: $0) },
                                         sizes: Dictionary(uniqueKeysWithValues: items.compactMap { f in f.path.map { ($0, f.size) } }),
                                         keys: items.compactMap(\.path)))

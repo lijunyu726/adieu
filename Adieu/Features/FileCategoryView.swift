@@ -131,7 +131,7 @@ struct FileCategoryView: View {
     @ViewBuilder private var headerControls: some View {
         if !modes.isEmpty {
             Picker("查看方式", selection: $mode) {
-                ForEach(modes, id: \.self) { Text($0.rawValue) }
+                ForEach(modes, id: \.self) { Text(Copy.text($0.rawValue)) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -148,7 +148,7 @@ struct FileCategoryView: View {
         HStack(spacing: 18) {
             ForEach(category.stats, id: \.self) { s in
                 HStack(spacing: 6) {
-                    Text(s.label).foregroundStyle(.secondary)
+                    Text(Copy.text(s.label)).foregroundStyle(.secondary)
                     Text(s.value).fontWeight(.semibold).foregroundStyle(s.highlight ? Color.green : .primary)
                 }
             }
@@ -177,7 +177,7 @@ struct FileCategoryView: View {
             facetMenu("时间", values: ageValues, on: Set(filter.ages.map(\.rawValue)),
                       toggle: { filter.ages.formSymmetricDifference([FileFilter.Age(rawValue: $0)!]) }, clear: { filter.ages = [] })
             Picker("排序", selection: $filter.sort) {
-                ForEach(FileFilter.Sort.allCases, id: \.self) { Text($0.rawValue) }
+                ForEach(FileFilter.Sort.allCases, id: \.self) { Text(Copy.text($0.rawValue)) }
             }
             .labelsHidden()
             .fixedSize()
@@ -212,14 +212,16 @@ struct FileCategoryView: View {
         if values.count > 1 || !on.isEmpty {
             Menu {
                 ForEach(values, id: \.0) { v, n in
-                    Toggle("\(v)（\(n)）", isOn: Binding(get: { on.contains(v) }, set: { _ in toggle(v) }))
+                    Toggle(isOn: Binding(get: { on.contains(v) }, set: { _ in toggle(v) })) {
+                        Text(Copy.labeledCount(Copy.facet(title, v), n))
+                    }
                 }
                 if !on.isEmpty {
                     Divider()
                     Button("不限\(title)", action: clear)
                 }
             } label: {
-                Text(on.isEmpty ? title : on.count == 1 ? "\(title)：\(on.first!)" : "\(title) · \(on.count)")
+                Text(on.isEmpty ? Copy.text(title) : on.count == 1 ? "\(Copy.text(title))：\(Copy.facet(title, on.first!))" : "\(Copy.text(title)) · \(on.count)")
             }
             .fixedSize()
         }
@@ -392,11 +394,11 @@ struct FileCategoryView: View {
         let keys = Set(s.items.map(key))
         let all = keys.isSubset(of: selected)
         return HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(s.title).font(.headline)
-            Text(([("\(s.items.count) 个 · \(total(s.items).gbText)")] + (s.note.isEmpty ? [] : [s.note])).joined(separator: " · "))
+            Text(Copy.text(s.title)).font(.headline)
+            Text(([String(localized: "\(s.items.count) 个 · \(total(s.items).gbText)")] + (s.note.isEmpty ? [] : [Copy.text(s.note)])).joined(separator: " · "))
                 .font(.callout).foregroundStyle(.secondary).monospacedDigit().lineLimit(1)
             Spacer()
-            Button(all ? "取消\(s.unit)" : "全选\(s.unit)") {
+            Button(all ? "取消\(Copy.text(s.unit))" : "全选\(Copy.text(s.unit))") {
                 if all { selected.subtract(keys) } else { selected.formUnion(keys) }
             }
             .buttonStyle(.link)
@@ -442,8 +444,8 @@ struct FileCategoryView: View {
 
     /// 修改时间精确到秒；modified 是状态说明（“微信已安装”）时也带上
     private func meta(_ f: FileItem) -> String {
-        var parts = [f.kind, f.location, f.timeText]
-        if f.date != nil, f.modified != FileCategorizer.dateText(f.date!) { parts.append(f.modified) }
+        var parts = [Copy.kind(f.kind), Copy.location(f.location), f.date == nil ? Copy.status(f.timeText) : f.timeText]
+        if f.date != nil, f.modified != FileCategorizer.dateText(f.date!) { parts.append(Copy.status(f.modified)) }
         return parts.filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
@@ -452,7 +454,7 @@ struct FileCategoryView: View {
             FileIcon(path: "\(f.id).\(f.ext.lowercased())", size: 32).opacity(0.7).padding(.leading, 30)
             VStack(alignment: .leading, spacing: 2) {
                 Text(f.name).fontWeight(.semibold)
-                Text("\(f.location) · \(f.modified)").font(.caption).foregroundStyle(.secondary)
+                Text("\(Copy.location(f.location)) · \(Copy.status(f.modified))").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             Text(f.size.gbText).fontWeight(.semibold).monospacedDigit()
@@ -661,7 +663,7 @@ struct FileCategoryView: View {
 
     private func request(_ list: [FileItem]) -> AppModel.TrashRequest {
         let keys = list.map(key)
-        let title = list.count == 1 ? "删除“\(list[0].name)”" : "删除 \(list.count) 个\(category.id.title)里的文件"
+        let title = list.count == 1 ? String(localized: "删除“\(list[0].name)”") : String(localized: "删除 \(list.count) 个\(category.id.title)里的文件")
         return .init(title: title, source: category.id.title,
                      urls: list.compactMap(\.path).map { URL(filePath: $0) },
                      sizes: Dictionary(list.compactMap { f in f.path.map { ($0, f.size) } }, uniquingKeysWith: { a, _ in a }),

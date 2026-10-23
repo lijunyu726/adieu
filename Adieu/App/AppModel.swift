@@ -149,7 +149,7 @@ final class AppModel {
 
     private func report(_ failed: [(name: String, reason: String)]) {
         guard !failed.isEmpty else { return }
-        notice = (notice.map { $0 + "\n" } ?? "") + "有 \(failed.count) 项没有移走：\n" + failed.prefix(6).map { "· \($0.name)：\($0.reason)" }.joined(separator: "\n")
+        notice = (notice.map { $0 + "\n" } ?? "") + String(localized: "有 \(failed.count) 项没有移走：") + "\n" + failed.prefix(6).map { "· \($0.name)：\($0.reason)" }.joined(separator: "\n")
     }
 
     /// 以前的版本清理时先进废纸篓：这些记录里还在废纸篓的文件可以放回原处
@@ -279,20 +279,20 @@ final class AppModel {
             case .command(let exe, let args):
                 let out = await blocking { Shell.run(exe, args) }
                 if let out, out.busy {
-                    log.append("缓存正在被别的程序使用（比如正在运行的 Python 程序或编辑器插件），没有清。关掉它们后再试。")
+                    log.append(String(localized: "缓存正在被别的程序使用（比如正在运行的 Python 程序或编辑器插件），没有清。关掉它们后再试。"))
                     failed.append(action.display)
                 } else if let out {
                     let text = (out.out + out.err).split(separator: "\n").suffix(4).joined(separator: "\n")
                     if !text.isEmpty { log.append(text) }
-                    if out.status != 0 { log.append("（退出码 \(out.status)）"); failed.append(action.display) }
+                    if out.status != 0 { log.append(String(localized: "（退出码 \(out.status)）")); failed.append(action.display) }
                 } else {
-                    log.append("（没能运行或超时）")
+                    log.append(String(localized: "（没能运行或超时）"))
                     failed.append(action.display)
                 }
             case .trash(let paths):
                 let r = TrashService.delete(paths.map { URL(filePath: $0) }, protected: protectedPaths)
                 trashed += r.done
-                log.append(r.failed.isEmpty ? "已删除 \(r.done.count) 项" : r.failed.map { "\($0.name)：\($0.reason)" }.joined(separator: "\n"))
+                log.append(r.failed.isEmpty ? String(localized: "已删除 \(r.done.count) 项") : r.failed.map { "\($0.name)：\($0.reason)" }.joined(separator: "\n"))
             }
             devLog[tool.id] = log.joined(separator: "\n")
         }
@@ -300,9 +300,9 @@ final class AppModel {
         await loadDev()
         let after = devTools.first { $0.id == tool.id }?.total ?? 0
         let commandsRan = tool.actions.contains { if case .command = $0 { return true } else { return false } }
-        var entry = HistoryEntry(date: .now, title: "清理 \(tool.name)", source: "开发工具", files: trashed)
+        var entry = HistoryEntry(date: .now, title: String(localized: "清理 \(tool.name)"), source: "开发工具", files: trashed)
         if commandsRan {
-            entry.commandNote = "运行了 " + tool.actions.compactMap { if case .command = $0 { return $0.display } else { return nil } }.joined(separator: "、")
+            entry.commandNote = String(localized: "运行了 \(tool.actions.compactMap { if case .command = $0 { return $0.display } else { return nil } }.joined(separator: "、"))")
             entry.commandFreed = max(0, before - after)
         }
         history.insert(entry, at: 0)
@@ -310,7 +310,7 @@ final class AppModel {
         // 只跑了命令（npm cache clean 之类）也算删完了，和删文件响同一声
         if !trashed.isEmpty || (commandsRan && failed.isEmpty) { DeleteSound.play() }
         if !failed.isEmpty {
-            notice = "\(tool.name) 有 \(failed.count) 条命令没有成功，对应的缓存还在：\n" + failed.map { "· \($0)" }.joined(separator: "\n")
+            notice = String(localized: "\(tool.name) 有 \(failed.count) 条命令没有成功，对应的缓存还在：") + "\n" + failed.map { "· \($0)" }.joined(separator: "\n")
         }
     }
 
@@ -344,7 +344,7 @@ final class AppModel {
         let t = Dictionary(uniqueKeysWithValues: Sample.categories.map { ($0.id, $0) })
         var result: [SpaceCategory] = []
         let free = SpaceCategory(id: "free", label: "可用", size: disk.free, color: t["free"]!.color,
-                                 hint: "建议至少保留 \((disk.total * 0.1).gbText)（10%）。")
+                                 hint: String(localized: "建议至少保留 \((disk.total * 0.1).gbText)（10%）。"))
         guard let space else {
             let mine = fileScan?.rootSizes.map(\.size).reduce(0, +)
             if let mine {
@@ -383,7 +383,7 @@ final class AppModel {
         result.append(.init(id: "system", label: "macOS 系统与其他", size: system, color: t["system"]!.color,
                             hint: "已用空间减去上面几类，剩下的就是这一块。主要是系统本身，以及 Adieu 看不到的其他用户和系统目录。",
                             parts: [.init(label: "交换文件", size: space.swap, note: "内存不够时临时写到磁盘，重启后会减少"),
-                                    .init(label: "本地快照 \(space.snapshots) 个", size: nil, note: space.snapshots > 0 ? "系统更新或时间机器创建的，系统会自动清理" : "目前没有"),
+                                    .init(label: String(localized: "本地快照 \(space.snapshots) 个"), size: nil, note: space.snapshots > 0 ? "系统更新或时间机器创建的，系统会自动清理" : "目前没有"),
                                     .init(label: "系统卷", size: nil, note: "只读且有签名保护，不能也不需要清理")]))
         return result.sorted { $0.size > $1.size } + [free]
     }
@@ -415,18 +415,18 @@ final class AppModel {
         if useSample { return Sample.goalCandidates }
         var list: [CleanupItem] = []
         for t in devTools where t.reclaimable > 0.01 && t.blocked == nil && !t.actions.isEmpty {
-            list.append(.init(id: "dev.\(t.id)", title: "\(t.name) 的缓存", detail: t.note, size: t.reclaimable, safety: .safe, action: .dev(toolID: t.id)))
+            list.append(.init(id: "dev.\(t.id)", title: String(localized: "\(t.name) 的缓存"), detail: t.note, size: t.reclaimable, safety: .safe, action: .dev(toolID: t.id)))
         }
         if let c = category(.installers) {
             let done = c.items.filter { $0.modified.hasSuffix("已安装") || $0.modified.hasPrefix("旁边已经有") }
             if !done.isEmpty {
-                list.append(.init(id: "installers", title: "用过的安装包和压缩包 \(done.count) 个", detail: "对应的应用已经装好，或者旁边已经有解压后的文件夹。",
+                list.append(.init(id: "installers", title: String(localized: "用过的安装包和压缩包 \(done.count) 个"), detail: String(localized: "对应的应用已经装好，或者旁边已经有解压后的文件夹。"),
                                   size: done.map(\.size).reduce(0, +), safety: .safe, action: .trash(paths: done.compactMap(\.path))))
             }
         }
         let gone = leftovers.first { $0.id == "gone" }?.items ?? []
         if !gone.isEmpty {
-            list.append(.init(id: "leftovers", title: "已删应用的残留 \(gone.count) 项", detail: "标识符找不到任何已装应用。",
+            list.append(.init(id: "leftovers", title: String(localized: "已删应用的残留 \(gone.count) 项"), detail: String(localized: "标识符找不到任何已装应用。"),
                               size: gone.compactMap(\.size).reduce(0, +), safety: .safe, action: .trash(paths: gone.flatMap(\.paths))))
         }
         // 要你确认的：1 GB 以上的大文件，逐个列出
@@ -440,7 +440,7 @@ final class AppModel {
     func execute(_ plan: GoalPlanner.Plan) async {
         let paths = plan.items.flatMap { if case .trash(let p) = $0.action { return p } else { return [] } }
         if !paths.isEmpty {
-            perform(.init(title: "腾出空间：移走 \(paths.count) 项", source: "腾出空间", urls: paths.map { URL(filePath: $0) }))
+            perform(.init(title: String(localized: "腾出空间：移走 \(paths.count) 项"), source: "腾出空间", urls: paths.map { URL(filePath: $0) }))
         }
         for item in plan.items {
             if case .dev(let id) = item.action, let tool = devTools.first(where: { $0.id == id }) { await runDev(tool) }
@@ -458,13 +458,13 @@ final class AppModel {
         switch s {
         case .apps: return apps.isEmpty ? nil : "\(apps.count)"
         case .installers, .captures, .stale: return size(s)
-        case .bigFiles: return category(.bigFiles).map { "\($0.items.count) 个" }
+        case .bigFiles: return category(.bigFiles).map { String(localized: "\($0.items.count) 个") }
         case .leftovers:
             let on = leftovers.flatMap(\.items).filter(\.defaultOn).compactMap(\.size).reduce(0, +)
             return on > 0 ? on.gbText : nil
         case .launch:
             let broken = launchGroups.first { $0.id == "broken" }?.items.count ?? 0
-            return broken > 0 ? "\(broken) 个失效" : nil
+            return broken > 0 ? String(localized: "\(broken) 个失效") : nil
         case .devTools:
             let r = devTools.map(\.reclaimable).reduce(0, +)
             return r > 0.01 ? r.gbText : nil

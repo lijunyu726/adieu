@@ -39,11 +39,11 @@ struct FilePreviewPane: View {
             Text(f.name).font(.headline).lineLimit(3).truncationMode(.middle).textSelection(.enabled)
             Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 4) {
                 fact("大小", f.size.gbText)
-                fact("种类", f.kind)
-                fact("位置", f.location)
+                fact("种类", Copy.kind(f.kind))
+                fact("位置", Copy.location(f.location))
                 fact("修改", f.timeText)
-                if let days = f.idleDays, days >= 30 { fact("没打开", "\(days) 天") }
-                if f.date != nil, f.modified != FileCategorizer.dateText(f.date!), !f.modified.hasSuffix("天没打开") { fact("状态", f.modified) }
+                if let days = f.idleDays, days >= 30 { fact("没打开", String(localized: "\(days) 天")) }
+                if f.date != nil, f.modified != FileCategorizer.dateText(f.date!), !f.modified.hasSuffix("天没打开") { fact("状态", Copy.status(f.modified)) }
             }
             .font(.caption)
             if !f.reason.isEmpty {
@@ -102,7 +102,7 @@ struct FilePreviewPane: View {
 
     private func fact(_ label: String, _ value: String) -> some View {
         GridRow {
-            Text(label).foregroundStyle(.secondary)
+            Text(Copy.text(label)).foregroundStyle(.secondary)
             Text(value).monospacedDigit().lineLimit(2).textSelection(.enabled)
         }
     }

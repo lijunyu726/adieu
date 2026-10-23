@@ -50,7 +50,9 @@ struct AppsView: View {
                             Circle().fill(.green).frame(width: 6, height: 6).help("正在运行")
                         }
                     }
-                    Text("应用 \(app.appSize.gbText)" + (app.dataSize > 0 ? " · 数据 \(app.dataSize.gbText)" : ""))
+                    Text(app.dataSize > 0
+                         ? String(localized: "应用 \(app.appSize.gbText) · 数据 \(app.dataSize.gbText)")
+                         : String(localized: "应用 \(app.appSize.gbText)"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -76,7 +78,7 @@ struct AppsView: View {
         var sizes: [String: Double] = [:]
         for p in parts { if let s = p.size { sizes[(p.path as NSString).expandingTildeInPath] = s } }
         model.requestTrash(.init(
-            title: "清理 \(app.name) 的数据", source: "已安装",
+            title: String(localized: "清理 \(app.name) 的数据"), source: "已安装",
             urls: parts.map { URL(filePath: ($0.path as NSString).expandingTildeInPath) },
             sizes: sizes,
             onDone: { _ in Task { await model.remeasure(app.id) } }))
@@ -229,10 +231,10 @@ struct UninstallSheet: View {
         VStack(spacing: 14) {
             AppIcon(app: app, size: 64)
             Text("卸载 \(app.name)？").font(.headline)
-            Text("将删除 \(parts.count) 项、共 \(total.gbText)，不进废纸篓，删完立刻腾出空间。" + (app.isRunning ? "\(app.name) 会先退出。" : ""))
+            Text(String(localized: "将删除 \(parts.count) 项、共 \(total.gbText)，不进废纸篓，删完立刻腾出空间。") + (app.isRunning ? String(localized: "\(app.name) 会先退出。") : ""))
                 .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
             if needsPassword {
-                Label("\(app.name) 归系统管理员所有（App Store 装的应用常这样），点“卸载”后系统会请你输入一次开机密码。", systemImage: "lock")
+                Label(String(localized: "\(app.name) 归系统管理员所有（App Store 装的应用常这样），点“卸载”后系统会请你输入一次开机密码。"), systemImage: "lock")
                     .font(.callout).foregroundStyle(.secondary)
                     .padding(10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(Theme.brand.opacity(0.08), in: .rect(cornerRadius: 8))
@@ -241,7 +243,7 @@ struct UninstallSheet: View {
                 ForEach(parts) { p in
                     HStack(spacing: 8) {
                         FileIcon(path: p.path, size: 18)
-                        Text(p.label)
+                        Text(Copy.text(p.label))
                         Spacer()
                         Text(p.size.gbText).foregroundStyle(.secondary).monospacedDigit()
                     }
@@ -284,7 +286,7 @@ struct UninstallSheet: View {
             var sizes: [String: Double] = [:]
             for (u, p) in zip(urls, parts) { if let s = p.size { sizes[u.path] = s } }
             model.notice = nil
-            entry = await model.deleteForUninstall(.init(title: "卸载 \(app.name)", source: "已安装", urls: urls, sizes: sizes))
+            entry = await model.deleteForUninstall(.init(title: String(localized: "卸载 \(app.name)"), source: "已安装", urls: urls, sizes: sizes))
             // 失败原因在这里直接显示，不再弹第二个提示
             failures = model.notice
             model.notice = nil

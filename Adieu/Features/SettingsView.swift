@@ -73,6 +73,7 @@ private struct SafetySettings: View {
 private struct GeneralSettings: View {
     @AppStorage("showMenuBar") private var showMenuBar = true
     @State private var sound = DeleteSound.current
+    @State private var language = AppLanguage.current
     @State private var loginItem = SMAppService.mainApp.status == .enabled
 
     private func setLoginItem(_ on: Bool) {
@@ -91,6 +92,19 @@ private struct GeneralSettings: View {
                 Text("菜单栏与启动")
             } footer: {
                 Text("自动规则只在 Adieu 开着的时候工作。打开“登录时打开 Adieu”后，开机就会悄悄启动，关掉窗口它也会待在菜单栏里。")
+            }
+            Section {
+                Picker("语言", selection: $language) {
+                    ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }
+                }
+                .onChange(of: language) { _, new in new.persist() }
+                if language.needsRelaunch {
+                    Button("重新打开 Adieu") { AppLanguage.relaunch() }
+                }
+            } header: {
+                Text("语言")
+            } footer: {
+                Text("界面跟着这里走。换一种语言后，重新打开才生效。")
             }
             Section("声音") {
                 Picker("删除完成时", selection: $sound) {
@@ -214,18 +228,20 @@ private struct PermissionRow: View {
             SymbolTile(symbol: symbol, tint: tint, size: 28)
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(title).fontWeight(.semibold)
+                    Text(Copy.text(title)).fontWeight(.semibold)
                     Spacer()
                     switch state {
                     case .granted: Chip(text: okText, tint: .green)
                     case .denied: Chip(text: "没有开", tint: .orange)
                     case .notAsked: Chip(text: "还没开", tint: .orange)
                     }
-                    if let action { Button(action.title, action: action.run).buttonStyle(.borderedProminent) }
+                    if let action {
+                        Button(action: action.run) { Text(Copy.text(action.title)) }.buttonStyle(.borderedProminent)
+                    }
                 }
-                Text(detail).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(Copy.text(detail)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 if state != .granted, let howTo {
-                    Label(howTo, systemImage: "lightbulb").font(.callout).foregroundStyle(.secondary)
+                    Label(Copy.text(howTo), systemImage: "lightbulb").font(.callout).foregroundStyle(.secondary)
                         .padding(8).frame(maxWidth: .infinity, alignment: .leading)
                         .background(Theme.brand.opacity(0.07), in: .rect(cornerRadius: 8))
                         .fixedSize(horizontal: false, vertical: true)

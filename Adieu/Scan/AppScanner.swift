@@ -80,14 +80,14 @@ enum AppScanner {
         }
         // 这个应用自己装的开机启动项（只限 ~/Library/LaunchAgents，系统目录里的要管理员密码）
         for a in agents where a.program?.hasPrefix(url.path + "/") == true {
-            parts.append(AppPart(id: "agent.\(a.label)", kind: .background, label: "开机启动项 \(a.label)", path: tilde(a.plist),
+            parts.append(AppPart(id: "agent.\(a.label)", kind: .background, label: String(localized: "开机启动项 \(a.label)"), path: tilde(a.plist),
                                  size: nil, evidence: .bundle, defaultOn: true))
         }
 
         return AppItem(id: id, name: name, monogram: String(name.prefix(1)), color: .gray,
-                       meta: fromAppStore ? "App Store · 随时可以重新下载" : [version.map { "版本 \($0)" }, id].compactMap(\.self).joined(separator: " · "),
+                       meta: fromAppStore ? String(localized: "App Store · 随时可以重新下载") : [version.map { String(localized: "版本 \($0)") }, id].compactMap(\.self).joined(separator: " · "),
                        isRunning: running.contains(id),
-                       notice: fromAppStore ? "这是 App Store 应用，卸载后可以在 App Store 免费重新下载。" : nil,
+                       notice: fromAppStore ? String(localized: "这是 App Store 应用，卸载后可以在 App Store 免费重新下载。") : nil,
                        parts: parts, path: url.path, isMeasured: false)
     }
 

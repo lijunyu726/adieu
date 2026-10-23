@@ -55,8 +55,8 @@ struct DiaryView: View {
                             Text((x.delta > 0 ? "+" : "−") + abs(x.delta).gbText).font(.headline).monospacedDigit()
                                 .foregroundStyle(x.delta > 0 ? .red : .green).frame(width: 90, alignment: .leading)
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(x.name).fontWeight(.semibold)
-                                Text(x.why).font(.callout).foregroundStyle(.secondary)
+                                Text(Copy.text(x.name)).fontWeight(.semibold)
+                                Text(Copy.text(x.why)).font(.callout).foregroundStyle(.secondary)
                             }
                             Spacer(minLength: 0)
                             // 多出来的才需要去处理

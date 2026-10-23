@@ -44,8 +44,8 @@ struct HomeView: View {
     private var subtitle: String {
         let pct = Int((model.disk.free / model.disk.total * 100).rounded())
         return pct < 10
-            ? "可用 \(model.disk.free.gbText)，只剩 \(pct)%。低于 10% 时系统会变慢，更新也可能装不上。"
-            : "可用 \(model.disk.free.gbText)，还有 \(pct)%。"
+            ? String(localized: "可用 \(model.disk.free.gbText)，只剩 \(pct)%。低于 10% 时系统会变慢，更新也可能装不上。")
+            : String(localized: "可用 \(model.disk.free.gbText)，还有 \(pct)%。")
     }
 
     private var categories: [SpaceCategory] { model.spaceCategories }
@@ -88,7 +88,7 @@ struct HomeView: View {
             }
             ForEach(list) { s in
                 SuggestionCard(title: s.title, size: s.size, detail: s.detail,
-                               action: s.picks ? "去 \(s.target.title) 勾选" : "去 \(s.target.title)") {
+                               action: s.picks ? String(localized: "去 \(s.target.title) 勾选") : String(localized: "去 \(s.target.title)")) {
                     if s.picks { model.pickOnOpen = s.target }
                     model.section = s.target
                 }
@@ -100,8 +100,8 @@ struct HomeView: View {
 
     /// 最近 7 天的日期和一句话；记录不到两天时没有
     private var diary: (range: String, line: String)? {
-        if model.useSample { return ("10 月 5 日 – 10 月 11 日", "这一周，磁盘少了 18.6 GB。将近一半是 Docker。") }
-        return DiaryStore.week(model).map { ($0.range, "这一周，\($0.headline)") }
+        if model.useSample { return ("10 月 5 日 – 10 月 11 日", String(localized: "这一周，磁盘少了 18.6 GB。将近一半是 Docker。")) }
+        return DiaryStore.week(model).map { ($0.range, String(localized: "这一周，\($0.headline)")) }
     }
 
     /// 有两天以上的记录才占一张卡；之前只留一行字，不拿空卡片占地方
@@ -146,7 +146,7 @@ private struct Suggestion: Identifiable {
     static func make(_ model: AppModel) -> [Suggestion] {
         var list: [Suggestion] = []
         if let dev = model.devTools.filter({ $0.reclaimable > 0.1 }).max(by: { $0.reclaimable < $1.reclaimable }) {
-            list.append(.init(title: "\(dev.name) 里有可以回收的缓存", size: dev.reclaimable, detail: dev.note, target: .devTools))
+            list.append(.init(title: String(localized: "\(dev.name) 里有可以回收的缓存"), size: dev.reclaimable, detail: dev.note, target: .devTools))
         }
         for id in [AppSection.installers, .captures, .bigFiles, .stale] {
             guard let c = model.category(id) else { continue }
@@ -158,7 +158,7 @@ private struct Suggestion: Identifiable {
         }
         let left = model.leftovers.flatMap(\.items).filter(\.defaultOn)
         if !left.isEmpty {
-            list.append(.init(title: "\(left.count) 项应用残留", size: left.compactMap(\.size).reduce(0, +), detail: "对应的应用已经删掉了，数据还在。", target: .leftovers))
+            list.append(.init(title: String(localized: "\(left.count) 项应用残留"), size: left.compactMap(\.size).reduce(0, +), detail: String(localized: "对应的应用已经删掉了，数据还在。"), target: .leftovers))
         }
         // 大的先上；和已经列出的有同一个文件的跳过，免得一批文件算两遍
         var picked: [Suggestion] = []
@@ -182,12 +182,12 @@ private struct SuggestionCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text(title).fontWeight(.semibold)
+                Text(Copy.text(title)).fontWeight(.semibold)
                 Spacer()
                 if let size { Text(size.gbText).fontWeight(.bold).foregroundStyle(.green).monospacedDigit() }
             }
-            Text(detail).font(.callout).foregroundStyle(.secondary)
-            Button(action, action: perform)
+            Text(Copy.text(detail)).font(.callout).foregroundStyle(.secondary)
+            Button(action: perform) { Text(Copy.text(action)) }
                 .buttonStyle(.bordered)
         }
         .padding(16)
@@ -207,7 +207,7 @@ private struct CategoryRow: View {
             Button(action: toggle) {
                 HStack(spacing: 12) {
                     RoundedRectangle(cornerRadius: 3).fill(category.color).frame(width: 10, height: 10)
-                    Text(category.label).fontWeight(.medium).frame(width: 140, alignment: .leading)
+                    Text(Copy.text(category.label)).fontWeight(.medium).frame(width: 140, alignment: .leading)
                     ProportionBar(fraction: category.size / maxSize, color: category.color, height: 8)
                     Text(category.size.gbText).fontWeight(.semibold).monospacedDigit()
                         .frame(width: 76, alignment: .trailing)
@@ -219,14 +219,14 @@ private struct CategoryRow: View {
 
             if expanded {
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(category.hint).foregroundStyle(.secondary)
+                    Text(Copy.text(category.hint)).foregroundStyle(.secondary)
                     ForEach(category.parts) { p in
                         HStack(spacing: 12) {
-                            Text(p.label).frame(width: 118, alignment: .leading)
+                            Text(Copy.text(p.label)).frame(width: 118, alignment: .leading)
                             if p.note.isEmpty, let size = p.size {
                                 ProportionBar(fraction: size / category.size, color: category.color.opacity(0.7), height: 5)
                             } else {
-                                Text(p.note).foregroundStyle(.tertiary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                                Text(Copy.text(p.note)).foregroundStyle(.tertiary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
                             }
                             Text(p.size.gbText).monospacedDigit().frame(width: 76, alignment: .trailing)
                         }

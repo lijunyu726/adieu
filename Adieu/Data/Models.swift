@@ -12,11 +12,11 @@ enum Evidence: String, Sendable {
 
     var label: String {
         switch self {
-        case .bundle: "应用本身"
-        case .exact: "确定是它的"
-        case .team: "同一家开发商"
-        case .name: "名字像，要你确认"
-        case .shared: "别的应用也在用"
+        case .bundle: String(localized: "应用本身")
+        case .exact: String(localized: "确定是它的")
+        case .team: String(localized: "同一家开发商")
+        case .name: String(localized: "名字像，要你确认")
+        case .shared: String(localized: "别的应用也在用")
         }
     }
 
@@ -35,10 +35,10 @@ enum PartKind: String, Sendable, CaseIterable {
 
     var label: String {
         switch self {
-        case .app: "应用本体"
-        case .data: "应用数据"
-        case .background: "后台项目"
-        case .shared: "共享组件"
+        case .app: String(localized: "应用本体")
+        case .data: String(localized: "应用数据")
+        case .background: String(localized: "后台项目")
+        case .shared: String(localized: "共享组件")
         }
     }
 
@@ -110,7 +110,7 @@ enum Safety: Sendable {
     case safe      // 可再生、可重新下载
     case review    // 可能有价值，需要人看
 
-    var label: String { self == .safe ? "稳妥" : "看一眼" }
+    var label: String { self == .safe ? String(localized: "稳妥") : String(localized: "看一眼") }
     var color: Color { self == .safe ? .green : .orange }
 }
 

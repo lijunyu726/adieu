@@ -4,10 +4,13 @@ options:
   deploymentTarget:
     macOS: "26.0"
   createIntermediateGroups: true
+  developmentLanguage: zh-Hans
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    MARKETING_VERSION: "0.1.3"
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    MARKETING_VERSION: "0.1.4"
     CURRENT_PROJECT_VERSION: "1"
 targets:
   Adieu:
@@ -19,7 +22,7 @@ targets:
       properties:
         CFBundleDisplayName: Adieu
         CFBundleDevelopmentRegion: zh-Hans
-        CFBundleLocalizations: [zh-Hans]
+        CFBundleLocalizations: [zh-Hans, zh-Hant, en, ja, ko, es, fr, de]
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.utilities
@@ -41,7 +44,9 @@ targets:
   AdieuWidget:
     type: app-extension
     platform: macOS
-    sources: [AdieuWidget]
+    sources:
+      - AdieuWidget
+      - path: Adieu/Localizable.xcstrings
     info:
       path: AdieuWidget/Info.plist
       properties:
