@@ -304,7 +304,7 @@ struct AppIcon: View {
 
     var body: some View {
         if let path = app.path {
-            Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+            Image(nsImage: FileIcon.image(path, folder: false, size: size))
                 .resizable()
                 .interpolation(.high)
                 .frame(width: size, height: size)
@@ -323,20 +323,26 @@ struct FileIcon: View {
     var folder: Bool? = nil
     var size: CGFloat = 26
 
-    nonisolated(unsafe) private static let cache = NSCache<NSString, NSImage>()
+    nonisolated(unsafe) private static let cache: NSCache<NSString, NSImage> = {
+        let c = NSCache<NSString, NSImage>()
+        c.countLimit = 3000  // 画成小位图后每个十几到几十 KB
+        return c
+    }()
 
     var body: some View {
-        Image(nsImage: Self.image(path, folder: folder))
+        Image(nsImage: Self.image(path, folder: folder, size: size))
             .resizable()
             .interpolation(.high)
             .frame(width: size, height: size)
             .accessibilityHidden(true)
     }
 
-    static func image(_ raw: String, folder: Bool? = nil) -> NSImage {
+    /// size：显示多大（点）。按这个大小画成一张小位图再用，见 NSImage.bitmap
+    static func image(_ raw: String, folder: Bool? = nil, size: CGFloat = 32) -> NSImage {
         let path = (raw as NSString).expandingTildeInPath
+        let key = "\(path)#\(Int(size))" as NSString
         // 取过一次就记住：删掉以后也还是原来那个图标
-        if let hit = cache.object(forKey: path as NSString) { return hit }
+        if let hit = cache.object(forKey: key) { return hit }
         let image: NSImage
         if FileManager.default.fileExists(atPath: path) {
             image = NSWorkspace.shared.icon(forFile: path)
@@ -348,7 +354,31 @@ struct FileIcon: View {
             let isFolder = folder ?? (type == nil || type!.isDynamic)
             image = NSWorkspace.shared.icon(for: isFolder ? .folder : type!)
         }
-        cache.setObject(image, forKey: path as NSString)
+        let small = image.bitmap(pixels: CGSize(width: size * 2, height: size * 2))
+        cache.setObject(small, forKey: key)
+        return small
+    }
+}
+
+extension NSImage {
+    /// 按要显示的像素大小画成一张位图。系统图标里带着最大 1024 像素的那一层，直接交给界面时会按大的那层解码、
+    /// 一直占着内存（一个应用图标好几 MB）；画小以后一个只有几十 KB。保持长宽比，放在正中
+    func bitmap(pixels: CGSize) -> NSImage {
+        let w = max(1, Int(pixels.width.rounded())), h = max(1, Int(pixels.height.rounded()))
+        guard size.width > 0, size.height > 0,
+              let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: w, pixelsHigh: h, bitsPerSample: 8,
+                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return self }
+        let k = min(CGFloat(w) / size.width, CGFloat(h) / size.height)
+        let fit = NSSize(width: size.width * k, height: size.height * k)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        NSGraphicsContext.current?.imageInterpolation = .high
+        draw(in: NSRect(x: (CGFloat(w) - fit.width) / 2, y: (CGFloat(h) - fit.height) / 2, width: fit.width, height: fit.height))
+        NSGraphicsContext.restoreGraphicsState()
+        rep.size = NSSize(width: CGFloat(w) / 2, height: CGFloat(h) / 2)
+        let image = NSImage(size: rep.size)
+        image.addRepresentation(rep)
         return image
     }
 }
@@ -432,11 +462,19 @@ struct Thumbnail: View {
     let path: String?
     let ext: String
     var tint: Color = .teal
-    /// 生成的缩略图尺寸（点）；大卡片用大一点的
+    /// 生成的缩略图尺寸（点，按 2 倍像素生成），和显示的大小一致：列表里的小图要的太大，每张白占一两 MB
     var pixels = CGSize(width: 320, height: 240)
     @State private var loaded: NSImage?
 
-    nonisolated(unsafe) private static let cache = NSCache<NSString, NSImage>()
+    /// 按像素算总量，最多留 48 MB；超了先丢最早用过的
+    nonisolated(unsafe) private static let cache: NSCache<NSString, NSImage> = {
+        let c = NSCache<NSString, NSImage>()
+        c.totalCostLimit = 48 << 20
+        return c
+    }()
+
+    /// 应用退到后台一会儿以后清掉：回来时再生成，比一直占着内存划算
+    static func purge() { cache.removeAllObjects() }
 
     var body: some View {
         // 底下垫一层不占尺寸的颜色，图片只作为覆盖层，不会把外框撑大
@@ -464,9 +502,10 @@ struct Thumbnail: View {
         } else if let frame = await blocking({ videoFrame(path, width: Int(size.width * 2)) }) {
             result = frame
         } else {
-            result = NSWorkspace.shared.icon(forFile: path)
+            result = NSWorkspace.shared.icon(forFile: path).bitmap(pixels: CGSize(width: size.width * 2, height: size.height * 2))
         }
-        cache.setObject(result, forKey: key)
+        let rep = result.representations.first
+        cache.setObject(result, forKey: key, cost: max(1, (rep?.pixelsWide ?? 0) * (rep?.pixelsHigh ?? 0) * 4))
         return result
     }
 

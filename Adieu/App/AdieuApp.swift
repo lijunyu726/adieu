@@ -83,6 +83,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// 退到后台一分钟还没回来：清掉缩略图缓存，把扫描时用过、已经空出来的内存还给系统。回来时缩略图再生成
+    private var relief: Task<Void, Never>?
+
+    func applicationDidResignActive(_ notification: Notification) {
+        relief?.cancel()
+        relief = Task {
+            try? await Task.sleep(for: .seconds(60))
+            guard !Task.isCancelled else { return }
+            Thumbnail.purge()
+            releaseFreedMemory()
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) { relief?.cancel() }
+
     /// 登录项启动时，系统发来的“打开应用”事件里带着 keyAELaunchedAsLogInItem
     private static var launchedAtLogin: Bool {
         guard let event = NSAppleEventManager.shared().currentAppleEvent, event.eventID == kAEOpenApplication else { return false }
@@ -125,4 +140,9 @@ enum MenuBarIcon {
         img.isTemplate = true
         return img
     }()
+}
+
+/// 扫描时临时用了大量小块内存，用完放掉以后系统内存分配器还留着这些页，活动监视器里看着一直很高：主动还回去
+func releaseFreedMemory() {
+    malloc_zone_pressure_relief(nil, 0)
 }

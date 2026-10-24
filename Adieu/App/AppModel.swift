@@ -243,6 +243,7 @@ final class AppModel {
         DiaryStore.record(self)
         startRules()
         await RuleEngine.evaluate(self)
+        releaseFreedMemory()
     }
 
     func loadLeftovers() async {

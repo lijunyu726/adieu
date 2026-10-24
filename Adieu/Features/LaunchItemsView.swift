@@ -55,7 +55,7 @@ struct LaunchItemsView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 3), spacing: 0) {
                     ForEach(rows, id: \.0) { name, path, on in
                         HStack(spacing: 12) {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: path)).resizable().frame(width: 30, height: 30)
+                            Image(nsImage: FileIcon.image(path, folder: false, size: 30)).resizable().frame(width: 30, height: 30)
                             Text(name).lineLimit(1).foregroundStyle(on ? .primary : .secondary)
                             Spacer()
                             Toggle(name, isOn: Binding(get: { on }, set: { toggle(name, path, $0) }))

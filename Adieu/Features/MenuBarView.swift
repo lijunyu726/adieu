@@ -45,7 +45,7 @@ struct MenuBarView: View {
                 ForEach(packages.prefix(3)) { p in
                     Divider()
                     HStack(spacing: 8) {
-                        Thumbnail(path: p.path, ext: "DMG", tint: .purple).frame(width: 24, height: 24).clipShape(.rect(cornerRadius: 5))
+                        Thumbnail(path: p.path, ext: "DMG", tint: .purple, pixels: CGSize(width: 24, height: 24)).frame(width: 24, height: 24).clipShape(.rect(cornerRadius: 5))
                         VStack(alignment: .leading, spacing: 0) {
                             Text(p.name).font(.caption.weight(.semibold)).lineLimit(1)
                             Text(p.modified).font(.caption2).foregroundStyle(.secondary)

@@ -117,7 +117,7 @@ struct FileReviewDeck: View {
     private func card(_ f: FileItem) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
-                Thumbnail(path: f.path, ext: f.ext, tint: tint(f), pixels: CGSize(width: 1120, height: 560))
+                Thumbnail(path: f.path, ext: f.ext, tint: tint(f), pixels: CGSize(width: 560, height: 280))
                 Chip(text: Copy.kind(f.kind), tint: tint(f)).padding(16)
             }
             .frame(height: 280)

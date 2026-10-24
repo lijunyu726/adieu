@@ -436,7 +436,7 @@ struct FileCategoryView: View {
     /// 截图与录屏看内容，用缩略图；其他文件和访达一样用系统图标
     @ViewBuilder private func icon(_ f: FileItem) -> some View {
         if category.id == .captures {
-            Thumbnail(path: f.path, ext: f.ext, tint: tint).frame(width: 46, height: 34).clipShape(.rect(cornerRadius: 6))
+            Thumbnail(path: f.path, ext: f.ext, tint: tint, pixels: CGSize(width: 46, height: 34)).frame(width: 46, height: 34).clipShape(.rect(cornerRadius: 6))
         } else {
             FileIcon(path: f.path ?? f.name, folder: f.ext == "DIR" ? true : nil, size: 32)
         }
