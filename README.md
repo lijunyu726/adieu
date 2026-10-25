@@ -19,6 +19,10 @@
 
 <img src="docs/images/home.webp" width="880" alt="Adieu 概览页：磁盘占用和今日建议">
 
+<br>
+
+https://github.com/user-attachments/assets/517acda1-9d71-4ff9-bfc5-af4252b690c1
+
 </div>
 
 <br>

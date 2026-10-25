@@ -66,7 +66,7 @@
 
 ## 开源与配套站点
 
-- 本仓库是公开的开源仓库（MIT），只放软件本身。官网和宣传片在私有仓库 lijunyu726/adieu-site（本机 `/Volumes/S690/codes/adieu-site`），不要把它们、服务器地址或部署细节提交到这里
+- 本仓库是公开的开源仓库（MIT），只放软件本身。官网和宣传片在私有仓库 lijunyu726/adieu-site（本机 `/Volumes/S690/codes/adieu-site`），不要把它们、服务器地址或部署细节提交到这里。README 里的宣传片是上传成 GitHub 附件（user-attachments，单个视频不超过 10 MB）后贴的链接，视频文件不进本仓库
 - README 截图在 `docs/images/`，只能用 `-AdieuSample YES` 演示数据截，不能出现用户自己的应用和文件
 - 发版：`scripts/make-dmg.sh` 打包后，`gh release create v<版本> scratch/Adieu-<版本>.dmg`；官网下载的 dmg 由 adieu-site 的部署脚本从本仓库 `scratch/` 取
 
