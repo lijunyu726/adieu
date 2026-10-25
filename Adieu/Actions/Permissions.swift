@@ -3,10 +3,13 @@ import CoreServices
 
 /// Adieu 用到的系统权限：检查状态，以及让系统弹出询问
 enum Permissions {
-    /// 完全磁盘访问权限：没有它就读不到 TCC 数据库，也统计不到其他应用的沙盒数据
+    /// 完全磁盘访问权限：没有它就读不到 TCC 数据库，也统计不到其他应用的沙盒数据。
+    /// 三个文件不是每台机器都有（macOS 27 上没有用户级 TCC 库），能读到任一个就算有权限
     static var hasFullDiskAccess: Bool {
-        let probes = ["/Library/Application Support/com.apple.TCC/TCC.db",
-                      FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Safari/CloudTabs.db").path]
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let probes = [home.appending(path: "Library/Application Support/com.apple.TCC/TCC.db").path,
+                      "/Library/Application Support/com.apple.TCC/TCC.db",
+                      home.appending(path: "Library/Safari/CloudTabs.db").path]
         return probes.contains { FileHandle(forReadingAtPath: $0) != nil }
     }
 

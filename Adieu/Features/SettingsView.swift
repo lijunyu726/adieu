@@ -87,7 +87,7 @@ private struct GeneralSettings: View {
         Form {
             Section {
                 Toggle("在菜单栏显示 Adieu", isOn: $showMenuBar)
-                Toggle("登录时打开 Adieu", isOn: Binding(get: { loginItem }, set: setLoginItem))
+                Toggle("登录时打开 Adieu", isOn: Binding(get: { loginItem }, set: { setLoginItem($0) }))
             } header: {
                 Text("菜单栏与启动")
             } footer: {

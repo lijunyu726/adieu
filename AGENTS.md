@@ -105,3 +105,4 @@
 - 文件图标和访达一致：能预览用 Quick Look 预览图，否则用文件自己的图标；一律完整显示（`scaledToFit`），不裁切、不垫底色。用户要求所有文件都保留原来的图标预览
 - 列表里要删的东西（卸载详情的相关文件、卸载确认、残留文件、“最近”记录）都用访达里的图标（`FileIcon`），不用 SF Symbols 色块。文件已经删掉时：卸载掉的应用用删之前存下的图标（`IconStore`，`~/Library/Application Support/Adieu/icons/<应用包名>.png`，在 `TrashService.delete` 删之前存），文件夹用文件夹图标（删除记录里的 `folder`），其余按扩展名取系统类型图标；没有扩展名或扩展名系统不认识的（`com.tencent.xinWeChat`）按文件夹处理
 - 删除音效默认“清空废纸篓”（用户要求，卸载、删文件、删残留、清开发缓存都响同一声，只跑了清理命令的也响）；设置里可换
+- 完全磁盘访问的检测是"读得开受保护的文件就算有权限"：用户级 TCC 库、系统级 TCC 库、Safari `CloudTabs.db` 任一可读即可。三个文件不是每台机器都有（macOS 27 上没有用户级 TCC 库，不用 Safari 的人没有 CloudTabs.db），不要只留一个
