@@ -151,7 +151,7 @@ struct FileItem: Identifiable, Hashable, Sendable {
     var idleDays: Int? = nil
 
     /// 所在的顶层文件夹（下载、文稿…），筛选“位置”用
-    var root: String { location.components(separatedBy: " › ").first ?? location }
+    var root: String { location.range(of: " › ").map { String(location[..<$0.lowerBound]) } ?? location }
     /// 精确到秒的修改时间；没有时用 modified
     var timeText: String { date.map(\.fullText) ?? modified }
 }

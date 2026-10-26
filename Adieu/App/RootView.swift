@@ -17,7 +17,7 @@ enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
         case .leftovers: String(localized: "残留文件")
         case .launch: String(localized: "开机与后台")
         case .installers: String(localized: "安装包与压缩包")
-        case .captures: String(localized: "截图与录屏")
+        case .captures: String(localized: "图片与视频")
         case .bigFiles: String(localized: "大文件")
         case .stale: String(localized: "久未打开")
         case .devTools: String(localized: "开发工具")
@@ -31,7 +31,7 @@ enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
         case .leftovers: "shippingbox"
         case .launch: "power"
         case .installers: "arrow.down.circle"
-        case .captures: "camera.viewfinder"
+        case .captures: "photo.on.rectangle.angled"
         case .bigFiles: "doc.badge.ellipsis"
         case .stale: "clock"
         case .devTools: "terminal"

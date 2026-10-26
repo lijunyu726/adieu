@@ -5045,58 +5045,6 @@
         }
       }
     },
-    "截图与录屏": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截图与录屏"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截圖與螢幕錄製"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Screenshots and recordings"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スクリーンショットと画面収録"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "스크린샷과 화면 녹화"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capturas y grabaciones"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captures et enregistrements"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Screenshots und Aufnahmen"
-          }
-        }
-      }
-    },
     "大文件": {
       "localizations": {
         "zh-Hans": {
@@ -8005,110 +7953,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Archiv, daneben kein entpackter Ordner mit demselben Namen."
-          }
-        }
-      }
-    },
-    "一段屏幕录制。看过或已经导出的话，原片可以删掉。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一段屏幕录制。看过或已经导出的话，原片可以删掉。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一段螢幕錄製。看過或已經匯出的話，原片可以刪掉。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A screen recording. If you've watched it or already exported it, you can delete the original."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "画面収録です。見たあと、またはすでに書き出してあるなら、元の映像は削除してよいです。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면 녹화예요. 이미 봤거나 내보냈다면 원본은 지워도 돼요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Una grabación de pantalla. Si ya la viste o la exportaste, puedes borrar el original."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un enregistrement d'écran. Si vous l'avez regardé ou déjà exporté, vous pouvez supprimer l'original."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine Bildschirmaufnahme. Wenn Du sie angesehen oder schon exportiert hast, kannst Du die Originaldatei löschen."
-          }
-        }
-      }
-    },
-    "截图。用完就可以删。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截图。用完就可以删。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截圖。用完就可以刪。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A screenshot. You can delete it once you're done with it."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スクリーンショットです。用が済んだら削除してよいです。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "스크린샷이에요. 다 썼으면 지워도 돼요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Una captura de pantalla. Cuando termines con ella, puedes borrarla."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Une capture d'écran. Vous pouvez la supprimer quand vous n'en avez plus besoin."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ein Screenshot. Wenn Du ihn nicht mehr brauchst, kannst Du ihn löschen."
           }
         }
       }
@@ -12221,58 +12065,6 @@
         }
       }
     },
-    "录屏": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "录屏"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "錄影"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rec"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "収録"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "녹화"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabación"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aufnahme"
-          }
-        }
-      }
-    },
     "已选 %lld 个 · %@": {
       "localizations": {
         "zh-Hans": {
@@ -13413,214 +13205,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese %lld anhaken"
-          }
-        }
-      }
-    },
-    "先勾上每天较早的 %lld 张（%@）。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "先勾上每天较早的 %lld 张（%@）。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "先勾上每天較早的 %lld 張（%@）。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checks %lld earlier shots and leaves the last one each day (%@)."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一日の最後の1枚を除く %lld 枚を先にチェックします（%@）。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "매일 마지막 한 장을 남기고, 더 이른 %lld장을 먼저 체크해요(%@)."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marca las %lld anteriores y deja la última de cada día (%@)."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cochez les %lld plus anciennes et gardez la dernière de chaque jour (%@)."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die früheren %lld werden angehakt, die letzte jedes Tages bleibt (%@)."
-          }
-        }
-      }
-    },
-    "先勾上每天较早的 %lld 张（%@）；录屏占了 %@，要不要留，指着看一眼再决定。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "先勾上每天较早的 %lld 张（%@）；录屏占了 %@，要不要留，指着看一眼再决定。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "先勾上每天較早的 %lld 張（%@）；螢幕錄製佔了 %@，要不要留，指著看一眼再決定。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checks %lld earlier shots and leaves the last one each day (%@). Screen recordings take up %@. Point at one and decide whether to keep it."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一日の最後の1枚を除く %lld 枚を先にチェックします（%@）。画面収録は %@ を占めています。残すかは、指して見てから決めてください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "매일 마지막 한 장을 남기고, 더 이른 %lld장을 먼저 체크해요(%@). 화면 기록은 %@를 차지해요. 남길지는 가리켜 보고 정해요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marca las %lld anteriores y deja la última de cada día (%@). Las grabaciones de pantalla ocupan %@. Señala una y decide si la conservas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cochez les %lld plus anciennes et gardez la dernière de chaque jour (%@). Les enregistrements d’écran occupent %@. Pointez-en un pour décider si vous le gardez."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die früheren %lld werden angehakt, die letzte jedes Tages bleibt (%@). Bildschirmaufnahmen belegen %@. Zeig auf eine und entscheide, ob du sie behältst."
-          }
-        }
-      }
-    },
-    "截图每天留最后一张就够": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截图每天留最后一张就够"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截圖每天留最後一張就夠"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The last screenshot each day is enough"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スクリーンショットは、毎日最後の1枚で十分です"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "스크린샷은 매일 마지막 한 장이면 충분해요"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Con la última captura de cada día basta"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La dernière capture de chaque jour suffit"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro Tag reicht der letzte Screenshot"
-          }
-        }
-      }
-    },
-    "每天只留最后一张": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每天只留最后一张"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "每天只留最後一張"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep only the last each day"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "毎日最後の1枚だけ残す"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "매일 마지막 한 장만 남기기"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dejar solo la última de cada día"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ne garder que la dernière de chaque jour"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro Tag nur die letzte behalten"
           }
         }
       }
@@ -16641,6 +16225,162 @@
         }
       }
     },
+    "图片与视频": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片与视频"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圖片與影片"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images and videos"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画像とビデオ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미지와 비디오"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imágenes y vídeos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images et vidéos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder und Videos"
+          }
+        }
+      }
+    },
+    "其中视频": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其中视频"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其中影片"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Videos"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "うちビデオ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그중 비디오"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De ellos, vídeos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dont vidéos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Davon Videos"
+          }
+        }
+      }
+    },
+    "视频往往很大，看过或导出过的可以删掉。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频往往很大，看过或导出过的可以删掉。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "影片往往很大，看過或匯出過的可以刪掉。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Videos tend to be large. Ones you have watched or exported can go."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ビデオは容量が大きくなりがちです。見終わったものや書き出し済みのものは削除できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비디오는 용량이 큰 경우가 많습니다. 이미 봤거나 내보낸 것은 지워도 됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los vídeos suelen ocupar mucho. Los que ya viste o exportaste se pueden borrar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les vidéos prennent souvent beaucoup de place. Celles déjà vues ou exportées peuvent être supprimées."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Videos sind oft groß. Bereits angesehene oder exportierte können weg."
+          }
+        }
+      }
+    },
     "文档": {
       "localizations": {
         "zh-Hans": {
@@ -19501,58 +19241,6 @@
         }
       }
     },
-    "其中录屏": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "其中录屏"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "其中螢幕錄製"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Screen recordings"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "画面収録"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면 녹화"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabaciones de pantalla"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistrements d'écran"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bildschirmaufnahmen"
-          }
-        }
-      }
-    },
     "50 MB 以上": {
       "localizations": {
         "zh-Hans": {
@@ -19813,58 +19501,6 @@
         }
       }
     },
-    "最大的一段录屏": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最大的一段录屏"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最大的一段螢幕錄製"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Largest screen recording"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "いちばん大きい画面収録"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "가장 큰 화면 녹화"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La grabación de pantalla más grande"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le plus gros enregistrement d'écran"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die größte Bildschirmaufnahme"
-          }
-        }
-      }
-    },
     "自动执行": {
       "localizations": {
         "zh-Hans": {
@@ -20017,58 +19653,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Heruntergeladen und schon benutzt: Installer von Apps, die du installiert hast, und Archive, die du entpackt hast."
-          }
-        }
-      }
-    },
-    "屏幕录制往往很大，看过或导出过就可以删掉。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "屏幕录制往往很大，看过或导出过就可以删掉。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "螢幕錄製往往很大，看過或匯出過就可以刪掉。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Screen recordings are often large. Once you've watched or exported one, you can delete it."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "画面収録は大きくなりがちです。見るか書き出したら、削除できます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "화면 녹화는 용량이 큰 경우가 많아요. 보았거나 내보냈다면 지워도 돼요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las grabaciones de pantalla suelen ser grandes. Si ya las viste o las exportaste, puedes borrarlas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les enregistrements d'écran sont souvent volumineux. Une fois vus ou exportés, vous pouvez les supprimer."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bildschirmaufnahmen sind oft groß. Wenn du sie angesehen oder exportiert hast, kannst du sie löschen."
           }
         }
       }

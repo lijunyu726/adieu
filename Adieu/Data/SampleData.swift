@@ -120,7 +120,7 @@ enum Sample {
         .init(id: "win", name: "26200.9457.260913-0221.25h2_ge_release_svc_refresh_CLIENTCONSUMER_RET_A64FRE_zh-cn.iso", ext: "ISO", kind: "系统镜像", location: "下载", modified: "2026 年 9 月", size: 6.7, reason: "Windows 11 的安装镜像。虚拟机已经装好的话就用不上了，需要时可以从微软官网重新下载。"),
         .init(id: "avi", name: "2026-06-14 17-01-54.avi", ext: "AVI", kind: "视频", location: "影片", modified: "2026 年 6 月 14 日", size: 4.5, reason: "没有压缩的 AVI 录像。如果还想留着，转成 MP4 通常只占现在的一小部分。"),
         .init(id: "kali", name: "kali-linux-2026.1-installer-arm64.iso", ext: "ISO", kind: "系统镜像", location: "jingxiang", modified: "2026 年 3 月 20 日", size: 3.7, reason: "199 天没有改动，也从没在访达里打开过。靶场环境搭好后，安装镜像一般就不再需要了。", idleDays: 199),
-        .init(id: "rec", name: "录屏2026-09-17 16.01.27.mov", ext: "MOV", kind: "屏幕录制", location: "文稿", modified: "2026 年 9 月 17 日", size: 3.3, reason: "一段屏幕录制。已经剪辑或导出过的话，原片可以删掉。"),
+        .init(id: "rec", name: "录屏2026-09-17 16.01.27.mov", ext: "MOV", kind: "视频", location: "文稿", modified: "2026 年 9 月 17 日", size: 3.3, reason: "一段屏幕录制。已经剪辑或导出过的话，原片可以删掉。"),
         .init(id: "zip", name: "大创赛视频.zip", ext: "ZIP", kind: "压缩包", location: "文稿 › 国创校赛演讲", modified: "2026 年 9 月", size: 0.18, reason: "旁边已经有解压后的“大创赛视频”文件夹，两份内容相同。"),
         .init(id: "php", name: "phpStudy_64.zip", ext: "ZIP", kind: "压缩包", location: "下载", modified: "约 3 年前", size: 0.079, reason: "1106 天没有改动的安装包压缩文件。", idleDays: 1106)
     ]
@@ -144,13 +144,13 @@ enum Sample {
             reviewable: false, ruleID: "pkg"),
         FileCategory(
             id: .captures,
-            subtitle: "屏幕录制往往很大，看过或导出过就可以删掉。",
-            stats: [.init(label: "截图与录屏", value: "40 个 · 4.2 GB"),
-                    .init(label: "最大的一段录屏", value: "3.3 GB", highlight: true)],
+            subtitle: "视频往往很大，看过或导出过的可以删掉。",
+            stats: [.init(label: "图片与视频", value: "40 个 · 4.2 GB"),
+                    .init(label: "最大的一个", value: "3.3 GB", highlight: true)],
             items: [
                 bigFiles[3],
-                .init(id: "sr", name: "ScreenRecording_08-20-2026 02-31-01_1.MP4", ext: "MP4", kind: "屏幕录制", location: "文稿", modified: "8 月 20 日", size: 0.125, reason: "下载里还有一份一样的。"),
-                .init(id: "cap-rest", name: "其余 38 个截图与录屏", ext: "PNG", kind: "截图", location: "大多在桌面和文稿", modified: "合计约 0.8 GB", size: 0.78, reason: "", isSummary: true)
+                .init(id: "sr", name: "ScreenRecording_08-20-2026 02-31-01_1.MP4", ext: "MP4", kind: "视频", location: "文稿", modified: "8 月 20 日", size: 0.125, reason: "下载里还有一份一样的。"),
+                .init(id: "cap-rest", name: "其余 38 个图片与视频", ext: "PNG", kind: "图片", location: "大多在桌面和文稿", modified: "合计约 0.8 GB", size: 0.78, reason: "", isSummary: true)
             ],
             reviewable: true, ruleID: "shot"),
         FileCategory(

@@ -28,6 +28,7 @@ struct FileCategoryView: View {
     @State private var width: CGFloat = 1200
     /// 只看已勾选的，删之前复核一遍
     @State private var onlyChosen = false
+    @State private var memo = FileListing.Memo()
     @AppStorage("filePreviewPane") private var showPane = true
     @FocusState private var listFocused: Bool
 
@@ -54,26 +55,32 @@ struct FileCategoryView: View {
 
     // MARK: 数据
 
-    private func key(_ f: FileItem) -> String { f.path ?? "\(category.id.rawValue).\(f.id)" }
+    private func key(_ f: FileItem) -> String { FileListing.key(f, in: category.id) }
 
-    /// 还在原处的文件（删掉的不再显示）
-    private var files: [FileItem] { category.items.filter { !$0.isSummary && !model.removedKeys.contains(key($0)) } }
-    private var summaries: [FileItem] { category.items.filter(\.isSummary) }
-    private var shown: [FileItem] { filter.apply(files).filter { !onlyChosen || selected.contains(key($0)) } }
-    private var chosen: [FileItem] { files.filter { selected.contains(key($0)) } }
-    private var focused: FileItem? { current.flatMap { k in files.first { key($0) == k } } }
+    /// 筛选、分组这些只在文件或条件变了时重算，指着换一张、勾一下都直接用上次的
+    private var listing: FileListing {
+        memo.get(.init(section: category.id, items: category.items, removed: model.removedKeys,
+                       filter: filter, only: onlyChosen ? selected : nil))
+    }
+    private var files: [FileItem] { listing.files }
+    private var summaries: [FileItem] { listing.summaries }
+    private var shown: [FileItem] { listing.shown }
+    /// 按勾选去查，不把整页过一遍：勾了东西以后，指着换一张也要重画底栏
+    private var chosen: [FileItem] { selected.compactMap { listing.byKey[$0] }.sorted { $0.size > $1.size } }
+    private var focused: FileItem? { current.flatMap { listing.byKey[$0] } }
 
     private var tint: Color { category.id.tint }
     private var roomForPane: Bool { width >= Self.paneMinWidth }
     private var paneVisible: Bool { showPane && roomForPane && mode != .cards }
 
     private func total(_ list: [FileItem]) -> Double { list.map(\.size).reduce(0, +) }
+    private var allChosen: Bool { listing.order.count <= selected.count && listing.order.allSatisfy(selected.contains) }
     private func isVideo(_ f: FileItem) -> Bool { FileSuggestion.isVideo(f) }
 
     var body: some View {
-        // 指到新的一行就会刷新整页，分组和顺序每次只算一遍，往下传
-        let sections = sections
-        let order = sections.flatMap { $0.items.map(key) }
+        let listing = listing
+        let sections = listing.sections
+        let order = listing.order
         HStack(spacing: 0) {
             main(sections, order: order)
             if paneVisible {
@@ -86,7 +93,7 @@ struct FileCategoryView: View {
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .onAppear(perform: pickFromHome)
-        .quickLookPreview($preview, in: sections.flatMap(\.items).compactMap(\.path).map { URL(filePath: $0) })
+        .quickLookPreview($preview, in: preview == nil ? [] : listing.urls)
         .onChange(of: filter) { anchor = nil }
         .onChange(of: selected.isEmpty) { if selected.isEmpty { onlyChosen = false } }
         .task(id: hovered) {
@@ -97,7 +104,7 @@ struct FileCategoryView: View {
         .animation(.smooth(duration: 0.25), value: paneVisible)
     }
 
-    private func main(_ sections: [FileSection], order: [String]) -> some View {
+    private func main(_ sections: [FileListing.Section], order: [String]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
                 PageHeader(category.id, subtitle: category.subtitle) { headerControls }
@@ -170,11 +177,11 @@ struct FileCategoryView: View {
             .background(.background.opacity(0.8), in: .capsule)
             .overlay(Capsule().strokeBorder(.primary.opacity(0.1)))
             .frame(maxWidth: 220)
-            facetMenu("位置", values: facetValues(\.root), on: filter.roots,
+            facetMenu("位置", values: listing.roots, on: filter.roots,
                       toggle: { filter.roots.formSymmetricDifference([$0]) }, clear: { filter.roots = [] })
-            facetMenu("类型", values: facetValues(\.kind), on: filter.kinds,
+            facetMenu("类型", values: listing.kinds, on: filter.kinds,
                       toggle: { filter.kinds.formSymmetricDifference([$0]) }, clear: { filter.kinds = [] })
-            facetMenu("时间", values: ageValues, on: Set(filter.ages.map(\.rawValue)),
+            facetMenu("时间", values: listing.ages, on: Set(filter.ages.map(\.rawValue)),
                       toggle: { filter.ages.formSymmetricDifference([FileFilter.Age(rawValue: $0)!]) }, clear: { filter.ages = [] })
             Picker("排序", selection: $filter.sort) {
                 ForEach(FileFilter.Sort.allCases, id: \.self) { Text(Copy.text($0.rawValue)) }
@@ -188,21 +195,6 @@ struct FileCategoryView: View {
                 Button("清除筛选") { filter.clear() }.buttonStyle(.link)
             }
         }
-    }
-
-    /// 某一维的取值和个数。个数按“其他条件都不变、只换这一维”来算，点之前就知道会筛出几个
-    private func facetValues(_ path: KeyPath<FileItem, String>) -> [(String, Int)] {
-        let base = filter.cleared(path == \FileItem.root ? \.roots : \.kinds).apply(files)
-        var counts: [String: Int] = [:]
-        for f in files { counts[f[keyPath: path], default: 0] += 0 }
-        for f in base { counts[f[keyPath: path], default: 0] += 1 }
-        return counts.sorted { ($0.value, $1.key) > ($1.value, $0.key) }
-    }
-
-    private var ageValues: [(String, Int)] {
-        let base = filter.cleared(\.ages).apply(files)
-        return FileFilter.Age.allCases.map { age in (age.rawValue, base.filter { FileFilter.Age.of($0.date) == age }.count) }
-            .filter { $0.1 > 0 || filter.ages.contains(FileFilter.Age(rawValue: $0.0)!) }
     }
 
     /// 一维条件收成一个下拉菜单，选了几个就在按钮上写出来
@@ -230,7 +222,7 @@ struct FileCategoryView: View {
     // MARK: 建议
 
     /// 每页一句话：哪些可以放心删。点按钮只是勾上，勾完还能改。规则和首页“今日建议”共用
-    private var suggestion: FileSuggestion? { FileSuggestion.make(category.id, files: files) }
+    private var suggestion: FileSuggestion? { listing.suggestion }
 
     /// 从首页“今日建议”点“去勾选”过来的：替人按一下这页的建议按钮，删不删还是自己定
     private func pickFromHome() {
@@ -261,69 +253,10 @@ struct FileCategoryView: View {
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.orange.opacity(0.18)))
     }
 
-    // MARK: 分组
-
-    private struct FileSection: Identifiable {
-        let id: String
-        var title = ""
-        var note = ""
-        var unit = "这一组"
-        let items: [FileItem]
-    }
-
-    /// 安装包按“装好了 / 解压过 / 其他”，截图按天，久未打开按多久没打开；大文件不分组，从大到小一列
-    private var sections: [FileSection] {
-        let items = shown
-        switch category.id {
-        case .installers:
-            let notes = [FileCategorizer.installedGroup: "以后要用可以重新下载",
-                         FileCategorizer.unzippedGroup: "旁边有解压好的文件夹",
-                         FileCategorizer.otherGroup: "没找到对应的应用，确认不要了再删"]
-            return [FileCategorizer.installedGroup, FileCategorizer.unzippedGroup, FileCategorizer.otherGroup].compactMap { g in
-                let list = items.filter { ($0.group ?? FileCategorizer.otherGroup) == g }
-                return list.isEmpty ? nil : FileSection(id: g, title: g, note: notes[g] ?? "", items: list)
-            }
-        case .captures:
-            let days = Dictionary(grouping: items) { $0.date.map { Calendar.current.startOfDay(for: $0) } }
-            // 全都没有日期（示例数据）就不分天
-            if days.count == 1, days.keys.first! == nil { return [FileSection(id: "all", items: items)] }
-            return days.keys.sorted { ($0 ?? .distantPast) > ($1 ?? .distantPast) }.map { d in
-                FileSection(id: d.map { "\($0.timeIntervalSince1970)" } ?? "unknown", title: dayTitle(d), unit: "这一天", items: days[d]!)
-            }
-        case .stale:
-            let bands = ["两年多没打开", "一年多没打开", "半年多没打开", "其他"]
-            func band(_ f: FileItem) -> String {
-                guard let d = f.idleDays else { return "其他" }
-                return d >= 730 ? bands[0] : d >= 365 ? bands[1] : bands[2]
-            }
-            let grouped = Dictionary(grouping: items, by: band)
-            if grouped.count == 1 { return [FileSection(id: "all", items: items)] }
-            return bands.compactMap { b in grouped[b].map { FileSection(id: b, title: b, items: $0) } }
-        default:
-            return items.isEmpty ? [] : [FileSection(id: "all", items: items)]
-        }
-    }
-
-    /// 汇总行（“其余 21 个”）放进同组；没有组的放在最后一组
-    private func summaries(for s: FileSection, in sections: [FileSection]) -> [FileItem] {
-        guard !filter.isActive else { return [] }
-        let ids = Set(sections.map(\.id))
-        let last = s.id == sections.last?.id
-        return summaries.filter { $0.group == s.id || (last && !ids.contains($0.group ?? "")) }
-    }
-
-    private func dayTitle(_ d: Date?) -> String {
-        guard let d else { return "日期未知" }
-        if Calendar.current.isDateInToday(d) { return "今天" }
-        if Calendar.current.isDateInYesterday(d) { return "昨天" }
-        return Calendar.current.isDate(d, equalTo: .now, toGranularity: .year)
-            ? d.formatted(.dateTime.month().day().weekday(.wide)) : d.formatted(.dateTime.year().month().day().weekday(.wide))
-    }
-
     // MARK: 列表与缩略图
 
     /// 显示顺序 order：连选、↑↓、全选都按它
-    @ViewBuilder private func content(_ sections: [FileSection], order: [String]) -> some View {
+    @ViewBuilder private func content(_ sections: [FileListing.Section], order: [String]) -> some View {
         if files.isEmpty && summaries.isEmpty {
             ContentUnavailableView(model.filesLoading ? "还在扫描" : "这里是空的", systemImage: model.filesLoading ? "hourglass" : "checkmark.circle",
                                    description: Text(category.items.contains { model.removedKeys.contains(key($0)) } ? "都处理完了。" : "桌面、文稿、下载、影片、音乐、图片里没有找到这类文件。"))
@@ -338,12 +271,13 @@ struct FileCategoryView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            let largest = files.map(\.size).max() ?? 1
+            let largest = listing.largest
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
+                    // 按天分组时可能有几百组，只造看得见的那几组
+                    LazyVStack(alignment: .leading, spacing: 18) {
                         ForEach(sections) { s in
-                            sectionView(s, order: order, largest: largest, summaries: summaries(for: s, in: sections))
+                            sectionView(s, order: order, largest: largest, summaries: listing.summaries(for: s))
                         }
                         if let rule = Sample.rules.first(where: { $0.id == category.ruleID }) { ruleBar(rule) }
                     }
@@ -367,7 +301,7 @@ struct FileCategoryView: View {
         }
     }
 
-    private func sectionView(_ s: FileSection, order: [String], largest: Double, summaries: [FileItem]) -> some View {
+    private func sectionView(_ s: FileListing.Section, order: [String], largest: Double, summaries: [FileItem]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             if !s.title.isEmpty { sectionHeader(s) }
             if mode == .grid {
@@ -390,15 +324,15 @@ struct FileCategoryView: View {
         }
     }
 
-    private func sectionHeader(_ s: FileSection) -> some View {
-        let keys = Set(s.items.map(key))
-        let all = keys.isSubset(of: selected)
+    private func sectionHeader(_ s: FileListing.Section) -> some View {
+        let all = s.items.count <= selected.count && s.items.allSatisfy { selected.contains(key($0)) }
         return HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(Copy.text(s.title)).font(.headline)
-            Text(([String(localized: "\(s.items.count) 个 · \(total(s.items).gbText)")] + (s.note.isEmpty ? [] : [Copy.text(s.note)])).joined(separator: " · "))
+            Text(([String(localized: "\(s.items.count) 个 · \(s.size.gbText)")] + (s.note.isEmpty ? [] : [Copy.text(s.note)])).joined(separator: " · "))
                 .font(.callout).foregroundStyle(.secondary).monospacedDigit().lineLimit(1)
             Spacer()
             Button(all ? "取消\(Copy.text(s.unit))" : "全选\(Copy.text(s.unit))") {
+                let keys = s.items.map(key)
                 if all { selected.subtract(keys) } else { selected.formUnion(keys) }
             }
             .buttonStyle(.link)
@@ -433,7 +367,7 @@ struct FileCategoryView: View {
         .contextMenu { menu(f) }
     }
 
-    /// 截图与录屏看内容，用缩略图；其他文件和访达一样用系统图标
+    /// 图片与视频看内容，用缩略图；其他文件和访达一样用系统图标
     @ViewBuilder private func icon(_ f: FileItem) -> some View {
         if category.id == .captures {
             Thumbnail(path: f.path, ext: f.ext, tint: tint, pixels: CGSize(width: 46, height: 34)).frame(width: 46, height: 34).clipShape(.rect(cornerRadius: 6))
@@ -492,7 +426,7 @@ struct FileCategoryView: View {
                 }
                 .overlay(alignment: .bottomLeading) {
                     if isVideo(f) {
-                        Label("录屏", systemImage: "video.fill").font(.caption2.bold()).foregroundStyle(.white)
+                        Label("视频", systemImage: "video.fill").font(.caption2.bold()).foregroundStyle(.white)
                             .padding(.horizontal, 6).padding(.vertical, 2).background(.black.opacity(0.5), in: .capsule).padding(6)
                     }
                 }
@@ -567,7 +501,7 @@ struct FileCategoryView: View {
             withAnimation(.smooth(duration: 0.2)) { proxy.scrollTo(order[i]) }
             return .handled
         case .return:
-            guard let current, files.contains(where: { key($0) == current }) else { return .ignored }
+            guard let current, listing.byKey[current] != nil else { return .ignored }
             toggle(current)
             return .handled
         case .delete, Self.backspace:
@@ -576,7 +510,7 @@ struct FileCategoryView: View {
             return .handled
         case "a" where press.modifiers.contains(.command):
             // 已经全勾上了，再按一次就全不选
-            if Set(order).isSubset(of: selected) { selected.subtract(order); anchor = nil } else { selected.formUnion(order) }
+            if allChosen { selected.subtract(order); anchor = nil } else { selected.formUnion(order) }
             return .handled
         case .escape:
             guard !selected.isEmpty else { return .ignored }
@@ -621,7 +555,7 @@ struct FileCategoryView: View {
                 }
                 Text("删完可用 \(free.gbText) → \(Text((free + size).gbText).fontWeight(.semibold).foregroundStyle(.green))")
                     .foregroundStyle(.secondary).monospacedDigit()
-                if mode != .cards, !Set(order).isSubset(of: selected) {
+                if mode != .cards, !allChosen {
                     Button { selected.formUnion(order) } label: { ShortcutLabel("全选（\(order.count)）", shortcut: "⌘A") }
                 }
                 Button { selected = []; anchor = nil } label: { ShortcutLabel("清除", shortcut: mode == .cards ? "" : "esc") }
@@ -712,55 +646,5 @@ private struct Pickable: ViewModifier {
             .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .named(space))
                 .onChanged { drag($0.location) }
                 .onEnded { _ in end() })
-    }
-}
-
-/// 文件页面的筛选条件。同一维里多选是“或”，不同维之间是“且”
-struct FileFilter: Equatable {
-    var roots: Set<String> = []
-    var kinds: Set<String> = []
-    var ages: Set<Age> = []
-    var query = ""
-    var sort: Sort = .size
-
-    enum Sort: String, CaseIterable { case size = "最大的在前", newest = "最新的在前", oldest = "最旧的在前", name = "按名称" }
-
-    /// 按修改时间分段，互不重叠
-    enum Age: String, CaseIterable {
-        case today = "今天", week = "一周内", month = "一个月内", halfYear = "半年内", older = "半年以前", unknown = "不清楚"
-
-        static func of(_ d: Date?) -> Age {
-            guard let d else { return .unknown }
-            if d.isToday { return .today }
-            let days = FileCategorizer.days(since: d)
-            return days <= 7 ? .week : days <= 31 ? .month : days <= 183 ? .halfYear : .older
-        }
-    }
-
-    var isActive: Bool { !roots.isEmpty || !kinds.isEmpty || !ages.isEmpty || !query.isEmpty }
-
-    mutating func clear() { roots = []; kinds = []; ages = []; query = "" }
-
-    /// 去掉某一维的条件（算那一维的个数用）
-    func cleared<T>(_ path: WritableKeyPath<FileFilter, Set<T>>) -> FileFilter {
-        var f = self
-        f[keyPath: path] = []
-        return f
-    }
-
-    func apply(_ items: [FileItem]) -> [FileItem] {
-        let q = query.trimmingCharacters(in: .whitespaces)
-        let hit = items.filter { f in
-            (roots.isEmpty || roots.contains(f.root))
-                && (kinds.isEmpty || kinds.contains(f.kind))
-                && (ages.isEmpty || ages.contains(Age.of(f.date)))
-                && (q.isEmpty || f.name.localizedStandardContains(q))
-        }
-        switch sort {
-        case .size: return hit.sorted { $0.size > $1.size }
-        case .newest: return hit.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
-        case .oldest: return hit.sorted { ($0.date ?? .distantFuture) < ($1.date ?? .distantFuture) }
-        case .name: return hit.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-        }
     }
 }

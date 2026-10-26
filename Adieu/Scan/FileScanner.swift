@@ -81,7 +81,7 @@ enum FileScanner {
                 let allocated = v.totalFileAllocatedSize ?? 0
                 rootBytes += allocated
                 let ext = url.pathExtension.lowercased()
-                // 只留下后面会用到的：1 MB 以上的（大文件、久未打开），以及按后缀认的安装包、压缩包、截图、录屏
+                // 只留下后面会用到的：1 MB 以上的（大文件、久未打开），以及按后缀认的安装包、压缩包、图片、视频
                 let downloadable = downloadRoots.contains(root.dir) && (installerExts.contains(ext) || archiveExts.contains(ext))
                 let interesting = allocated >= 1 << 20 || downloadable || captureExts.contains(ext)
                 if interesting {

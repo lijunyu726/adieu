@@ -64,9 +64,9 @@ enum FileCategorizer {
         case "dmg", "pkg", "mpkg", "xip": return "安装包"
         case "iso", "img": return "系统镜像"
         case _ where FileScanner.archiveExts.contains(f.ext): return "压缩包"
-        case _ where FileScanner.recordingExts.contains(f.ext): return "屏幕录制"
+        case _ where FileScanner.recordingExts.contains(f.ext): return "视频"
         case "avi", "mkv", "m4v", "wmv", "flv": return "视频"
-        case _ where FileScanner.screenshotExts.contains(f.ext): return "截图"
+        case _ where FileScanner.screenshotExts.contains(f.ext): return "图片"
         case "tiff", "psd": return "图片"
         case "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "key", "pages", "numbers": return "文档"
         case "vmdk", "qcow2", "vdi", "vhd", "vhdx", "utm": return "虚拟磁盘"
@@ -92,10 +92,6 @@ enum FileCategorizer {
             }
             if stale { return String(localized: "压缩包，旁边没有解压后的同名文件夹。\(idle) 天没有打开过。") }
             return String(localized: "压缩包，旁边没有解压后的同名文件夹。")
-        case "屏幕录制":
-            return String(localized: "一段屏幕录制。看过或已经导出的话，原片可以删掉。")
-        case "截图":
-            return String(localized: "截图。用完就可以删。")
         case "视频":
             if f.ext == "avi" {
                 if stale { return String(localized: "没有压缩的 AVI 视频，转成 MP4 通常能小很多。\(idle) 天没有打开过。") }
@@ -161,7 +157,7 @@ enum FileCategorizer {
             item(f, apps: apps, modifiedNote: extractedFolder(f) != nil ? "旁边已经有解压后的文件夹" : dateText(f.modified))
         }
 
-        // 截图与录屏
+        // 图片与视频
         let captures = files.filter(\.isScreenCapture).sorted { $0.size > $1.size }
 
         // 大文件
@@ -179,10 +175,10 @@ enum FileCategorizer {
                                  .init(label: "已解压的压缩包", value: count(extracted), highlight: !extracted.isEmpty)],
                          items: installerItems, reviewable: false, ruleID: "pkg"),
             FileCategory(id: .captures, subtitle: template[.captures]!.subtitle,
-                         stats: [.init(label: "截图与录屏", value: count(captures)),
+                         stats: [.init(label: "图片与视频", value: count(captures)),
                                  .init(label: "最大的一个", value: captures.first?.size.gbText ?? "—", highlight: !captures.isEmpty),
-                                 .init(label: "其中录屏", value: {
-                                     let n = captures.filter { kind($0) == "屏幕录制" }.count
+                                 .init(label: "其中视频", value: {
+                                     let n = captures.filter { kind($0) == "视频" }.count
                                      return String(localized: "\(n) 个")
                                  }())],
                          items: captures.map { item($0, apps: apps) }, reviewable: true, ruleID: "shot"),
