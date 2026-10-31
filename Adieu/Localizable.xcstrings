@@ -1,6 +1,162 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "写着“软件自己设置的”是在那个软件的设置里开的，要在那个软件里或系统设置里关。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写着“软件自己设置的”是在那个软件的设置里开的，要在那个软件里或系统设置里关。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "標著「軟體自己設定的」是在那個軟體的設定裡開啟的，要在那個軟體裡或系統設定裡關閉。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items marked “Set by the app” were turned on in that app’s own settings. Turn them off there or in System Settings."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「アプリ自身の設定」と表示された項目は、そのアプリの設定でオンにされています。オフにするにはそのアプリかシステム設定で行います。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“앱이 직접 설정”으로 표시된 항목은 해당 앱 설정에서 켠 것입니다. 그 앱이나 시스템 설정에서 끄세요."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit „Von der App eingestellt“ markierte Objekte wurden in den Einstellungen der App aktiviert. Dort oder in den Systemeinstellungen ausschalten."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les éléments marqués « Défini par l’app » ont été activés dans les réglages de l’app. Désactivez-les là ou dans Réglages Système."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los elementos marcados como «Configurado por la app» se activaron en los ajustes de la app. Desactívalos allí o en Ajustes del Sistema."
+          }
+        }
+      }
+    },
+    "开着 %lld 个，打开的越多，开机越慢。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开着 %lld 个，打开的越多，开机越慢。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開著 %lld 個，開啟的越多，開機越慢。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld on. The more that open, the slower startup gets."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個がオン。多いほど起動が遅くなります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 켜짐. 많을수록 시동이 느려집니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld aktiv. Je mehr geöffnet werden, desto langsamer der Start."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld activés. Plus il y en a, plus le démarrage est lent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld activados. Cuantos más se abren, más lento es el arranque."
+          }
+        }
+      }
+    },
+    "%@ 是在自己的设置里开的开机启动，到 %@ 的设置里，或系统设置“登录项与扩展”里改。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 是在自己的设置里开的开机启动，到 %@ 的设置里，或系统设置“登录项与扩展”里改。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 是在自己的設定裡開啟的開機啟動，到 %@ 的設定裡，或系統設定「登入項目與延伸功能」裡更改。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ turned this on in its own settings. Change it in %@’s settings or in System Settings › Login Items & Extensions."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ は自身の設定で起動時に開くようにしています。%@ の設定か、システム設定の「ログイン項目と機能拡張」で変更してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@이(가) 자체 설정에서 켠 항목입니다. %@ 설정이나 시스템 설정의 ‘로그인 항목 및 확장 프로그램’에서 바꾸세요."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat dies in den eigenen Einstellungen aktiviert. Ändern in den Einstellungen von %@ oder unter Systemeinstellungen › Anmeldeobjekte & Erweiterungen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ l’a activé dans ses propres réglages. Modifiez-le dans les réglages de %@ ou dans Réglages Système › Ouverture et extensions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ lo activó en sus propios ajustes. Cámbialo en los ajustes de %@ o en Ajustes del Sistema › Ítems de inicio y extensiones."
+          }
+        }
+      }
+    },
     "软件自己设置的": {
       "localizations": {
         "zh-Hans": {
@@ -53,370 +209,6 @@
         }
       }
     },
-    "这些是软件在自己的设置里打开的，要关就到那个软件的设置里，或者系统设置里关。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这些是软件在自己的设置里打开的，要关就到那个软件的设置里，或者系统设置里关。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "這些是軟體在自己的設定裡開啟的，要關閉就到那個軟體的設定裡，或者系統設定裡關。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "These were turned on in each app’s own settings. To turn one off, use that app’s settings or System Settings."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "各アプリの設定でオンにされたものです。オフにするには、そのアプリの設定かシステム設定で行います。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "각 앱의 설정에서 켠 항목입니다. 끄려면 해당 앱의 설정이나 시스템 설정에서 끄세요."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese wurden in den Einstellungen der jeweiligen App aktiviert. Zum Ausschalten die Einstellungen der App oder die Systemeinstellungen verwenden."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ils ont été activés dans les réglages de chaque app. Pour en désactiver un, passez par les réglages de l’app ou par Réglages Système."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se activaron en los ajustes de cada app. Para desactivar uno, usa los ajustes de esa app o Ajustes del Sistema."
-          }
-        }
-      }
-    },
-    "Adieu 只能看，改不了：苹果只让软件自己或系统设置改这些。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu 只能看，改不了：苹果只让软件自己或系统设置改这些。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu 只能看，改不了：Apple 只讓軟體自己或系統設定更改這些。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu can only show these: Apple lets only the app itself or System Settings change them."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu では表示のみです。変更できるのはアプリ自身かシステム設定だけです。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu에서는 볼 수만 있습니다. 앱 자신이나 시스템 설정에서만 바꿀 수 있습니다."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu kann diese nur anzeigen: Ändern können sie nur die App selbst oder die Systemeinstellungen."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu peut seulement les afficher : seuls l’app elle-même ou Réglages Système peuvent les modifier."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu solo puede mostrarlos: solo la propia app o Ajustes del Sistema pueden cambiarlos."
-          }
-        }
-      }
-    },
-    "开机启动助手": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开机启动助手"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "開機啟動助手"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login helper"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ログインヘルパー"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 도우미"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anmeldehelfer"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assistant d’ouverture"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Asistente de inicio"
-          }
-        }
-      }
-    },
-    "开机启动助手 %@": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开机启动助手 %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "開機啟動助手 %@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Login helper %@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ログインヘルパー %@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 도우미 %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anmeldehelfer %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assistant d’ouverture %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Asistente de inicio %@"
-          }
-        }
-      }
-    },
-    "后台程序": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "后台程序"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "背景程式"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Background program"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "バックグラウンドプログラム"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "백그라운드 프로그램"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hintergrundprogramm"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Programme en arrière-plan"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Programa en segundo plano"
-          }
-        }
-      }
-    },
-    "后台程序 %@": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "后台程序 %@"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "背景程式 %@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Background program %@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "バックグラウンドプログラム %@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "백그라운드 프로그램 %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hintergrundprogramm %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Programme en arrière-plan %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Programa en segundo plano %@"
-          }
-        }
-      }
-    },
-    "开着": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开着"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "開著"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "オン"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "켜짐"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ein"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activé"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activado"
-          }
-        }
-      }
-    },
     "系统设置里关掉了": {
       "localizations": {
         "zh-Hans": {
@@ -465,110 +257,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desactivado en Ajustes del Sistema"
-          }
-        }
-      }
-    },
-    "没开": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没开"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "沒開"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Off"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "オフ"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "꺼짐"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aus"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Désactivé"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desactivado"
-          }
-        }
-      }
-    },
-    "软件在自己设置里开的开机启动在下面。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "软件在自己设置里开的开机启动在下面。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "軟體在自己設定裡開啟的開機啟動在下面。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Startup items turned on in apps’ own settings are listed below."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アプリ自身の設定でオンにした起動項目は下にあります。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "앱 설정에서 켠 시작 항목은 아래에 있습니다."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In den App-Einstellungen aktivierte Startobjekte stehen unten."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les éléments d’ouverture activés dans les réglages des apps figurent ci-dessous."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los elementos de inicio activados en los ajustes de las apps están abajo."
           }
         }
       }
