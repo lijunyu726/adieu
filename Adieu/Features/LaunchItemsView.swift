@@ -14,6 +14,8 @@ struct LaunchItemsView: View {
     /// 指向的应用已经不在了的登录项（应用被删了，系统不会自己去掉）
     @State private var missingLogin: Set<String> = []
     @State private var showOthers = false
+    /// 在“登录时打开”里点选的那一行，“−”删的就是它
+    @State private var selected: String?
     /// 软件在自己的设置里打开的开机启动（系统后台任务账本里读出来的）
     @State private var registered: [RegisteredItems.Item] = []
 
@@ -44,8 +46,22 @@ struct LaunchItemsView: View {
                     Text(loginLoaded && loginError == nil ? "开着 \(rows.filter(\.on).count) 个，打开的越多，开机越慢。" : "打开的越多，开机越慢。").font(.callout).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("添加应用…", systemImage: "plus", action: addApps)
-                    .disabled(loginError != nil)
+                if loginLoaded && loginError == nil {
+                    Text(selectedHint).font(.callout).foregroundStyle(.secondary)
+                    // 和系统设置“登录项”一样：＋ 添加，− 移除选中的
+                    HStack(spacing: 0) {
+                        Button(action: addApps) { Image(systemName: "plus").frame(width: 28, height: 22) }
+                            .help("添加应用")
+                        Divider().frame(height: 16)
+                        Button { if let row = rows.first(where: { $0.id == selected }) { removeRow(row) } } label: {
+                            Image(systemName: "minus").frame(width: 28, height: 22)
+                        }
+                        .help("移除选中的应用")
+                        .disabled(!(rows.first { $0.id == selected }.map(canRemove) ?? false))
+                    }
+                    .buttonStyle(.borderless)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.primary.opacity(0.06)))
+                }
             }
             .padding(16)
             Divider()
@@ -65,21 +81,22 @@ struct LaunchItemsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(row.name).lineLimit(1).foregroundStyle(row.on ? .primary : .secondary)
                                 if let note = row.note {
-                                    Text(note).font(.caption).foregroundStyle(row.kind == .missing || row.kind == .gone ? .orange : .secondary).lineLimit(1)
+                                    Text(note).font(.caption).foregroundStyle(row.kind == .missing ? .orange : .secondary).lineLimit(1)
                                 }
                             }
                             Spacer()
                             switch row.kind {
                             case .missing:
                                 Button("移除") { toggle(row.name, row.path, false, keep: false) }
-                            case .gone:
-                                EmptyView()
                             default:
                                 Toggle(row.name, isOn: Binding(get: { row.on }, set: { flip(row, $0) }))
                                     .toggleStyle(.switch).labelsHidden()
                             }
                         }
                         .padding(12)
+                        .background(selected == row.id ? Color.accentColor.opacity(0.12) : .clear)
+                        .contentShape(Rectangle())
+                        .onTapGesture { selected = selected == row.id ? nil : row.id }
                         .overlay(alignment: .bottom) { Divider() }
                     }
                 }
@@ -140,7 +157,7 @@ struct LaunchItemsView: View {
     // MARK: 合并：已装的软件 + 登录项 + 软件自己登记的
 
     private struct Row: Identifiable {
-        enum Kind { case login, byApp, off, missing, gone }
+        enum Kind { case login, byApp, off, missing }
         let name: String
         let path: String
         let kind: Kind
@@ -156,8 +173,9 @@ struct LaunchItemsView: View {
         for app in model.apps { if let p = app.path { byPath[p] = Row(name: app.name, path: p, kind: .off, on: false) } }
         for (path, items) in Dictionary(grouping: registered, by: \.appPath) {
             let name = items[0].appName
+            // 应用文件已经没了：起不来，系统也不让单独删这条记录（只有 sfltool resetbtm 整本清掉），不列出来
             if !items[0].appExists {
-                byPath[path] = Row(name: name, path: path, kind: .gone, on: false, note: String(localized: "应用已经不在了"))
+                continue
             } else if items.contains(where: \.running) {
                 byPath[path] = Row(name: byPath[path]?.name ?? name, path: path, kind: .byApp, on: true, note: String(localized: "软件自己设置的"))
             } else if items.contains(where: \.enabled) {
@@ -181,6 +199,30 @@ struct LaunchItemsView: View {
         }
     }
 
+    private var selectedHint: String {
+        guard let row = rows.first(where: { $0.id == selected }) else { return String(localized: "点选一个应用，再按 − 移除") }
+        return canRemove(row) ? String(localized: "已选 \(row.name)") : String(localized: "\(row.name) 没在登录时打开")
+    }
+
+    private func canRemove(_ row: Row) -> Bool {
+        switch row.kind {
+        case .login, .byApp: row.on || row.kind == .byApp
+        case .missing: true
+        case .off: false
+        }
+    }
+
+    /// “−”：登录项直接移除；软件自己设置的带人去系统设置；应用已经不在的直接清掉
+    private func removeRow(_ row: Row) {
+        switch row.kind {
+        case .login: toggle(row.name, row.path, false)
+        case .byApp: flip(row, false)
+        case .missing: toggle(row.name, row.path, false, keep: false)
+        case .off: return
+        }
+        selected = nil
+    }
+
     private func flip(_ row: Row, _ on: Bool) {
         switch row.kind {
         case .byApp:
@@ -189,7 +231,7 @@ struct LaunchItemsView: View {
             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")!)
         case .login, .off:
             toggle(row.name, row.path, on)
-        case .missing, .gone:
+        case .missing:
             break
         }
     }
