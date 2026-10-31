@@ -11,7 +11,11 @@ struct LaunchItemsView: View {
     @State private var automationDenied = false
     /// 这次关掉的登录项，用来重新打开
     @State private var removedLogin: [String: String] = [:]
+    /// 指向的应用已经不在了的登录项（应用被删了，系统不会自己去掉）
+    @State private var missingLogin: Set<String> = []
     @State private var showOthers = false
+    /// 软件在自己的设置里打开的开机启动（系统后台任务账本里读出来的）
+    @State private var registered: [RegisteredItems.Item] = []
 
     private var broken: [LaunchItem] { model.launchGroups.first { $0.id == "broken" }?.items ?? [] }
     private var others: [(LaunchItem, LaunchGroup)] {
@@ -23,6 +27,7 @@ struct LaunchItemsView: View {
             VStack(alignment: .leading, spacing: 20) {
                 PageHeader(.launch, subtitle: "开机后自己打开的应用。关掉不会卸载应用，随时可以再打开。")
                 login
+                if !shownRegistered.isEmpty { registeredCard }
                 background
             }
             .padding(32)
@@ -57,18 +62,27 @@ struct LaunchItemsView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 3), spacing: 0) {
                     ForEach(rows, id: \.0) { name, path, on in
                         HStack(spacing: 12) {
-                            Image(nsImage: FileIcon.image(path, folder: false, size: 30)).resizable().frame(width: 30, height: 30)
-                            Text(name).lineLimit(1).foregroundStyle(on ? .primary : .secondary)
-                            Spacer()
-                            Toggle(name, isOn: Binding(get: { on }, set: { toggle(name, path, $0) }))
-                                .toggleStyle(.switch).labelsHidden()
+                            Image(nsImage: FileIcon.image(path.isEmpty ? "/Applications/\(name).app" : path, folder: false, size: 30)).resizable().frame(width: 30, height: 30)
+                            if missingLogin.contains(name) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(name).lineLimit(1).foregroundStyle(.secondary)
+                                    Text("应用已经不在了").font(.caption).foregroundStyle(.orange)
+                                }
+                                Spacer()
+                                Button("移除") { toggle(name, path, false, keep: false) }
+                            } else {
+                                Text(name).lineLimit(1).foregroundStyle(on ? .primary : .secondary)
+                                Spacer()
+                                Toggle(name, isOn: Binding(get: { on }, set: { toggle(name, path, $0) }))
+                                    .toggleStyle(.switch).labelsHidden()
+                            }
                         }
                         .padding(12)
                         .overlay(alignment: .bottom) { Divider() }
                     }
                 }
                 HStack {
-                    Text("有些应用是在自己的设置里开的“开机启动”，不在这里，系统设置里能看到全部。")
+                    Text(shownRegistered.isEmpty ? "有些应用是在自己的设置里开的“开机启动”，不在这里，系统设置里能看到全部。" : "软件在自己设置里开的开机启动在下面。")
                     Button("打开系统设置") {
                         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")!)
                     }
@@ -78,6 +92,72 @@ struct LaunchItemsView: View {
             }
         }
         .card()
+    }
+
+    // MARK: 软件自己设置的
+
+    /// 和“登录时打开”重复的（老式登录项在账本里也有一条）不再列
+    private var shownRegistered: [RegisteredItems.Item] {
+        let listed = Set(loginItems.map(\.path))
+        return registered.filter { $0.kind != .app || !listed.contains($0.appPath) }
+    }
+
+    private var registeredCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("软件自己设置的").fontWeight(.semibold)
+                Text("这些是软件在自己的设置里打开的，要关就到那个软件的设置里，或者系统设置里关。").font(.callout).foregroundStyle(.secondary)
+            }
+            .padding(16)
+            Divider()
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 2), spacing: 0) {
+                ForEach(shownRegistered) { item in
+                    HStack(spacing: 12) {
+                        Image(nsImage: FileIcon.image(item.appPath, folder: false, size: 30)).resizable().frame(width: 30, height: 30)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.appName).lineLimit(1)
+                            Text(detail(item)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                        Spacer()
+                        status(item)
+                    }
+                    .padding(12)
+                    .overlay(alignment: .bottom) { Divider() }
+                }
+            }
+            HStack {
+                Text("Adieu 只能看，改不了：苹果只让软件自己或系统设置改这些。")
+                Button("打开系统设置") {
+                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")!)
+                }
+                .buttonStyle(.link)
+            }
+            .font(.caption).foregroundStyle(.secondary).padding(14)
+        }
+        .card()
+    }
+
+    private func detail(_ item: RegisteredItems.Item) -> String {
+        // 登记的名字有时是程序名（Cursor 是 true）或带开发者编号的标识符，只留看得懂的那段
+        var name = item.name.split(separator: ".").last.map(String.init) ?? item.name
+        if ["true", "env", "sh", "bash", "node", "python3"].contains(name.lowercased()) || name == item.appName { name = "" }
+        switch item.kind {
+        case .app: return String(localized: "登录时打开")
+        case .loginItem: return name.isEmpty ? String(localized: "开机启动助手") : String(localized: "开机启动助手 \(name)")
+        case .agent: return name.isEmpty ? String(localized: "后台程序") : String(localized: "后台程序 \(name)")
+        }
+    }
+
+    @ViewBuilder private func status(_ item: RegisteredItems.Item) -> some View {
+        if !item.appExists {
+            Text("应用已经不在了").font(.caption).foregroundStyle(.orange)
+        } else if item.running {
+            Text("开着").font(.caption).foregroundStyle(.green)
+        } else if item.enabled {
+            Text("系统设置里关掉了").font(.caption).foregroundStyle(.secondary)
+        } else {
+            Text("没开").font(.caption).foregroundStyle(.secondary)
+        }
     }
 
     private func permissionHint(_ error: String) -> some View {
@@ -107,21 +187,29 @@ struct LaunchItemsView: View {
             loginLoaded = true
             return
         }
-        let r = await blocking { LoginItems.list() }
+        async let found = blocking { RegisteredItems.scan() }
+        let r = await blocking { () -> (items: [LoginItems.Item], error: String?, missing: Set<String>) in
+            let r = LoginItems.list()
+            let missing = r.items.filter { $0.path.isEmpty || !FileManager.default.fileExists(atPath: $0.path) }.map(\.name)
+            return (r.items, r.error, Set(missing))
+        }
         loginItems = r.items
+        missingLogin = r.missing
+        registered = await found
         loginError = r.error
         if r.error != nil { automationDenied = await blocking { Permissions.automation == .denied } }
         loginLoaded = true
     }
 
-    private func toggle(_ name: String, _ path: String, _ on: Bool) {
+    /// keep：关掉后留在列表里（灰着，可以再打开）；应用已经不在了的直接拿掉
+    private func toggle(_ name: String, _ path: String, _ on: Bool, keep: Bool = true) {
         guard !model.useSample else { return }
         Task {
             if let error = await blocking({ on ? LoginItems.add(path: path) : LoginItems.remove(name) }) {
                 model.notice = error
                 return
             }
-            if on { removedLogin[name] = nil } else { removedLogin[name] = path }
+            if on || !keep { removedLogin[name] = nil } else { removedLogin[name] = path }
             await loadLogin()
         }
     }

@@ -282,6 +282,8 @@ struct UninstallSheet: View {
             let agents = parts.filter { $0.kind == .background && $0.id.hasPrefix("agent.") }
                 .map { LaunchItem(owner: app.name, label: String($0.id.dropFirst(6)), isUser: true) }
             await blocking { for a in agents { LaunchScanner.unload(a) } }
+            let appPath = app.path
+            let logins = await blocking { appPath.map(LoginItems.names(pointingInto:)) ?? [] }
             let urls = parts.map { URL(filePath: ($0.path as NSString).expandingTildeInPath) }
             var sizes: [String: Double] = [:]
             for (u, p) in zip(urls, parts) { if let s = p.size { sizes[u.path] = s } }
@@ -292,6 +294,7 @@ struct UninstallSheet: View {
             model.notice = nil
             if let entry, entry.files.contains(where: { $0.originalPath == app.path }) {
                 model.apps.removeAll { $0.id == app.id }
+                await blocking { for name in logins { _ = LoginItems.remove(name) } }
             }
         }
         step = .done

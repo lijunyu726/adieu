@@ -352,7 +352,8 @@ struct FileIcon: View {
             let ext = (path as NSString).pathExtension
             let type = ext.isEmpty ? nil : UTType(filenameExtension: ext)
             let isFolder = folder ?? (type == nil || type!.isDynamic)
-            image = NSWorkspace.shared.icon(for: isFolder ? .folder : type!)
+            // 不是文件夹又认不出类型（比如登录项指向的应用已经删了，路径是空的）就用普通文件图标
+            image = NSWorkspace.shared.icon(for: isFolder ? .folder : type ?? .data)
         }
         let small = image.bitmap(pixels: CGSize(width: size * 2, height: size * 2))
         cache.setObject(small, forKey: key)

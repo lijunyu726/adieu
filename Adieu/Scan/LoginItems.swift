@@ -27,9 +27,20 @@ enum LoginItems {
         let items = r.out.split(separator: "\n").compactMap { line -> Item? in
             let parts = line.split(separator: "\t", maxSplits: 1, omittingEmptySubsequences: false)
             guard let name = parts.first, !name.isEmpty else { return nil }
-            return Item(name: String(name), path: parts.count > 1 ? String(parts[1]) : "")
+            // 应用被删掉后，路径读出来是 missing value
+            let path = parts.count > 1 && parts[1] != "missing value" ? String(parts[1]) : ""
+            return Item(name: String(name), path: path)
         }
         return (items, nil)
+    }
+
+    /// 指向这个应用的登录项名字。卸载前先查：应用一删，“系统事件”给出的路径就成了 missing value，对不上了。
+    /// 应用删了系统不会自己去掉这一项，系统设置和“开机与后台”里会一直留着一个打不开的名字。
+    /// 只在已经允许控制“系统事件”时查，卸载过程中不为这个弹权限窗口
+    static func names(pointingInto appPath: String) -> [String] {
+        guard Permissions.automation == .granted else { return [] }
+        let root = appPath.hasSuffix("/") ? String(appPath.dropLast()) : appPath
+        return list().items.filter { $0.path == root || $0.path.hasPrefix(root + "/") }.map(\.name)
     }
 
     static func remove(_ name: String) -> String? {
