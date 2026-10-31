@@ -35,6 +35,15 @@ enum HistoryStore {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(entries) { try? data.write(to: file, options: .atomic) }
     }
+
+    /// 一次删几千个文件，记录就有几 MB，编码和写盘放到后台；排成一队，后存的不会被先存的盖掉
+    private static let queue = DispatchQueue(label: "com.ljy.adieu.history")
+
+    static func saveLater(_ entries: [HistoryEntry]) {
+        queue.async { save(entries) }
+    }
+
+    static func flush() { queue.sync {} }
 }
 
 /// 卸载掉的应用在“最近”里还显示原来的图标：删之前存一张 128 像素的 PNG，按应用包的名字存

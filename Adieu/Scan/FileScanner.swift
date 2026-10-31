@@ -14,10 +14,11 @@ enum FileScanner {
         let lastUsed: Date?
         let isScreenCapture: Bool
         let isPackage: Bool
+        /// 文件名和小写后缀扫描时就记下：分类时每个文件要读好几遍，每次现建 URL 再取，一万多个文件要多花几百毫秒
+        let name: String
+        let ext: String
 
         var url: URL { URL(filePath: path) }
-        var name: String { url.lastPathComponent }
-        var ext: String { url.pathExtension.lowercased() }
         var lastTouched: Date { max(lastUsed ?? modified, modified) }
     }
 
@@ -101,6 +102,6 @@ enum FileScanner {
         let ext = url.pathExtension.lowercased()
         let capture = screenshotExts.contains(ext) || recordingExts.contains(ext)
         return File(path: url.path, size: size, bytes: bytes, modified: modified ?? .distantPast,
-                    lastUsed: lastUsed, isScreenCapture: capture, isPackage: package)
+                    lastUsed: lastUsed, isScreenCapture: capture, isPackage: package, name: url.lastPathComponent, ext: ext)
     }
 }

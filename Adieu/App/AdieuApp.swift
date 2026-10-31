@@ -70,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        HangLog.start()
         if UserDefaults.standard.bool(forKey: "AdieuUpdatePreview") {
             UpdatePrompt.preview()
         }
@@ -97,6 +98,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) { relief?.cancel() }
+
+    /// 退出前等后台排队的记录写完
+    func applicationWillTerminate(_ notification: Notification) { HistoryStore.flush() }
 
     /// 登录项启动时，系统发来的“打开应用”事件里带着 keyAELaunchedAsLogInItem
     private static var launchedAtLogin: Bool {

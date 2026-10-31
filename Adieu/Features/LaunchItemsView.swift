@@ -7,6 +7,8 @@ struct LaunchItemsView: View {
     @State private var loginItems: [LoginItems.Item] = []
     @State private var loginError: String?
     @State private var loginLoaded = false
+    /// 读不到登录项时，是不是之前在系统弹窗里点了“不允许”
+    @State private var automationDenied = false
     /// 这次关掉的登录项，用来重新打开
     @State private var removedLogin: [String: String] = [:]
     @State private var showOthers = false
@@ -25,7 +27,7 @@ struct LaunchItemsView: View {
             }
             .padding(32)
         }
-        .onAppear { if !loginLoaded { loadLogin() } }
+        .task { if !loginLoaded { await loadLogin() } }
     }
 
     // MARK: 登录项
@@ -80,7 +82,7 @@ struct LaunchItemsView: View {
 
     private func permissionHint(_ error: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            let denied = Permissions.automation == .denied
+            let denied = automationDenied
             Text("还看不到登录时打开的应用").fontWeight(.semibold)
             Text(denied ? "之前在系统弹窗里点了“不允许”。到“系统设置 › 隐私与安全性 › 自动化”里找到 Adieu，把“System Events”打开，再回来点“再试一次”。"
                         : "Adieu 要通过 macOS 自带的“系统事件”才能列出这些应用。点“允许”，系统会弹窗问你，选“好”就行。")
@@ -90,34 +92,38 @@ struct LaunchItemsView: View {
                 if denied {
                     Button("打开系统设置") { NSWorkspace.shared.open(Permissions.automationSettings) }.buttonStyle(.borderedProminent)
                 } else {
-                    Button("允许") { Task { _ = await Permissions.requestAutomation(); loadLogin() } }.buttonStyle(.borderedProminent)
+                    Button("允许") { Task { _ = await Permissions.requestAutomation(); await loadLogin() } }.buttonStyle(.borderedProminent)
                 }
-                Button("再试一次", action: loadLogin)
+                Button("再试一次") { Task { await loadLogin() } }
             }
         }
         .padding(16)
     }
 
-    private func loadLogin() {
+    /// 要等“系统事件”回话，在后台读
+    private func loadLogin() async {
         if model.useSample {
             loginItems = Sample.loginApps.map { .init(name: $0.name, path: "/Applications") }
             loginLoaded = true
             return
         }
-        let r = LoginItems.list()
+        let r = await blocking { LoginItems.list() }
         loginItems = r.items
         loginError = r.error
+        if r.error != nil { automationDenied = await blocking { Permissions.automation == .denied } }
         loginLoaded = true
     }
 
     private func toggle(_ name: String, _ path: String, _ on: Bool) {
         guard !model.useSample else { return }
-        if let error = on ? LoginItems.add(path: path) : LoginItems.remove(name) {
-            model.notice = error
-            return
+        Task {
+            if let error = await blocking({ on ? LoginItems.add(path: path) : LoginItems.remove(name) }) {
+                model.notice = error
+                return
+            }
+            if on { removedLogin[name] = nil } else { removedLogin[name] = path }
+            await loadLogin()
         }
-        if on { removedLogin[name] = nil } else { removedLogin[name] = path }
-        loadLogin()
     }
 
     /// 从“应用程序”里挑，可以多选；已经在列表里的跳过
@@ -129,11 +135,15 @@ struct LaunchItemsView: View {
         panel.prompt = "登录时打开"
         guard panel.runModal() == .OK, !model.useSample else { return }
         let existing = Set(loginItems.map(\.path))
-        for url in panel.urls where !existing.contains(url.path) {
-            if let error = LoginItems.add(path: url.path) { model.notice = error; break }
-            removedLogin[url.deletingPathExtension().lastPathComponent] = nil
+        let urls = panel.urls.filter { !existing.contains($0.path) }
+        Task {
+            for url in urls {
+                let path = url.path
+                if let error = await blocking({ LoginItems.add(path: path) }) { model.notice = error; break }
+                removedLogin[url.deletingPathExtension().lastPathComponent] = nil
+            }
+            await loadLogin()
         }
-        loadLogin()
     }
 
     // MARK: 其他软件的后台程序
@@ -215,9 +225,12 @@ struct LaunchItemsView: View {
     /// 先停用用户级的，再删除 plist；系统级的由 perform 接着弹一次密码
     private func removeBroken() {
         let items = broken
-        for item in items where item.isUser { LaunchScanner.unload(item) }
-        model.perform(.init(title: String(localized: "清掉失效的后台程序 \(items.count) 个"), source: "开机与后台",
-                            urls: items.compactMap(\.plist).map { URL(filePath: $0) },
-                            onDone: { _ in Task { await model.loadLaunch() } }))
+        Task {
+            // 停用要等对应的进程退出，在后台做
+            await blocking { for item in items where item.isUser { LaunchScanner.unload(item) } }
+            model.perform(.init(title: String(localized: "清掉失效的后台程序 \(items.count) 个"), source: "开机与后台",
+                                urls: items.compactMap(\.plist).map { URL(filePath: $0) },
+                                onDone: { _ in Task { await model.loadLaunch() } }))
+        }
     }
 }

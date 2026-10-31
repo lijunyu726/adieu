@@ -18,9 +18,15 @@ struct Snapshot: Codable, Sendable {
 enum DiaryStore {
     private static var file: URL { HistoryStore.folder.appending(path: "snapshots.json") }
 
+    /// 读过一次就留在内存里：首页每次重画都要用，扫描时一会儿就重画一次，不能每次都读盘解码
+    private static var cache: [Snapshot]?
+    private static let queue = DispatchQueue(label: "com.ljy.adieu.diary")
+
     static func load() -> [Snapshot] {
-        guard let data = try? Data(contentsOf: file) else { return [] }
-        return (try? JSONDecoder().decode([Snapshot].self, from: data)) ?? []
+        if let cache { return cache }
+        let all = (try? Data(contentsOf: file)).flatMap { try? JSONDecoder().decode([Snapshot].self, from: $0) } ?? []
+        cache = all
+        return all
     }
 
     /// 空间分布算完才记，否则分类不全
@@ -40,8 +46,13 @@ enum DiaryStore {
         var all = load().filter { $0.day != today }
         all.append(Snapshot(day: today, free: m.disk.free, used: m.disk.used, categories: cats, apps: apps, parts: parts))
         all = Array(all.sorted { $0.day < $1.day }.suffix(60))
-        try? FileManager.default.createDirectory(at: HistoryStore.folder, withIntermediateDirectories: true)
-        if let data = try? JSONEncoder().encode(all) { try? data.write(to: file, options: .atomic) }
+        cache = all
+        let file = file, snapshots = all
+        // 写盘排成一队放到后台，后写的不会被先写的盖掉
+        queue.async {
+            try? FileManager.default.createDirectory(at: HistoryStore.folder, withIntermediateDirectories: true)
+            if let data = try? JSONEncoder().encode(snapshots) { try? data.write(to: file, options: .atomic) }
+        }
     }
 
     struct Week {

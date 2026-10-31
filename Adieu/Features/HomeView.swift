@@ -52,7 +52,9 @@ struct HomeView: View {
 
     /// 顶部一整条：按磁盘总量分段，看“占整块盘多少”
     private var overview: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        // spaceCategories 每次读都要现算，一次重画只算一遍
+        let categories = categories
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("已用 \(Text(model.disk.used.gbText).fontWeight(.bold).foregroundStyle(.primary).monospacedDigit()) / \(model.disk.total.gbText)")
                     .foregroundStyle(.secondary)
@@ -68,6 +70,7 @@ struct HomeView: View {
 
     /// 每类一行：条以最大的一类为满格，看“彼此谁大谁小”
     private var categoryRows: some View {
+        let categories = categories
         let maxSize = categories.map(\.size).max() ?? 1
         return VStack(spacing: 2) {
             ForEach(categories) { c in
@@ -148,7 +151,8 @@ private struct Suggestion: Identifiable {
         if let dev = model.devTools.filter({ $0.reclaimable > 0.1 }).max(by: { $0.reclaimable < $1.reclaimable }) {
             list.append(.init(title: String(localized: "\(dev.name) 里有可以回收的缓存"), size: dev.reclaimable, detail: dev.note, target: .devTools))
         }
-        for id in [AppSection.installers, .captures, .bigFiles, .stale] {
+        // 图片与视频不给建议（见 FileSuggestion），不用把上万个文件过一遍
+        for id in [AppSection.installers, .bigFiles, .stale] {
             guard let c = model.category(id) else { continue }
             // 和文件页一样：不算汇总行，也不算刚删掉的
             let files = c.items.filter { !$0.isSummary && !model.removedKeys.contains($0.path ?? "\(id.rawValue).\($0.id)") }

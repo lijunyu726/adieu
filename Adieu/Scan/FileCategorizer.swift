@@ -39,8 +39,9 @@ enum FileCategorizer {
 
     // MARK: 显示用的文字
 
+    private static let home = FileManager.default.homeDirectoryForCurrentUser.path
+
     static func location(_ path: String) -> String {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
         var rel = path.hasPrefix(home + "/") ? String(path.dropFirst(home.count + 1)) : path
         rel = (rel as NSString).deletingLastPathComponent
         var parts = rel.split(separator: "/").map(String.init)

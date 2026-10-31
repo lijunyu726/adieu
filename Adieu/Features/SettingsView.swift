@@ -74,13 +74,16 @@ private struct GeneralSettings: View {
     @AppStorage("showMenuBar") private var showMenuBar = true
     @State private var sound = DeleteSound.current
     @State private var language = AppLanguage.current
-    @State private var loginItem = SMAppService.mainApp.status == .enabled
+    /// 问一次系统服务要走进程间通信，不放在每次重建都会算的 @State 初始值里；第一次用到时查，之后记住
+    @MainActor private static var loginItemOn = SMAppService.mainApp.status == .enabled
+    @State private var loginItem = Self.loginItemOn
 
     private func setLoginItem(_ on: Bool) {
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {}
         loginItem = SMAppService.mainApp.status == .enabled
+        Self.loginItemOn = loginItem
     }
 
     var body: some View {
@@ -117,12 +120,19 @@ private struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear {
+            loginItem = SMAppService.mainApp.status == .enabled
+            Self.loginItemOn = loginItem
+        }
     }
 }
 
 private struct PermissionSettings: View {
-    @State private var fullDisk = Permissions.hasFullDiskAccess
-    @State private var automation = Permissions.automation
+    /// 上次查到的结果。@State 的初始值在这个视图每次重建时都会再算一遍（设置窗口刷新一次就重建一次），
+    /// 所以不在那里直接问系统：第一次用到时查一次，之后在后台查完再更新
+    @MainActor private static var known = (fullDisk: Permissions.hasFullDiskAccess, automation: Permissions.automation)
+    @State private var fullDisk = Self.known.fullDisk
+    @State private var automation = Self.known.automation
     @State private var notifications: Permissions.State?
     @State private var asking = false
 
@@ -190,6 +200,7 @@ private struct PermissionSettings: View {
         Task {
             asking = true
             automation = await Permissions.requestAutomation()
+            Self.known.automation = automation
             asking = false
         }
     }
@@ -202,8 +213,10 @@ private struct PermissionSettings: View {
     }
 
     private func refresh() async {
-        fullDisk = Permissions.hasFullDiskAccess
-        automation = Permissions.automation
+        let now = await blocking { (fullDisk: Permissions.hasFullDiskAccess, automation: Permissions.automation) }
+        Self.known = now
+        fullDisk = now.fullDisk
+        automation = now.automation
         notifications = await Notifier.state()
     }
 }

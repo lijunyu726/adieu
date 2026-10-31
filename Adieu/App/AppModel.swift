@@ -72,28 +72,37 @@ final class AppModel {
     }
 
     /// 直接删除（不进废纸篓）并记一笔。示例模式只做界面演示，不碰文件。
-    /// 有权限不够的（如 App Store 装的应用）会接着弹系统密码窗口，完成后才调用 onDone
-    @discardableResult
-    func perform(_ request: TrashRequest) -> HistoryEntry? {
-        let (entry, admin) = firstPass(request)
-        if admin.isEmpty {
-            if entry != nil { DeleteSound.play() }
-            request.onDone?(entry)
-        } else {
-            Task {
-                let merged = await adminPass(request, admin, entry)
-                if merged != nil { DeleteSound.play() }
-                request.onDone?(merged)
-            }
+    /// 删除在后台线程做（删大文件夹前要先走一遍算大小，要好几秒），删完才调用 onDone；
+    /// 有权限不够的（如 App Store 装的应用）会接着弹系统密码窗口
+    func perform(_ request: TrashRequest) {
+        pendingTrash = nil
+        Task {
+            let (entry, admin) = await firstPass(request)
+            var result = entry
+            if !admin.isEmpty { result = await adminPass(request, admin, entry) }
+            if result != nil { DeleteSound.play() }
+            request.onDone?(result)
         }
-        return entry
+    }
+
+    /// 正在删的路径：一大批要删好几秒，这期间再点一次删除，同一个文件不会再删一遍
+    @ObservationIgnored private var deleting: Set<String> = []
+
+    /// 在后台线程删，正在删的跳过
+    private func delete(_ urls: [URL], sizes: [String: Double] = [:]) async -> TrashService.Outcome {
+        let urls = urls.filter { !deleting.contains($0.path) }
+        let paths = urls.map(\.path)
+        deleting.formUnion(paths)
+        defer { deleting.subtract(paths) }
+        let protected = protectedPaths
+        return await blocking { TrashService.delete(urls, sizes: sizes, protected: protected) }
     }
 
     /// 卸载应用：直接删除，不进废纸篓。权限不够的弹一次系统密码窗口，全部删完才返回
     func deleteForUninstall(_ request: TrashRequest) async -> HistoryEntry? {
         pendingTrash = nil
         if useSample { return nil }
-        let first = TrashService.delete(request.urls, sizes: request.sizes, protected: protectedPaths)
+        let first = await delete(request.urls, sizes: request.sizes)
         var entry = record(request, files: first.done, into: nil)
         report(first.failed)
         if !first.needsAdmin.isEmpty {
@@ -107,13 +116,12 @@ final class AppModel {
         return entry
     }
 
-    private func firstPass(_ request: TrashRequest) -> (HistoryEntry?, [URL]) {
-        pendingTrash = nil
+    private func firstPass(_ request: TrashRequest) async -> (HistoryEntry?, [URL]) {
         if useSample {
             removedKeys.formUnion(request.keys)
             return (nil, [])
         }
-        let result = TrashService.delete(request.urls, sizes: request.sizes, protected: protectedPaths)
+        let result = await delete(request.urls, sizes: request.sizes)
         let entry = record(request, files: result.done, into: nil)
         report(result.failed)
         return (entry, result.needsAdmin)
@@ -141,7 +149,7 @@ final class AppModel {
             e = new
             history.insert(e, at: 0)
         }
-        HistoryStore.save(history)
+        HistoryStore.saveLater(history)
         removedKeys.formUnion(files.map(\.originalPath))
         refreshDisk()
         return e
@@ -164,7 +172,7 @@ final class AppModel {
             do { try TrashService.restore(f) } catch { errors.append(error.localizedDescription) }
         }
         history[i].restored = errors.isEmpty
-        HistoryStore.save(history)
+        HistoryStore.saveLater(history)
         refreshDisk()
         if !errors.isEmpty { notice = errors.joined(separator: "\n") }
     }
@@ -185,10 +193,23 @@ final class AppModel {
             var pending = listed[...]
             for app in pending.prefix(6) { group.addTask { await blocking { AppScanner.measured(app) } } }
             pending = pending.dropFirst(6)
+            // 攒一会儿再一起写回：每测完一个就改一次 apps，几百个应用就是几百次整窗重画
+            var done: [AppItem] = []
+            var flushed = ContinuousClock.now
+            @MainActor func flush() {
+                guard !done.isEmpty else { return }
+                var list = apps
+                for m in done { if let i = list.firstIndex(where: { $0.id == m.id }) { list[i] = m } }
+                apps = list
+                done = []
+                flushed = .now
+            }
             for await m in group {
-                if let i = apps.firstIndex(where: { $0.id == m.id }) { apps[i] = m }
+                done.append(m)
+                if flushed.duration(to: .now) > .milliseconds(300) { flush() }
                 if let next = pending.popFirst() { group.addTask { await blocking { AppScanner.measured(next) } } }
             }
+            flush()
         }
     }
 
@@ -212,6 +233,8 @@ final class AppModel {
     /// 每次扫描前检查一次
     var hasFullDiskAccess = true
     var devLog: [String: String] = [:]
+    /// 桌面上放了 30 天、可以归档的截图张数（自动规则卡片上显示）；规则检查时在后台数
+    var oldShotCount: Int?
 
     @ObservationIgnored private var scanInFlight = false
 
@@ -239,11 +262,14 @@ final class AppModel {
         async let appsDone: Void = loadApps(force: force)
         async let filesDone: Void = loadFiles()
         _ = await (filesDone, appsDone, spaceDone, leftDone, launchDone, devDone)
-        rebuildFileCategories()
+        HangLog.mark("各项扫描结束")
+        // 应用大小测完了再分一次：安装包对不对得上已装的应用要用到
+        await categorize()
         DiaryStore.record(self)
         startRules()
         await RuleEngine.evaluate(self)
         releaseFreedMemory()
+        HangLog.mark("扫描全部完成")
     }
 
     func loadLeftovers() async {
@@ -291,7 +317,7 @@ final class AppModel {
                     failed.append(action.display)
                 }
             case .trash(let paths):
-                let r = TrashService.delete(paths.map { URL(filePath: $0) }, protected: protectedPaths)
+                let r = await delete(paths.map { URL(filePath: $0) })
                 trashed += r.done
                 log.append(r.failed.isEmpty ? String(localized: "已删除 \(r.done.count) 项") : r.failed.map { "\($0.name)：\($0.reason)" }.joined(separator: "\n"))
             }
@@ -307,7 +333,7 @@ final class AppModel {
             entry.commandFreed = max(0, before - after)
         }
         history.insert(entry, at: 0)
-        HistoryStore.save(history)
+        HistoryStore.saveLater(history)
         // 只跑了命令（npm cache clean 之类）也算删完了，和删文件响同一声
         if !trashed.isEmpty || (commandsRan && failed.isEmpty) { DeleteSound.play() }
         if !failed.isEmpty {
@@ -318,8 +344,9 @@ final class AppModel {
     private func loadFiles() async {
         filesLoading = true
         fileScan = await blocking { FileScanner.scan() }
+        // 分好类再算扫完：不然页面会先闪一下“这里是空的”
+        await categorize()
         filesLoading = false
-        rebuildFileCategories()
     }
 
     private func loadSpace() async {
@@ -330,9 +357,24 @@ final class AppModel {
 
     /// 删掉的文件不算进分类：列表、汇总、侧边栏、首页建议都按剩下的算
     func rebuildFileCategories() {
-        guard var scan = fileScan else { return }
-        if !removedKeys.isEmpty { scan.files.removeAll { removedKeys.contains($0.path) } }
-        fileCategories = FileCategorizer.categories(scan, apps: apps)
+        Task { await categorize() }
+    }
+
+    /// 上一次分类的编号：删得快时几次分类会同时在算，只用最后开始的那次
+    @ObservationIgnored private var categorizeRun = 0
+
+    /// 一万多个文件分一次类要几百毫秒，在主线程上算界面会停住，所以放到后台
+    private func categorize() async {
+        guard let scan = fileScan else { return }
+        categorizeRun += 1
+        let run = categorizeRun
+        let removed = removedKeys, apps = apps
+        let result = await blocking {
+            var scan = scan
+            if !removed.isEmpty { scan.files.removeAll { removed.contains($0.path) } }
+            return FileCategorizer.categories(scan, apps: apps)
+        }
+        if run == categorizeRun { fileCategories = result }
     }
 
     func category(_ id: AppSection) -> FileCategory? {

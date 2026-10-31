@@ -237,8 +237,7 @@ extension View {
 
 /// 一段按比例着色的横条
 struct SegmentBar: View {
-    struct Segment: Identifiable {
-        let id = UUID()
+    struct Segment {
         let value: Double
         let color: Color
         var dimmed = false
@@ -251,7 +250,8 @@ struct SegmentBar: View {
         GeometryReader { geo in
             let sum = total ?? segments.map(\.value).reduce(0, +)
             HStack(spacing: 2) {
-                ForEach(segments) { s in
+                // 按位置认：每次重画都换新 id 的话，SwiftUI 会把每一段删掉再重新插入
+                ForEach(Array(segments.enumerated()), id: \.offset) { _, s in
                     Rectangle()
                         .fill(s.color.opacity(s.dimmed ? 0.22 : 1))
                         .frame(width: sum > 0 ? max(2, geo.size.width * s.value / sum - 2) : 0)

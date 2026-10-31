@@ -22,6 +22,7 @@
 - 界面：用 `-didOnboard YES -AdieuSection <页面>` 启动，再用 `screencapture -l <窗口ID>` 截图检查；连续截图时必须等上一个进程完全退出，否则会截到旧窗口；从终端启动的窗口可能不在屏幕上（取不到窗口 ID），先用 System Events 把进程设为前台
 - 截图用启动参数（调试与截图用，正常启动不受影响，界面上没有入口）：`-AdieuFileMode grid|list|cards` 文件页直接进某种查看方式（该页没有这种方式时忽略）；`-AdieuUninstall YES` 应用程序页直接打开第一个应用的卸载确认；`-AdieuSettingsTab safety|rules|general|permissions|about` 设置停在某一页；`-AdieuSheet menuBar|onboarding` 把菜单栏面板、欢迎页放在主窗口右边显示（`AppSheet.isPreview`，不走 sheet）；`-AdieuUpdatePreview YES` 只弹出更新进度条，不下载、不替换。官网手册（adieu-site 的 `website/manual/`）的图都这样截：`open -n -g <Debug 版> --args -didOnboard YES -AdieuSample YES …`，只 kill 自己开的那个 PID，不动 /Applications 里正在用的 Adieu
 - 后台截图的坑：`CGEventPostToPid` 发的按键能送到后台实例（鼠标点击不行，后台窗口不响应）；窗口上挂着 sheet 或 alert 时 `screencapture -o -l` 一直截不到、不带 `-o` 也时好时坏，要先给该 PID 发几次 Shift 和鼠标移动唤醒，再不带 `-o` 截、按 alpha 裁掉阴影，必要时重开实例；启动时弹出的欢迎页 sheet 始终截不到，所以有了 `-AdieuSheet onboarding`。ScreenCaptureKit 截单窗口报 -3811，不可用
+- 卡顿：`-AdieuHangLog YES` 让后台每 20 毫秒问一次主线程，接住超过 100 毫秒就往标准错误写“主线程停了 N ms”，并在扫描结束时写时间点（`HangLog.mark`）。配合 `-AdieuLaunchHidden YES` 从终端直接跑可执行文件（继承终端的完全磁盘访问），等到“扫描全部完成”再 kill 自己的 PID。2026-10-31 实测本机：改动前扫描中主线程停 0.3 / 2.8 / 1.6 秒，改动后扫描中不再停（启动瞬间偶尔 0.2 秒，改动前也有）
 - **DerivedData 必须放在 `scratch/`（外置盘 S690）**：开发机系统盘只剩个位数 GB，默认的 `~/Library/Developer/Xcode/DerivedData` 会把系统盘挤满
 
 ## 安全边界（不可放松）
@@ -56,6 +57,8 @@
 - 截图验证只截 Adieu 自己的窗口（`CGWindowListCopyWindowInfo` 取窗口号再 `screencapture -l`），**禁止截整屏**；`pkill` 后立刻 `open` 会报 LaunchServices -600，要等进程完全退出再隔几秒
 - 小组件是沙盒扩展，自己读 `/` 的容量，不和主程序共享数据
 - 阻塞的磁盘读取和命令一律用 `blocking { }`（GCD 线程），不要用 `Task.detached` 或任务组直接跑：协作线程池只有 CPU 核数个线程，77 个应用的大小统计曾把它占满，文件扫描和开发工具扫描排队超过 75 秒（命令行单独跑只要 3 秒），页面一直显示“没有找到”。应用大小统计同时最多 6 个
+- 主线程只做界面。扫描、删除都会卡住所有窗口（用户反馈 M1 Max 上设置和扫描时略卡，根源都在这里），已挪到后台的：文件分类（`categorize()`，一次 1.5 秒，用 `categorizeRun` 丢掉过期结果；扫完才把 `filesLoading` 置假，否则先闪“空”）；应用列表的大小统计结果攒着、最多每 300 毫秒写回一次 `apps`（每写一次整页重画）；删除（`TrashService.delete` 在 `blocking` 里，`deleting` 防止同一路径被并发删两次）；`launchctl bootout`；历史和存储日记写盘走串行队列（`HistoryStore.saveLater`，退出时 `flush()`），日记读一次就缓存；“整理桌面截图”规则的个数扫描完才数一次，页面读 `oldShotCount`。登录项不用 `NSAppleScript`（只能在主线程，冷启动“系统事件”要 0.6 秒），改用 `/usr/bin/osascript` 在 `blocking` 里跑，参数用 `on run argv` 传；删除按读出来的名字（随系统语言，如“計算機”），不是按 .app 名。设置里的权限、登录启动状态不在 `@State` 初值里现查（视图每次重建都会查），用静态缓存，`onAppear` 后台刷新
+- 长列表用 `LazyVStack`（残留、历史、按天分组）；`ForEach` 的 id 要稳定，模型里不要放 `UUID()` 当 id（`SegmentBar` 曾因此每次重画都重建全部分段）；`body` 里不要反复调用有开销的计算属性，先 `let` 一次
 - 页面的“没有找到”必须同时判断对应的 loading 标志；`model.scanning` 为真时，“0 MB”“空”都不可信
 - 文件扫描跳过 `.photoslibrary`：一读里面就弹“照片”权限，而且图库内部文件不能单独删
 - 界面语言：简体中文、繁体中文、英语、日语、韩语、西班牙语、法语、德语。没在设置里选过时跟随系统。设置「通用 › 语言」写入 `AppleLanguages`，重新打开后整个界面换成那种语言。判断用的状态（「已安装」、分组名、分类名）在数据里是固定简体词，嵌进句子前先换成当前语言，界面上不出现中文词

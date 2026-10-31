@@ -279,9 +279,9 @@ struct UninstallSheet: View {
                 running.terminate()
                 for _ in 0..<25 where !running.isTerminated { try? await Task.sleep(for: .milliseconds(200)) }
             }
-            for p in parts where p.kind == .background && p.id.hasPrefix("agent.") {
-                LaunchScanner.unload(LaunchItem(owner: app.name, label: String(p.id.dropFirst(6)), isUser: true))
-            }
+            let agents = parts.filter { $0.kind == .background && $0.id.hasPrefix("agent.") }
+                .map { LaunchItem(owner: app.name, label: String($0.id.dropFirst(6)), isUser: true) }
+            await blocking { for a in agents { LaunchScanner.unload(a) } }
             let urls = parts.map { URL(filePath: ($0.path as NSString).expandingTildeInPath) }
             var sizes: [String: Double] = [:]
             for (u, p) in zip(urls, parts) { if let s = p.size { sizes[u.path] = s } }

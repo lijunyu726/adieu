@@ -11,7 +11,8 @@ struct LeftoversView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+                // 残留可能有几百项，每行要取一次图标：只画看得见的
+                LazyVStack(alignment: .leading, spacing: 24) {
                     PageHeader(.leftovers, subtitle: "应用已经删掉了，它们还留在电脑里。只列能确定是哪个应用留下的。")
                     if model.leftovers.isEmpty {
                         Group {
@@ -26,7 +27,7 @@ struct LeftoversView: View {
                                 Text(group.title).font(.headline)
                                 Text(group.subtitle).font(.caption).foregroundStyle(.secondary)
                             }
-                            VStack(spacing: 0) {
+                            LazyVStack(spacing: 0) {
                                 ForEach(group.items) { item in
                                     row(item)
                                     if item.id != group.items.last?.id { Divider() }
@@ -57,18 +58,21 @@ struct LeftoversView: View {
         var sizes: [String: Double] = [:]
         for i in items where i.paths.count == 1 { if let s = i.size { sizes[i.paths[0]] = s } }
         // 失效的开机启动项要启动的程序已经不在了，先停用不会有影响；plist 删掉后就没法按路径停用了
-        for i in items where i.paths.first?.contains("/LaunchAgents/") == true {
-            LaunchScanner.unload(LaunchItem(owner: i.name, label: "", plist: i.paths[0], isUser: true))
+        let agents = items.filter { $0.paths.first?.contains("/LaunchAgents/") == true }
+            .map { LaunchItem(owner: $0.name, label: "", plist: $0.paths[0], isUser: true) }
+        Task {
+            // 停用要等对应的进程退出，在后台做
+            await blocking { for a in agents { LaunchScanner.unload(a) } }
+            model.requestTrash(.init(title: String(localized: "删除 \(items.count) 项残留"), source: "残留文件",
+                                     urls: items.flatMap(\.paths).map { URL(filePath: $0) }, sizes: sizes, onDone: { _ in
+                withAnimation {
+                    // 只去掉真的删掉了的（取消输密码、没权限的留在列表里）
+                    let gone = items.filter { $0.paths.allSatisfy { model.removedKeys.contains($0) } }.map(\.id)
+                    for g in model.leftovers.indices { model.leftovers[g].items.removeAll { gone.contains($0.id) } }
+                    model.leftovers.removeAll { $0.items.isEmpty }
+                }
+            }))
         }
-        model.requestTrash(.init(title: String(localized: "删除 \(items.count) 项残留"), source: "残留文件",
-                                 urls: items.flatMap(\.paths).map { URL(filePath: $0) }, sizes: sizes, onDone: { _ in
-            withAnimation {
-                // 只去掉真的删掉了的（取消输密码、没权限的留在列表里）
-                let gone = items.filter { $0.paths.allSatisfy { model.removedKeys.contains($0) } }.map(\.id)
-                for g in model.leftovers.indices { model.leftovers[g].items.removeAll { gone.contains($0.id) } }
-                model.leftovers.removeAll { $0.items.isEmpty }
-            }
-        }))
     }
 
     private func row(_ item: LeftoverItem) -> some View {

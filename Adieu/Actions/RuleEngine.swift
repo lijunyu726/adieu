@@ -25,7 +25,7 @@ enum RuleEngine {
             let when = last.map { String(localized: " · 上次 \($0.formatted(.dateTime.month().day()))") } ?? ""
             return String(localized: "现在可回收约 \(size)") + when
         case "shot":
-            let n = oldScreenshots().count
+            let n = m.oldShotCount ?? 0
             return n == 0 ? String(localized: "桌面上没有放了 30 天的截图 · 只移动，不删除") : String(localized: "\(n) 张截图可以归档 · 只移动，不删除")
         case "wx":
             let wx = m.apps.first { $0.id == "com.tencent.xinWeChat" }?.dataSize
@@ -44,8 +44,8 @@ enum RuleEngine {
         }
     }
 
-    /// 桌面上放了 30 天以上的截图（只看桌面第一层）
-    static func oldScreenshots() -> [URL] {
+    /// 桌面上放了 30 天以上的截图（只看桌面第一层）。要把桌面列一遍，在后台调用
+    nonisolated static func oldScreenshots() -> [URL] {
         let desktop = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Desktop")
         let month = Date.now.addingTimeInterval(-30 * 86400)
         let urls = (try? FileManager.default.contentsOfDirectory(at: desktop, includingPropertiesForKeys: [.creationDateKey], options: [.skipsHiddenFiles])) ?? []
@@ -81,8 +81,15 @@ enum RuleEngine {
             remindOnce("wx", every: 7 * 86400, title: String(localized: "微信的数据有 \(wx.dataSize.gbText) 了"),
                        body: String(localized: "在微信的“设置 › 通用 › 存储空间”里可以按聊天清理。"))
         }
-        if on.contains("shot") { archiveScreenshots(m) }
+        if on.contains("shot") { await archiveScreenshots(m) }
         if on.contains("cache") { await weeklyCache(m) }
+        await countScreenshots(m)
+    }
+
+    /// 规则卡片上的张数：界面重画时不现数桌面，规则检查时数一遍记下
+    static func countScreenshots(_ m: AppModel) async {
+        guard !m.useSample else { return }
+        m.oldShotCount = await blocking { oldScreenshots().count }
     }
 
     /// 周日 21:00 以后，距上次超过 6 天就跑一次 Homebrew、npm、uv 的清理命令
@@ -100,25 +107,27 @@ enum RuleEngine {
     }
 
     /// 桌面上放了 30 天的截图移到“图片/截图归档/年-月”，只移动
-    private static func archiveScreenshots(_ m: AppModel) {
-        let shots = oldScreenshots()
-        guard !shots.isEmpty else { return }
-        let fm = FileManager.default
-        let root = fm.homeDirectoryForCurrentUser.appending(path: "Pictures/截图归档")
-        var moved = 0
-        for u in shots {
-            let d = (try? u.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .now
-            let folder = root.appending(path: d.formatted(.iso8601.year().month()))
-            try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
-            let dest = folder.appending(path: u.lastPathComponent)
-            if !fm.fileExists(atPath: dest.path), (try? fm.moveItem(at: u, to: dest)) != nil { moved += 1 }
+    private static func archiveScreenshots(_ m: AppModel) async {
+        let moved = await blocking { () -> Int in
+            let shots = oldScreenshots()
+            let fm = FileManager.default
+            let root = fm.homeDirectoryForCurrentUser.appending(path: "Pictures/截图归档")
+            var moved = 0
+            for u in shots {
+                let d = (try? u.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .now
+                let folder = root.appending(path: d.formatted(.iso8601.year().month()))
+                try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
+                let dest = folder.appending(path: u.lastPathComponent)
+                if !fm.fileExists(atPath: dest.path), (try? fm.moveItem(at: u, to: dest)) != nil { moved += 1 }
+            }
+            return moved
         }
         if moved > 0 {
             var entry = HistoryEntry(date: .now, title: String(localized: "把 \(moved) 张截图移到“截图归档”"), source: "自动规则", files: [])
             entry.commandNote = String(localized: "只移动，没有删除：~/Pictures/截图归档")
             entry.commandFreed = 0
             m.history.insert(entry, at: 0)
-            HistoryStore.save(m.history)
+            HistoryStore.saveLater(m.history)
         }
     }
 }
