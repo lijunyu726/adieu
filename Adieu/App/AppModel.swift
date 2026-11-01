@@ -337,6 +337,7 @@ final class AppModel {
         startRules()
         await RuleEngine.evaluate(self)
         feedWidget()
+        lastFullScan = .now
         releaseFreedMemory()
         HangLog.mark("扫描全部完成")
     }
@@ -557,11 +558,32 @@ final class AppModel {
     private var ruleTimer: Timer?
 
     /// 启动后每小时检查一次规则
+    /// 每小时一次：规则照常检查；上次全量扫描超过 6 小时就在后台重扫（只在菜单栏时也算）；
+    /// 上次检查更新超过 24 小时就再看一次
     func startRules() {
         guard ruleTimer == nil, !useSample else { return }
         ruleTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
-            Task { @MainActor in self.refreshDisk(); await RuleEngine.evaluate(self) }
+            Task { @MainActor in
+                self.refreshDisk()
+                if self.scanIsStale(6 * 3600) { await self.scanAll(force: true) } else { await RuleEngine.evaluate(self) }
+                await UpdatePrompt.automaticIfDue()
+            }
         }
+    }
+
+    /// 上次全量扫描完成的时间。扫描要半分钟、磁盘读得多，所以按时间判断要不要重扫，不定时硬扫
+    private(set) var lastFullScan: Date?
+
+    func scanIsStale(_ age: TimeInterval) -> Bool {
+        guard let lastFullScan else { return false }  // 还没扫完第一次，不叠加
+        return Date.now.timeIntervalSince(lastFullScan) > age
+    }
+
+    /// 窗口回到前台：剩余空间马上刷新；上次扫描超过 1 小时就在后台重扫
+    func didBecomeActive() {
+        refreshDisk()
+        guard !useSample, !scanInFlight, scanIsStale(3600) else { return }
+        Task { await scanAll(force: true) }
     }
 
     /// “腾出空间”的候选：从各页面的扫描结果里汇总

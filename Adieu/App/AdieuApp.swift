@@ -23,7 +23,7 @@ struct AdieuApp: App {
                 .frame(minWidth: 1080, minHeight: 700)
                 .task { await model.scanAll() }
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    model.refreshDisk()
+                    model.didBecomeActive()
                 }
         }
         .defaultSize(width: 1280, height: 820)

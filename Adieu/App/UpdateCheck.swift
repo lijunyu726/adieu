@@ -102,8 +102,16 @@ enum UpdatePrompt {
     /// 打开后自己看一次。有新版本才问；没有、或连不上，不打扰
     static func automatic() async {
         guard !UserDefaults.standard.bool(forKey: "AdieuSample") else { return }
+        UserDefaults.standard.set(Date.now, forKey: "lastUpdateCheck")
         guard case .newer(let release) = await UpdateCheck.look() else { return }
         ask(release)
+    }
+
+    /// 一直开着不退出时也会更新：距上次检查超过 24 小时再看一次
+    static func automaticIfDue() async {
+        let last = UserDefaults.standard.object(forKey: "lastUpdateCheck") as? Date ?? .distantPast
+        guard Date.now.timeIntervalSince(last) > 24 * 3600, !installing else { return }
+        await automatic()
     }
 
     /// 关于页里点的：有没有新版本都告诉你
