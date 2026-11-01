@@ -27,6 +27,11 @@ enum RuleEngine {
         case "shot":
             let n = m.oldShotCount ?? 0
             return n == 0 ? String(localized: "桌面上没有放了 30 天的截图 · 只移动，不删除") : String(localized: "\(n) 张截图可以归档 · 只移动，不删除")
+        case "clones":
+            let n = m.space?.clones.removable.count ?? 0
+            let last = defaults.object(forKey: "rule.clones.lastRun") as? Date
+            let when = last.map { String(localized: " · 上次 \($0.formatted(.dateTime.month().day()))") } ?? ""
+            return (n == 0 ? String(localized: "目前没有没在用的") : String(localized: "目前有 \(n) 份没在用")) + when
         case "wx":
             let wx = m.apps.first { $0.id == "com.tencent.xinWeChat" }?.dataSize
             return wx.map { let size = $0.gbText; return String(localized: "现在是 \(size)") } ?? String(localized: "没有找到微信")
@@ -83,6 +88,7 @@ enum RuleEngine {
         }
         if on.contains("shot") { await archiveScreenshots(m) }
         if on.contains("cache") { await weeklyCache(m) }
+        if on.contains("clones") { await dailyClones(m) }
         await countScreenshots(m)
     }
 
@@ -104,6 +110,26 @@ enum RuleEngine {
             await m.runDev(tool)
         }
         Notifier.post(id: "rule.cache", title: String(localized: "每周清理开发缓存：完成"), body: String(localized: "腾出约 \(max(0, m.disk.free - before).gbText)。记录在“最近”里。"))
+    }
+
+    /// 每天一次：删掉没在用的启动副本（Chrome 下次启动会自己再做，删了没有坏处）。
+    /// 安静地删，不响声音、不弹“实际腾出”，记一笔在“最近”里
+    private static func dailyClones(_ m: AppModel) async {
+        if let last = defaults.object(forKey: "rule.clones.lastRun") as? Date, Date.now.timeIntervalSince(last) < 20 * 3600 { return }
+        defaults.set(Date.now, forKey: "rule.clones.lastRun")
+        let found = await blocking { CodeSignClones.scan() }
+        if !found.removable.isEmpty {
+            let urls = found.removable.map { URL(filePath: $0) }, sizes = found.removableSizes, protected = m.protectedPaths
+            let r = await blocking { TrashService.delete(urls, sizes: sizes, protected: protected) }
+            if !r.done.isEmpty {
+                var entry = HistoryEntry(date: .now, title: String(localized: "自动删掉 \(r.done.count) 份启动副本"), source: "自动规则", files: r.done)
+                entry.deleted = true
+                m.history.insert(entry, at: 0)
+                HistoryStore.saveLater(m.history)
+            }
+        }
+        let fresh = await blocking { CodeSignClones.scan() }
+        m.space?.clones = fresh
     }
 
     /// 桌面上放了 30 天的截图移到“图片/截图归档/年-月”，只移动

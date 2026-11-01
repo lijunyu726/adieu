@@ -4,10 +4,12 @@ import Foundation
 /// 系统记在后台任务管理（BTM）的账本里，系统设置“登录项与扩展”就是读这份账本。
 /// `sfltool dumpbtm` 不用管理员密码就能读出来（macOS 27 实测）。输出是诊断用的文本，没有公开格式，
 /// 所以只认几个字段，读不到或认不出时整块不显示，不报错。
-/// 这些项只有软件自己或系统设置能改，Adieu 只显示状态、带人去系统设置
+/// 这些项只有软件自己或系统设置能改，Adieu 只显示状态、带人去系统设置。
+/// 从访达打开的 Adieu 调 sfltool 时系统会要管理员授权（从终端启动不会），所以不自动读：
+/// 用户点“读取”才读，结果存盘，以后打开页面直接用存下的，点“重新读取”再更新
 enum RegisteredItems {
-    struct Item: Identifiable, Hashable, Sendable {
-        enum Kind: Sendable { case app, loginItem, agent }
+    struct Item: Identifiable, Hashable, Sendable, Codable {
+        enum Kind: String, Sendable, Codable { case app, loginItem, agent }
         let id: String
         let name: String
         let kind: Kind
@@ -23,9 +25,32 @@ enum RegisteredItems {
         var running: Bool { enabled && allowed }
     }
 
-    static func scan() -> [Item] {
-        guard let r = Shell.run("/usr/bin/sfltool", ["dumpbtm"], timeout: 20), r.status == 0 else { return [] }
-        return parse(r.out, uid: getuid(), home: FileManager.default.homeDirectoryForCurrentUser.path)
+    struct Snapshot: Codable, Sendable {
+        let date: Date
+        let items: [Item]
+    }
+
+    private static var file: URL { HistoryStore.folder.appending(path: "registered-items.json") }
+
+    /// 上次读到的；应用后来被删了的按现在的情况重新标
+    static func cached() -> Snapshot? {
+        guard let data = try? Data(contentsOf: file), let s = try? JSONDecoder().decode(Snapshot.self, from: data) else { return nil }
+        let items = s.items.map { i in
+            Item(id: i.id, name: i.name, kind: i.kind, enabled: i.enabled, allowed: i.allowed,
+                 appName: i.appName, appPath: i.appPath, appExists: FileManager.default.fileExists(atPath: i.appPath))
+        }
+        return Snapshot(date: s.date, items: items)
+    }
+
+    /// 读一次并存盘。会弹系统授权框；用户取消或读不到时返回 nil，存下的不动
+    static func refresh() -> Snapshot? {
+        guard let r = Shell.run("/usr/bin/sfltool", ["dumpbtm"], timeout: 120), r.status == 0 else { return nil }
+        let items = parse(r.out, uid: getuid(), home: FileManager.default.homeDirectoryForCurrentUser.path)
+        guard !items.isEmpty || r.out.contains("Records for UID") else { return nil }
+        let snap = Snapshot(date: .now, items: items)
+        try? FileManager.default.createDirectory(at: HistoryStore.folder, withIntermediateDirectories: true)
+        if let data = try? JSONEncoder().encode(snap) { try? data.write(to: file, options: .atomic) }
+        return snap
     }
 
     /// 只看当前用户那一段。每条记录以 “#数字:” 开头，下面是 “字段: 值”

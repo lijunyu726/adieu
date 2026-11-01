@@ -265,6 +265,9 @@ enum Sample {
         .init(id: "shot", name: "桌面截图自动归档", symbol: "camera.viewfinder", color: .teal,
               sentence: [.text("当"), .condition("桌面"), .text("上的截图"), .condition("放了 30 天"), .text("时，"), .action("移到“图片/截图归档”")],
               automatic: true, status: "只移动，不删除"),
+        .init(id: "clones", name: "清掉应用留下的启动副本", symbol: "square.on.square.dashed", color: .blue,
+              sentence: [.text("每天"), .action("删掉 Chrome 等应用被强制退出时留下、现在没在用的启动副本")],
+              automatic: true, status: "目前有 187 份没在用"),
         .init(id: "wx", name: "微信太大时提醒", symbol: "message", color: .green,
               sentence: [.text("当"), .condition("微信的数据超过 20 GB"), .text("时，"), .action("提醒我去微信里清理")],
               automatic: false, status: "现在是 22.8 GB")

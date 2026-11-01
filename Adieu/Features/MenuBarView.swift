@@ -1,91 +1,141 @@
 import SwiftUI
 
-/// 菜单栏面板：剩余空间、刚装好应用留下的安装包、低空间提醒
+/// 菜单栏面板：剩多少、这周多用了多少、最值得做的一件事、另外几件小事、刚才删的结果。
+/// 建议和概览“今日建议”是同一套（`Suggestion.make`）。能当场处理的（开发缓存、已装好的安装包、启动副本）
+/// 点按钮就做，菜单栏里点的就是确认；要人看一眼的（大文件、残留）打开主窗口过去
 struct MenuBarView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
-    @State private var cleaned = false
+    /// 正在当场处理的建议
+    @State private var working: Set<String> = []
 
-    /// 对应应用已经装好的安装包，最多显示 3 个
-    private var packages: [FileItem] {
-        if model.useSample {
-            return [.init(id: "1", name: "WeChatMac_4.1.15.dmg", ext: "DMG", kind: "", location: "", modified: "微信已安装", size: 541.0 / 1000, reason: ""),
-                    .init(id: "2", name: "WorkBuddy-darwin-arm64-5.6.2….dmg", ext: "DMG", kind: "", location: "", modified: "WorkBuddy AI 已安装", size: 533.0 / 1000, reason: ""),
-                    .init(id: "3", name: "MiniMax Design-3.0.20-arm64.dmg", ext: "DMG", kind: "", location: "", modified: "MiniMax Design 已安装", size: 406.0 / 1000, reason: "")]
-        }
-        return (model.category(.installers)?.items ?? []).filter { $0.modified.hasSuffix("已安装") && !model.removedKeys.contains($0.path ?? "") }
+    private var suggestions: [Suggestion] { Suggestion.make(model) }
+
+    /// 一小时内删过、核对过的最近一条
+    private var recent: HistoryEntry? {
+        model.history.first { $0.actualFreed != nil && $0.date > .now.addingTimeInterval(-3600) }
     }
 
     var body: some View {
-        let used = model.disk.used / model.disk.total
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 14) {
-                Gauge(value: used) { EmptyView() }
-                    .gaugeStyle(.accessoryCircularCapacity)
-                    .tint(used > 0.9 ? .red : .accentColor)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("可用 \(model.disk.free.gbText)").font(.title3.bold()).monospacedDigit()
-                    if used > 0.9 {
-                        Text("只剩 \(Int((1 - used) * 100))%，系统更新可能装不上").font(.caption).foregroundStyle(.red)
-                    }
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text("刚装好的应用留下的安装包").font(.caption.weight(.semibold))
+        let used = model.disk.total > 0 ? model.disk.used / model.disk.total : 0
+        let low = used > 0.9
+        let list = suggestions
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("可用 \(model.disk.free.gbText)").font(.title2.bold()).monospacedDigit()
                     Spacer()
-                    Text(cleaned ? "已删除" : "\(packages.count) 个 · \(packages.map(\.size).reduce(0, +).gbText)").font(.caption).foregroundStyle(.secondary)
+                    Text("共 \(model.disk.total.gbText)").font(.caption).foregroundStyle(.secondary)
                 }
-                .padding(10)
-                if packages.isEmpty && !cleaned {
-                    Divider()
-                    Text("没有了。").font(.caption).foregroundStyle(.secondary).padding(10)
-                }
-                ForEach(packages.prefix(3)) { p in
-                    Divider()
-                    HStack(spacing: 8) {
-                        Thumbnail(path: p.path, ext: "DMG", tint: .purple, pixels: CGSize(width: 24, height: 24)).frame(width: 24, height: 24).clipShape(.rect(cornerRadius: 5))
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(p.name).font(.caption.weight(.semibold)).lineLimit(1)
-                            Text(p.modified).font(.caption2).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Text(p.size.gbText).font(.caption).monospacedDigit()
-                    }
-                    .padding(.horizontal, 10).padding(.vertical, 6)
-                    .opacity(cleaned ? 0.4 : 1)
-                }
-                Divider()
-                Button("删除") { withAnimation { clean() } }
-                    .disabled(cleaned)
-                    .disabled(packages.isEmpty && !cleaned)
-                    .buttonStyle(.borderedProminent)
-                    .tint(cleaned ? .secondary : .accentColor)
-                    .frame(maxWidth: .infinity)
-                    .padding(10)
+                ProgressView(value: used).tint(low ? .red : .accentColor)
+                Text(headline(used: used)).font(.caption).foregroundStyle(low ? .red : .secondary)
             }
-            .background(.background.opacity(0.7), in: .rect(cornerRadius: 12))
 
-            HStack {
-                Button("腾出空间…") { model.sheet = .goal; activateMainWindow() }
-                Spacer()
-                Button("打开 Adieu") { activateMainWindow() }
+            if let top = list.first {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("现在最值得做").font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(Copy.text(top.title)).fontWeight(.semibold)
+                        Spacer()
+                        if let size = top.size { Text(size.gbText).fontWeight(.bold).foregroundStyle(.green).monospacedDigit() }
+                    }
+                    Text(Copy.text(top.detail)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    actionButton(top, prominent: true).padding(.top, 2)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.background.opacity(0.8), in: .rect(cornerRadius: 12))
+            } else {
+                Text(model.scanning ? "正在扫描，稍等一下…" : "暂时没有要处理的。")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+
+            if list.count > 1 {
+                VStack(spacing: 0) {
+                    ForEach(Array(list.dropFirst().enumerated()), id: \.element.id) { i, s in
+                        if i > 0 { Divider() }
+                        HStack(spacing: 8) {
+                            Text(Copy.text(s.title)).font(.callout).lineLimit(1)
+                            Spacer(minLength: 6)
+                            if let size = s.size { Text(size.gbText).font(.callout).foregroundStyle(.secondary).monospacedDigit() }
+                            actionButton(s, prominent: false)
+                        }
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                    }
+                }
+                .background(.background.opacity(0.8), in: .rect(cornerRadius: 12))
+            }
+
+            if let recent, let actual = recent.actualFreed {
+                Label("刚才\(Copy.text(recent.title))，实际腾出 \(actual.gbText)", systemImage: "checkmark")
+                    .font(.caption).foregroundStyle(.green).lineLimit(2)
+            }
+
+            HStack(spacing: 8) {
+                Button("腾出空间…") { model.sheet = .goal; activateMainWindow() }.frame(maxWidth: .infinity)
+                Button("最近") { model.sheet = .history; activateMainWindow() }.frame(maxWidth: .infinity)
+                Button("打开 Adieu") { activateMainWindow() }.frame(maxWidth: .infinity)
             }
         }
         .padding(16)
         .frame(width: 340)
     }
 
-    /// 菜单栏里点的就是确认，不再弹窗
-    private func clean() {
-        if model.useSample { cleaned = true; return }
-        let items = packages
-        model.perform(.init(title: String(localized: "删除 \(items.count) 个安装包"), source: "菜单栏",
-                            urls: items.compactMap(\.path).map { URL(filePath: $0) },
-                            sizes: Dictionary(uniqueKeysWithValues: items.compactMap { f in f.path.map { ($0, f.size) } }),
-                            keys: items.compactMap(\.path),
-                            onDone: { cleaned = $0 != nil }))
+    private func headline(used: Double) -> String {
+        let pct = Int(((1 - used) * 100).rounded())
+        var line = pct < 10 ? String(localized: "只剩 \(pct)%，系统更新可能装不上") : String(localized: "还有 \(pct)%")
+        if let week = DiaryStore.week(model), abs(week.change) > 0.05 {
+            line += " · " + (week.change > 0 ? String(localized: "这周多用了 \(week.change.gbText)") : String(localized: "这周空出了 \((-week.change).gbText)"))
+        }
+        return line
+    }
+
+    @ViewBuilder
+    private func actionButton(_ s: Suggestion, prominent: Bool) -> some View {
+        let busy = working.contains(s.id)
+        let title: String = switch s.kind {
+        case .dev: String(localized: "清理")
+        case .clones: String(localized: "删掉")
+        case .files where s.target == .installers: String(localized: "删除")
+        default: String(localized: "去看看")
+        }
+        if prominent {
+            Button(busy ? String(localized: "正在处理…") : title) { act(s) }
+                .buttonStyle(.borderedProminent).disabled(busy)
+        } else {
+            Button(busy ? String(localized: "处理中…") : title) { act(s) }
+                .controlSize(.small).disabled(busy)
+        }
+    }
+
+    private func act(_ s: Suggestion) {
+        if model.useSample { return }
+        switch s.kind {
+        case .dev(let id):
+            guard let tool = model.devTools.first(where: { $0.id == id }) else { return }
+            working.insert(s.id)
+            Task { await model.runDev(tool); working.remove(s.id) }
+        case .clones:
+            guard let c = model.space?.clones, !c.removable.isEmpty else { return }
+            working.insert(s.id)
+            model.perform(.init(title: String(localized: "删掉 \(c.removable.count) 份启动副本"), source: "菜单栏",
+                                urls: c.removable.map { URL(filePath: $0) }, sizes: c.removableSizes,
+                                onDone: { _ in
+                                    Task { @MainActor in
+                                        model.space?.clones = await blocking { CodeSignClones.scan() }
+                                        working.remove(s.id)
+                                    }
+                                }))
+        case .files where s.target == .installers && !s.sizes.isEmpty:
+            working.insert(s.id)
+            model.perform(.init(title: Copy.text(s.title), source: "菜单栏",
+                                urls: s.sizes.keys.map { URL(filePath: $0) }, sizes: s.sizes, keys: Array(s.sizes.keys),
+                                onDone: { _ in working.remove(s.id) }))
+        default:
+            if s.picks { model.pickOnOpen = s.target }
+            model.section = s.target
+            activateMainWindow()
+        }
     }
 
     private func activateMainWindow() {

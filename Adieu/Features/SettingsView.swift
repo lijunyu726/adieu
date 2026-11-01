@@ -72,6 +72,7 @@ private struct SafetySettings: View {
 
 private struct GeneralSettings: View {
     @AppStorage("showMenuBar") private var showMenuBar = true
+    @AppStorage("menuBarShowsFree") private var menuBarShowsFree = true
     @State private var sound = DeleteSound.current
     @State private var language = AppLanguage.current
     /// 问一次系统服务要走进程间通信，不放在每次重建都会算的 @State 初始值里；第一次用到时查，之后记住
@@ -90,6 +91,7 @@ private struct GeneralSettings: View {
         Form {
             Section {
                 Toggle("在菜单栏显示 Adieu", isOn: $showMenuBar)
+                Toggle("图标旁显示剩余空间", isOn: $menuBarShowsFree).disabled(!showMenuBar)
                 Toggle("登录时打开 Adieu", isOn: Binding(get: { loginItem }, set: { setLoginItem($0) }))
             } header: {
                 Text("菜单栏与启动")

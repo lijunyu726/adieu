@@ -13,6 +13,16 @@ xcodebuild -project Adieu.xcodeproj -scheme Adieu -configuration Release \
   CURRENT_PROJECT_VERSION="$BUILD"
 
 APP=scratch/DerivedData/Build/Products/Release/Adieu.app
+# 用本机钥匙串里的固定证书重签（先组件、后主程序，权限原样保留）。临时签名每次编译都变，
+# 系统按签名认应用，每次更新都要重新允许完全磁盘访问、自动化等权限；固定证书签出来的“指定要求”不变
+SIGN_ID="Adieu Self Signing"
+if security find-identity -p codesigning | grep -q "\"$SIGN_ID\""; then
+  codesign -f -s "$SIGN_ID" --preserve-metadata=identifier,entitlements "$APP/Contents/PlugIns/AdieuWidget.appex"
+  codesign -f -s "$SIGN_ID" --preserve-metadata=identifier,entitlements "$APP"
+  codesign --verify --deep --strict "$APP"
+else
+  echo "没有找到“$SIGN_ID”证书，保持临时签名：装上后要重新允许权限（证书怎么建见 AGENTS.md）" >&2
+fi
 # Xcode 不更新 .app 文件夹的修改时间；不改的话替换安装后程序坞、访达继续用旧图标缓存
 touch "$APP"
 OUT=scratch/Adieu-$VERSION.dmg

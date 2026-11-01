@@ -10,6 +10,8 @@ struct AdieuApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     private var model: AppModel { delegate.model }
     @AppStorage("showMenuBar") private var showMenuBar = true
+    /// 菜单栏图标旁写剩余空间
+    @AppStorage("menuBarShowsFree") private var menuBarShowsFree = true
 
     var body: some Scene {
         WindowGroup("Adieu", id: "main") {
@@ -45,7 +47,14 @@ struct AdieuApp: App {
                 .environment(model)
                 .preferredColorScheme(.light)
         } label: {
-            Image(nsImage: MenuBarIcon.image).accessibilityLabel("Adieu")
+            // 菜单栏里的字只能是单色，空间紧张时在数字后面加个感叹号
+            if menuBarShowsFree {
+                let low = model.disk.total > 0 && model.disk.free / model.disk.total < 0.1
+                Image(nsImage: MenuBarIcon.image)
+                Text(String(format: "%.0f GB", model.disk.free) + (low ? " !" : ""))
+            } else {
+                Image(nsImage: MenuBarIcon.image).accessibilityLabel("Adieu")
+            }
         }
         .menuBarExtraStyle(.window)
 

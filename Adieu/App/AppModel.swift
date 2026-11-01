@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 /// 全局状态：导航、扫描结果、删除与操作记录
 @Observable
@@ -119,6 +120,22 @@ final class AppModel {
             HistoryStore.saveLater(history)
         }
         freedReport = FreedReport(id: entry.id, title: entry.title, expected: expected, actual: actual, reasons: reasons)
+        feedWidget()
+    }
+
+    /// 把空间分布和建议写给桌面组件，再让组件重画
+    func feedWidget() {
+        guard !useSample, space != nil else { return }
+        let categories = spaceCategories.filter { !["free", "pending"].contains($0.id) }.map { c in
+            let ns = NSColor(c.color).usingColorSpace(.sRGB)
+            return WidgetFeed.Category(label: Copy.text(c.label), size: c.size,
+                                       rgb: [ns?.redComponent ?? 0.5, ns?.greenComponent ?? 0.5, ns?.blueComponent ?? 0.5].map(Double.init))
+        }
+        let list = Suggestion.make(self)
+        WidgetFeed(date: .now, categories: categories, reclaimable: list.compactMap(\.size).reduce(0, +),
+                   items: list.map { .init(title: Copy.text($0.title), size: $0.size) },
+                   weekChange: DiaryStore.week(self)?.change).save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     /// 腾出比预计少的常见原因，能查到的先说
@@ -319,6 +336,7 @@ final class AppModel {
         DiaryStore.record(self)
         startRules()
         await RuleEngine.evaluate(self)
+        feedWidget()
         releaseFreedMemory()
         HangLog.mark("扫描全部完成")
     }
@@ -385,6 +403,7 @@ final class AppModel {
         }
         history.insert(entry, at: 0)
         HistoryStore.saveLater(history)
+        feedWidget()
         // 只跑了命令（npm cache clean 之类）也算删完了，和删文件响同一声
         if !trashed.isEmpty || (commandsRan && failed.isEmpty) { DeleteSound.play() }
         if !failed.isEmpty {

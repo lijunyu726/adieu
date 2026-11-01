@@ -18,6 +18,9 @@ struct LaunchItemsView: View {
     @State private var selected: String?
     /// 软件在自己的设置里打开的开机启动（系统后台任务账本里读出来的）
     @State private var registered: [RegisteredItems.Item] = []
+    /// 上次读取软件自己登记的开机启动的时间；nil 表示还没读过
+    @State private var registeredDate: Date?
+    @State private var registeredReading = false
 
     private var broken: [LaunchItem] { model.launchGroups.first { $0.id == "broken" }?.items ?? [] }
     private var others: [(LaunchItem, LaunchGroup)] {
@@ -100,6 +103,19 @@ struct LaunchItemsView: View {
                         .overlay(alignment: .bottom) { Divider() }
                     }
                 }
+                HStack(spacing: 6) {
+                    if let date = registeredDate {
+                        Text("软件自己设置的开机启动读取于 \(date.formatted(.dateTime.month().day().hour().minute()))，在软件里改过的话点")
+                        Button(registeredReading ? "读取中…" : "重新读取") { readRegistered() }
+                            .buttonStyle(.link).disabled(registeredReading)
+                    } else {
+                        Text("在软件自己设置里打开的开机启动（如微信），要系统授权才能读到，会弹密码框。")
+                        Button(registeredReading ? "读取中…" : "读取") { readRegistered() }
+                            .buttonStyle(.link).disabled(registeredReading)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .font(.caption).foregroundStyle(.secondary).padding(.horizontal, 14).padding(.top, 12)
                 HStack {
                     Text("写着“软件自己设置的”是在那个软件的设置里开的，要在那个软件里或系统设置里关。")
                     Button("打开系统设置") {
@@ -133,6 +149,19 @@ struct LaunchItemsView: View {
         .padding(16)
     }
 
+    /// 读软件自己登记的开机启动：系统会弹授权框，用户点了才读
+    private func readRegistered() {
+        guard !model.useSample, !registeredReading else { return }
+        registeredReading = true
+        Task {
+            if let snap = await blocking({ RegisteredItems.refresh() }) {
+                registered = snap.items
+                registeredDate = snap.date
+            }
+            registeredReading = false
+        }
+    }
+
     /// 要等“系统事件”回话，在后台读
     private func loadLogin() async {
         if model.useSample {
@@ -140,7 +169,8 @@ struct LaunchItemsView: View {
             loginLoaded = true
             return
         }
-        async let found = blocking { RegisteredItems.scan() }
+        // 只用存下的结果，不在这里调 sfltool（会弹授权框）
+        async let found = blocking { RegisteredItems.cached() }
         let r = await blocking { () -> (items: [LoginItems.Item], error: String?, missing: Set<String>) in
             let r = LoginItems.list()
             let missing = r.items.filter { $0.path.isEmpty || !FileManager.default.fileExists(atPath: $0.path) }.map(\.name)
@@ -148,7 +178,9 @@ struct LaunchItemsView: View {
         }
         loginItems = r.items
         missingLogin = r.missing
-        registered = await found
+        let snap = await found
+        registered = snap?.items ?? []
+        registeredDate = snap?.date
         loginError = r.error
         if r.error != nil { automationDenied = await blocking { Permissions.automation == .denied } }
         loginLoaded = true

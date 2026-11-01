@@ -10,13 +10,13 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_EMIT_LOC_STRINGS: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
-    MARKETING_VERSION: "0.1.13"
+    MARKETING_VERSION: "0.1.14"
     CURRENT_PROJECT_VERSION: "1"
 targets:
   Adieu:
     type: application
     platform: macOS
-    sources: [Adieu]
+    sources: [Adieu, Shared]
     info:
       path: Adieu/Info.plist
       properties:
@@ -46,6 +46,7 @@ targets:
     platform: macOS
     sources:
       - AdieuWidget
+      - Shared
       - path: Adieu/Localizable.xcstrings
     info:
       path: AdieuWidget/Info.plist
@@ -55,8 +56,14 @@ targets:
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    # 写在这里：xcodegen 每次按 properties 重新生成这个文件，直接改文件会被覆盖。
+    # 小组件不开沙盒系统就不登记；只读主程序写下的 widget.json 所在文件夹
     entitlements:
       path: AdieuWidget/AdieuWidget.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.temporary-exception.files.home-relative-path.read-only:
+          - /Library/Application Support/Adieu/
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ljy.adieu.widget
