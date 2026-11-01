@@ -76,15 +76,23 @@ private struct GeneralSettings: View {
     @State private var sound = DeleteSound.current
     @State private var language = AppLanguage.current
     /// 问一次系统服务要走进程间通信，不放在每次重建都会算的 @State 初始值里；第一次用到时查，之后记住
-    @MainActor private static var loginItemOn = SMAppService.mainApp.status == .enabled
-    @State private var loginItem = Self.loginItemOn
+    @MainActor private static var loginStatus = SMAppService.mainApp.status
+    @State private var loginStatus = Self.loginStatus
+
+    /// 打开了但系统还等着用户在“登录项与扩展”里允许：开关算开着，下面提示去允许。
+    /// 自签名没有开发者团队编号，升级后系统可能把它当新软件，又要重新允许一次
+    private var loginItem: Bool { loginStatus == .enabled || loginStatus == .requiresApproval }
+
+    private func refreshLoginItem() {
+        loginStatus = SMAppService.mainApp.status
+        Self.loginStatus = loginStatus
+    }
 
     private func setLoginItem(_ on: Bool) {
         do {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
         } catch {}
-        loginItem = SMAppService.mainApp.status == .enabled
-        Self.loginItemOn = loginItem
+        refreshLoginItem()
     }
 
     var body: some View {
@@ -93,6 +101,14 @@ private struct GeneralSettings: View {
                 Toggle("在菜单栏显示 Adieu", isOn: $showMenuBar)
                 Toggle("图标旁显示剩余空间", isOn: $menuBarShowsFree).disabled(!showMenuBar)
                 Toggle("登录时打开 Adieu", isOn: Binding(get: { loginItem }, set: { setLoginItem($0) }))
+                if loginStatus == .requiresApproval {
+                    HStack {
+                        Label("还要在系统设置里允许，开机才会启动", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Spacer()
+                        Button("去允许") { SMAppService.openSystemSettingsLoginItems() }
+                    }
+                }
             } header: {
                 Text("菜单栏与启动")
             } footer: {
@@ -122,10 +138,9 @@ private struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear {
-            loginItem = SMAppService.mainApp.status == .enabled
-            Self.loginItemOn = loginItem
-        }
+        .onAppear { refreshLoginItem() }
+        // 去系统设置允许完切回来，提示马上消失
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in refreshLoginItem() }
     }
 }
 
