@@ -15,6 +15,10 @@ struct HistoryEntry: Identifiable, Codable, Hashable, Sendable {
     var deleted: Bool? = nil
     /// 命令清理前后对比得到的释放量（GB）
     var commandFreed: Double? = nil
+    /// 删后核对：删除前后磁盘可用空间的差（GB）
+    var actualFreed: Double? = nil
+    /// 实际腾出明显比预计少时的可能原因
+    var shortfall: [String]? = nil
 
     var total: Double { commandFreed ?? files.compactMap(\.size).reduce(0, +) }
     var canRestore: Bool { !restored && files.contains(where: \.isInTrash) }

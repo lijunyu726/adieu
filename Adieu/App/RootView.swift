@@ -97,6 +97,12 @@ struct RootView: View {
             }
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
                 .background { PageBackground() }
+                .overlay(alignment: .bottomTrailing) {
+                    if let report = model.freedReport {
+                        FreedToast(report: report).transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .animation(.smooth, value: model.freedReport?.id)
         }
         .sheet(isPresented: $model.showOnboarding) {
             OnboardingView()

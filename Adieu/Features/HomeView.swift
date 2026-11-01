@@ -2,7 +2,8 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(AppModel.self) private var model
-    @State private var expandedID: String? = Sample.categories.first?.id
+    /// 截图用：`-AdieuExpand system` 打开时展开某一类
+    @State private var expandedID: String? = UserDefaults.standard.string(forKey: "AdieuExpand") ?? Sample.categories.first?.id
 
     var body: some View {
         HStack(alignment: .top, spacing: 32) {
@@ -76,7 +77,12 @@ struct HomeView: View {
             ForEach(categories) { c in
                 CategoryRow(category: c, maxSize: maxSize, expanded: expandedID == c.id,
                             toggle: { withAnimation(.smooth) { expandedID = expandedID == c.id ? nil : c.id } },
-                            open: { model.section = $0 })
+                            open: { model.section = $0 },
+                            act: { action in
+                                switch action {
+                                case .cleanClones: model.cleanClones()
+                                }
+                            })
             }
         }
     }
@@ -205,6 +211,7 @@ private struct CategoryRow: View {
     let expanded: Bool
     let toggle: () -> Void
     let open: (AppSection) -> Void
+    let act: (SpaceCategory.PartAction) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -225,12 +232,20 @@ private struct CategoryRow: View {
                 VStack(alignment: .leading, spacing: 7) {
                     Text(Copy.text(category.hint)).foregroundStyle(.secondary)
                     ForEach(category.parts) { p in
-                        HStack(spacing: 12) {
-                            Text(Copy.text(p.label)).frame(width: 118, alignment: .leading)
+                        HStack(alignment: p.note.isEmpty ? .center : .firstTextBaseline, spacing: 12) {
+                            Text(Copy.text(p.label)).frame(width: 130, alignment: .leading)
                             if p.note.isEmpty, let size = p.size {
                                 ProportionBar(fraction: size / category.size, color: category.color.opacity(0.7), height: 5)
                             } else {
-                                Text(Copy.text(p.note)).foregroundStyle(.tertiary).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(Copy.text(p.note)).foregroundStyle(.tertiary).lineLimit(3)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    if let action = p.action {
+                                        Button(action.title) { act(action) }
+                                            .controlSize(.small)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             Text(p.size.gbText).monospacedDigit().frame(width: 76, alignment: .trailing)
                         }

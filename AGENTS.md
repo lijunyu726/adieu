@@ -19,7 +19,7 @@
 ## 验证方式
 
 - 编译：`xcodebuild ... -derivedDataPath scratch/DerivedData build`，要求零 error、零 warning
-- 界面：用 `-didOnboard YES -AdieuSection <页面>` 启动，再用 `screencapture -l <窗口ID>` 截图检查；连续截图时必须等上一个进程完全退出，否则会截到旧窗口；从终端启动的窗口可能不在屏幕上（取不到窗口 ID），先用 System Events 把进程设为前台
+- 界面：用 `-didOnboard YES -AdieuSection <页面>` 启动（概览页加 `-AdieuExpand <类别 id>` 展开某一类，如 `system`），再用 `screencapture -l <窗口ID>` 截图检查；连续截图时必须等上一个进程完全退出，否则会截到旧窗口；从终端启动的窗口可能不在屏幕上（取不到窗口 ID），先用 System Events 把进程设为前台
 - 截图用启动参数（调试与截图用，正常启动不受影响，界面上没有入口）：`-AdieuFileMode grid|list|cards` 文件页直接进某种查看方式（该页没有这种方式时忽略）；`-AdieuUninstall YES` 应用程序页直接打开第一个应用的卸载确认；`-AdieuSettingsTab safety|rules|general|permissions|about` 设置停在某一页；`-AdieuSheet menuBar|onboarding` 把菜单栏面板、欢迎页放在主窗口右边显示（`AppSheet.isPreview`，不走 sheet）；`-AdieuUpdatePreview YES` 只弹出更新进度条，不下载、不替换。官网手册（adieu-site 的 `website/manual/`）的图都这样截：`open -n -g <Debug 版> --args -didOnboard YES -AdieuSample YES …`，只 kill 自己开的那个 PID，不动 /Applications 里正在用的 Adieu
 - 后台截图的坑：`CGEventPostToPid` 发的按键能送到后台实例（鼠标点击不行，后台窗口不响应）；窗口上挂着 sheet 或 alert 时 `screencapture -o -l` 一直截不到、不带 `-o` 也时好时坏，要先给该 PID 发几次 Shift 和鼠标移动唤醒，再不带 `-o` 截、按 alpha 裁掉阴影，必要时重开实例；启动时弹出的欢迎页 sheet 始终截不到，所以有了 `-AdieuSheet onboarding`。ScreenCaptureKit 截单窗口报 -3811，不可用
 - 卡顿：`-AdieuHangLog YES` 让后台每 20 毫秒问一次主线程，接住超过 100 毫秒就往标准错误写“主线程停了 N ms”，并在扫描结束时写时间点（`HangLog.mark`）。配合 `-AdieuLaunchHidden YES` 从终端直接跑可执行文件（继承终端的完全磁盘访问），等到“扫描全部完成”再 kill 自己的 PID。2026-10-31 实测本机：改动前扫描中主线程停 0.3 / 2.8 / 1.6 秒，改动后扫描中不再停（启动瞬间偶尔 0.2 秒，改动前也有）
@@ -27,7 +27,7 @@
 
 ## 安全边界（不可放松）
 
-1. 所有删除都经过 `TrashService.delete`，**按用户要求一律直接删除**（卸载、文件、残留、开发缓存都不进废纸篓、不能放回，“最近”里只留记录）；删除前的确认（设置“删除前总是再确认一次”，默认开）是唯一的后悔机会，不要去掉默认确认。`restore` 只给旧版本留在废纸篓的记录用。权限不够的（App Store 应用归 root）通过 `osascript … with administrator privileges` 弹系统密码窗口，一次处理完，Adieu 不接触密码，路径照样先过 `check`；范围限定为家目录下至少 2 层（`~/Library` 内至少 3 层）、`/Applications/*`、`/Volumes/盘/x`，保护名单双向生效（本身、里面的、包含它的上级都不动）
+1. 所有删除都经过 `TrashService.delete`，**按用户要求一律直接删除**（卸载、文件、残留、开发缓存都不进废纸篓、不能放回，“最近”里只留记录）；删除前的确认（设置“删除前总是再确认一次”，默认开）是唯一的后悔机会，不要去掉默认确认。`restore` 只给旧版本留在废纸篓的记录用。权限不够的（App Store 应用归 root）通过 `osascript … with administrator privileges` 弹系统密码窗口，一次处理完，Adieu 不接触密码，路径照样先过 `check`；范围限定为家目录下至少 2 层（`~/Library` 内至少 3 层）、`/Applications/*`、`/Volumes/盘/x`，以及应用签名副本那一层（`CodeSignClones.isClone`：`/var/folders/…/X/<bundle id>.code_sign_clone/code_sign_clone.XXXXXX`，别的临时目录不放开），保护名单双向生效（本身、里面的、包含它的上级都不动）
 2. 每个待删项必须带证据等级（`Evidence`）：只有“应用包 / 标识符完全匹配 / 同一开发者”可默认勾选，“名称相似 / 其他应用也在用”默认不勾
 3. 卸载应用时默认全勾（含聊天记录等个人数据，用户 2026-10-17 决定），确认面板里逐项列出可取消；残留文件只列“应用已经不在了”一组，默认全勾；对应程序正在运行的不列，最近 30 天还有改动的列出但不勾（直接删除不能撤销，“找不到应用”不等于没人在用）
 4. 开发者空间只调用各工具的官方清理命令，并原样展示；`docker volume prune` 等会删数据的命令列入“永不执行”
@@ -54,6 +54,9 @@
 - 自动规则没有后台守护进程，只在 Adieu 运行时（含仅菜单栏）检查；默认只开提醒类，会动文件的规则必须用户自己打开
 - 开机自启（设置里“登录时打开 Adieu”，`SMAppService.mainApp`）时不弹主窗口：`AppDelegate` 从启动时的“打开应用”Apple 事件里认出 `keyAELaunchedAsLogInItem`，关掉 SwiftUI 摆出来的主窗口，并直接调 `scanAll()`——扫描原本挂在窗口内容的 `.task` 上，窗口关了它就不跑，自动规则的计时器（在扫描结束时启动）也就起不来。`AppModel` 因此改由 `AppDelegate` 持有。`scanAll` 用 `scanInFlight` 防止后台扫描还没完时打开窗口又开一遍。真正的登录启动只能重启验证；`-AdieuLaunchHidden YES` 走同一条路径，用来验证“不弹窗口”
 - 没有完全磁盘访问权限时，其他应用的容器读不到：应用数据合计会明显偏小（本机实测 99.5 GB 对命令行 155.7 GB），差额算进“系统与其他”
+- “macOS 系统与其他”（系统设置里的“系统数据”）的细分都不用管理员权限：`diskutil apfs list -plist` 取启动盘所在容器（同时有 System 和 Data 角色的那个）的 System、Preboot+Recovery、VM（交换文件）卷大小；`/private/var/vm/sleepimage`；日志 = `/private/var/db/diagnostics` + `uuidtext` + `/private/var/log`；临时文件 = `DARWIN_USER_TEMP_DIR` 的上级里的 T 和 C；系统素材 = `/System/Library/AssetsV2`（部分子目录读不到，偏小）。加起来以外的记作“其他”。每项的说明写清是什么、会不会自己变小、能不能删；只有签名副本给删除按钮
+- Chrome 签名副本（code_sign_clone）是“系统数据”忽大忽小的主要来源：Chrome 每次启动把自己整个克隆到 `X/com.google.Chrome.code_sign_clone/` 下，正常退出会删，被强制结束（自动化测试）就留下，本机一天攒到 262 份。副本是 APFS 克隆、和复制时的本体共用存储块，`du` 和 `totalFileAllocatedSize` 都按完整大小算（262 份显示 556 GB，实际约 0）。所以 `CodeSignClones` 按版本去重：和已安装版本相同的算 0，其他版本每个版本算一份（同版本的副本之间也共用）。没进程打开副本里的文件（`lsof` 查不到），正在用哪份只能按时间判断：应用开着时，晚于它最早一次启动前 60 秒的副本留着，其余都可删；应用没开就全部可删。不只 Chrome，`X/` 下所有 `*.code_sign_clone` 都按 bundle id 处理
+- 删后核对：`perform` 和卸载在删除前后各读一次 `DiskInfo.current().free`（含可清除空间，和访达一致），等 2 秒（APFS 释放有延迟）再比，结果写进记录的 `actualFreed`，窗口右下角弹 `FreedToast`。实际比预计少 0.1 GB 以上且不到八成时列原因（有本地快照的先说个数，再说 APFS 克隆共用存储、文件还被打开着），这种提示不自动消失。同时在删别的东西时数字会混在一起，只是“约”；开发工具的命令清理仍按工具自己前后的占用算（`commandFreed`），不走这里
 - 截图验证只截 Adieu 自己的窗口（`CGWindowListCopyWindowInfo` 取窗口号再 `screencapture -l`），**禁止截整屏**；`pkill` 后立刻 `open` 会报 LaunchServices -600，要等进程完全退出再隔几秒
 - 小组件是沙盒扩展，自己读 `/` 的容量，不和主程序共享数据
 - 阻塞的磁盘读取和命令一律用 `blocking { }`（GCD 线程），不要用 `Task.detached` 或任务组直接跑：协作线程池只有 CPU 核数个线程，77 个应用的大小统计曾把它占满，文件扫描和开发工具扫描排队超过 75 秒（命令行单独跑只要 3 秒），页面一直显示“没有找到”。应用大小统计同时最多 6 个

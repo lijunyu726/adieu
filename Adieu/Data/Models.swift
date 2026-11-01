@@ -92,7 +92,18 @@ struct SpaceCategory: Identifiable, Hashable, Sendable {
         let label: String
         let size: Double?
         var note: String = ""
+        /// 这一项旁边的小按钮，如“清掉 262 份”
+        var action: PartAction? = nil
         var id: String { label }
+    }
+    enum PartAction: Hashable, Sendable {
+        case cleanClones(count: Int)
+
+        var title: String {
+            switch self {
+            case .cleanClones(let n): String(localized: "删掉没在用的 \(n) 份")
+            }
+        }
     }
     let id: String
     let label: String

@@ -44,7 +44,8 @@ enum TrashService {
     }
 
     /// 检查一个路径能不能动。只允许：主目录里两层以下、/Applications 里、外置卷里两层以下，
-    /// 以及 /Library/LaunchAgents、/Library/LaunchDaemons 里的单个 plist（清理已失效的后台程序）
+    /// /Library/LaunchAgents、/Library/LaunchDaemons 里的单个 plist（清理已失效的后台程序），
+    /// 以及应用留下的签名副本（Chrome 的 code_sign_clone.XXXXXX，只认那一层）
     static func check(_ url: URL, protected: [String]) throws {
         let fm = FileManager.default
         let path = url.standardizedFileURL.resolvingSymlinksInPath().path
@@ -68,6 +69,7 @@ enum TrashService {
         }
         if parts.first == "Applications", parts.count >= 2 { return }
         if parts.first == "Volumes", parts.count >= 3 { return }
+        if CodeSignClones.isClone(path) { return }
         if parts.count == 3, parts[0] == "Library", ["LaunchAgents", "LaunchDaemons"].contains(parts[1]), path.hasSuffix(".plist") { return }
         throw Refusal.notAllowed("不在 Adieu 允许清理的范围内（只处理主目录、应用程序和外置硬盘）")
     }

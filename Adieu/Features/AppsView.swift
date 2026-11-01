@@ -321,6 +321,10 @@ struct UninstallSheet: View {
                 .symbolEffect(.bounce, value: step)
             Text(failures == nil ? "\(app.name) 已经删干净了" : "\(app.name) 没有完全卸载").font(.headline)
             Text(moved.gbText).font(.system(size: 40, weight: .bold)).monospacedDigit()
+            // 删后核对两秒后才有结果，到了就补上
+            if let actual = model.history.first(where: { $0.id == entry?.id })?.actualFreed {
+                Text("磁盘实际多出 \(actual.gbText)").font(.callout).foregroundStyle(.secondary).monospacedDigit()
+            }
             if let failures {
                 Text(failures).font(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)

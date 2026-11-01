@@ -1,6 +1,1722 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "%@ 签名副本": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 签名副本"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 簽名副本"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ signing copies"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 署名コピー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 서명 복사본"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-Signaturkopien"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copies de signature %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copias de firma de %@"
+          }
+        }
+      }
+    },
+    "共 %lld 份。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共 %lld 份。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共 %lld 份。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld copies. "
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개. "
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Kopien. "
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld copies. "
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld copias. "
+          }
+        }
+      }
+    },
+    "macOS 本身": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 本身"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 本身"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS itself"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 本体"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 자체"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS selbst"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS lui-même"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS en sí"
+          }
+        }
+      }
+    },
+    "系统卷，只读且有签名保护，不会自己变，也不能删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统卷，只读且有签名保护，不会自己变，也不能删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統卷，唯讀且有簽名保護，不會自己變，也不能刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The system volume is read-only and signed. It doesn't change on its own and can't be deleted."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムボリュームは読み取り専用で署名保護されています。勝手には変わらず、削除もできません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 볼륨은 읽기 전용이며 서명으로 보호됩니다. 저절로 바뀌지 않고 삭제할 수도 없습니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Systemvolume ist schreibgeschützt und signiert. Es ändert sich nicht von selbst und lässt sich nicht löschen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le volume système est en lecture seule et signé. Il ne change pas tout seul et ne peut pas être supprimé."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El volumen del sistema es de solo lectura y está firmado. No cambia solo y no se puede eliminar."
+          }
+        }
+      }
+    },
+    "启动与恢复": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动与恢复"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟動與復原"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Startup & recovery"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "起動と復旧"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시동 및 복구"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start & Wiederherstellung"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrage et récupération"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arranque y recuperación"
+          }
+        }
+      }
+    },
+    "开机和恢复要用的文件，系统更新时会临时变大，装完自己收回，不要手动删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开机和恢复要用的文件，系统更新时会临时变大，装完自己收回，不要手动删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開機和復原要用的檔案，系統更新時會暫時變大，裝完自己收回，不要手動刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files needed to start up and recover. They grow during a macOS update and shrink again afterwards. Don't delete them by hand."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "起動と復旧に必要なファイルです。システムアップデート中は一時的に大きくなり、終わると自動で戻ります。手動で削除しないでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시동과 복구에 필요한 파일입니다. 시스템 업데이트 중에는 잠시 커졌다가 끝나면 저절로 줄어듭니다. 직접 삭제하지 마세요."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien zum Starten und Wiederherstellen. Sie wachsen während eines macOS-Updates und schrumpfen danach wieder. Nicht von Hand löschen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichiers nécessaires au démarrage et à la récupération. Ils grossissent pendant une mise à jour puis diminuent d'eux-mêmes. Ne les supprimez pas à la main."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos necesarios para arrancar y recuperar el sistema. Crecen durante una actualización y luego vuelven a reducirse. No los borres a mano."
+          }
+        }
+      }
+    },
+    "内存不够时把内存写到磁盘，重启后会变小，不能手动删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内存不够时把内存写到磁盘，重启后会变小，不能手动删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記憶體不夠時把記憶體寫到磁碟，重新開機後會變小，不能手動刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory written to disk when RAM runs short. It shrinks after a restart and can't be deleted by hand."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メモリが足りないときに内容をディスクに書き出したものです。再起動すると小さくなり、手動では削除できません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메모리가 부족할 때 디스크에 쓴 내용입니다. 재시동하면 줄어들며 직접 삭제할 수 없습니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arbeitsspeicher, der bei Knappheit auf die Festplatte ausgelagert wird. Wird nach einem Neustart kleiner, lässt sich nicht von Hand löschen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mémoire écrite sur le disque quand la RAM manque. Elle diminue après un redémarrage et ne peut pas être supprimée à la main."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memoria que se escribe en disco cuando falta RAM. Se reduce al reiniciar y no se puede borrar a mano."
+          }
+        }
+      }
+    },
+    "睡眠镜像": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "睡眠镜像"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "睡眠映像"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep image"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スリープイメージ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "잠자기 이미지"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruhezustandsabbild"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Image de veille"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen de reposo"
+          }
+        }
+      }
+    },
+    "合盖休眠时保存内存内容，系统自己维护，不能删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合盖休眠时保存内存内容，系统自己维护，不能删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "闔蓋休眠時保存記憶體內容，系統自己維護，不能刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Holds memory contents while the Mac sleeps. macOS manages it; it can't be deleted."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スリープ中にメモリの内容を保存します。システムが管理しており、削除できません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "잠자기 중 메모리 내용을 저장합니다. 시스템이 관리하며 삭제할 수 없습니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichert den Arbeitsspeicher im Ruhezustand. Wird von macOS verwaltet und lässt sich nicht löschen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserve le contenu de la mémoire pendant la veille. Géré par macOS, impossible à supprimer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda el contenido de la memoria durante el reposo. Lo gestiona macOS y no se puede borrar."
+          }
+        }
+      }
+    },
+    "系统素材": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统素材"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統素材"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System assets"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムアセット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 에셋"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemressourcen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ressources système"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recursos del sistema"
+          }
+        }
+      }
+    },
+    "字体、语音、Apple 智能模型等按需下载的资源，系统自己管理，不要手动删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字体、语音、Apple 智能模型等按需下载的资源，系统自己管理，不要手动删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "字體、語音、Apple 智慧型模型等按需下載的資源，系統自己管理，不要手動刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonts, voices, Apple Intelligence models and other on-demand downloads. macOS manages them; don't delete them by hand."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォント、音声、Apple Intelligence のモデルなど必要に応じてダウンロードされる資源です。システムが管理しているので手動で削除しないでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "글꼴, 음성, Apple Intelligence 모델 등 필요할 때 내려받는 자원입니다. 시스템이 관리하므로 직접 삭제하지 마세요."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schriften, Stimmen, Apple-Intelligence-Modelle und andere Downloads bei Bedarf. macOS verwaltet sie; nicht von Hand löschen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Polices, voix, modèles Apple Intelligence et autres téléchargements à la demande. Gérés par macOS ; ne les supprimez pas à la main."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuentes, voces, modelos de Apple Intelligence y otras descargas bajo demanda. Los gestiona macOS; no los borres a mano."
+          }
+        }
+      }
+    },
+    "系统日志": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统日志"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統日誌"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System logs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムログ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 로그"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemprotokolle"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journaux système"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registros del sistema"
+          }
+        }
+      }
+    },
+    "系统运行记录，按时间和大小自动轮换，不用管。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统运行记录，按时间和大小自动轮换，不用管。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統執行記錄，按時間和大小自動輪替，不用管。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Records of what the system does. They rotate automatically by age and size; leave them alone."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムの動作記録です。期間とサイズで自動的に入れ替わるので放っておいて大丈夫です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 동작 기록입니다. 기간과 크기에 따라 자동으로 교체되니 그대로 두면 됩니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufzeichnungen des Systems. Sie werden nach Alter und Größe automatisch rotiert; nichts zu tun."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique de l'activité du système. Renouvelé automatiquement selon l'âge et la taille ; rien à faire."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de la actividad del sistema. Se renueva solo según antigüedad y tamaño; no hace falta tocarlo."
+          }
+        }
+      }
+    },
+    "临时文件": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "临时文件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫存檔案"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporary files"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時ファイル"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "임시 파일"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporäre Dateien"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichiers temporaires"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos temporales"
+          }
+        }
+      }
+    },
+    "应用运行时放的临时文件和缓存，重启后大多会清掉，不建议手动删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用运行时放的临时文件和缓存，重启后大多会清掉，不建议手动删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "應用程式執行時放的暫存檔案和快取，重新開機後大多會清掉，不建議手動刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporary files and caches apps create while running. Most are cleared on restart; deleting them by hand isn't recommended."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリが実行中に作る一時ファイルとキャッシュです。再起動でほとんど消えるので、手動での削除はおすすめしません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱이 실행 중에 만드는 임시 파일과 캐시입니다. 재시동하면 대부분 지워지므로 직접 삭제는 권장하지 않습니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporäre Dateien und Caches laufender Apps. Die meisten verschwinden beim Neustart; manuelles Löschen wird nicht empfohlen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichiers temporaires et caches créés par les apps en cours. La plupart disparaissent au redémarrage ; mieux vaut ne pas les supprimer à la main."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos temporales y cachés que crean las apps al ejecutarse. La mayoría se borran al reiniciar; no se recomienda borrarlos a mano."
+          }
+        }
+      }
+    },
+    "%@ 启动时复制的自己，被强制退出就会留下。和本体共用存储，看着有 %@，实际约 %@。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 启动时复制的自己，被强制退出就会留下。和本体共用存储，看着有 %@，实际约 %@。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 啟動時複製的自己，被強制結束就會留下。和本體共用儲存空間，看起來有 %@，實際約 %@。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copies %@ makes of itself at launch; force-quitting leaves them behind. They share storage with the app, so they look like %@ but really take about %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ が起動時に作る自分のコピーで、強制終了すると残ります。本体と保存領域を共有しているため、見かけは %@ でも実際は約 %@ です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 가 실행할 때 만드는 자신의 복사본으로, 강제 종료하면 남습니다. 본체와 저장 공간을 공유하므로 보기에는 %@ 이지만 실제로는 약 %@ 입니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopien, die %@ beim Start von sich anlegt; nach einem erzwungenen Beenden bleiben sie liegen. Sie teilen Speicher mit der App: scheinbar %@, tatsächlich etwa %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copies que %@ fait d'elle-même au lancement ; un arrêt forcé les laisse sur place. Elles partagent le stockage avec l'app : %@ en apparence, environ %@ en réalité."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copias que %@ hace de sí mismo al abrirse; si se fuerza su cierre, se quedan. Comparten almacenamiento con la app: parecen %@, pero en realidad ocupan unos %@."
+          }
+        }
+      }
+    },
+    "现在的都在用，不要删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现在的都在用，不要删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在的都在用，不要刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All of them are in use right now; don't delete them."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今あるものはすべて使用中なので、削除しないでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 있는 것은 모두 사용 중이니 삭제하지 마세요."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle sind gerade in Gebrauch; nicht löschen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elles sont toutes utilisées en ce moment ; ne les supprimez pas."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas están en uso ahora; no las borres."
+          }
+        }
+      }
+    },
+    "没在用的可以删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没在用的可以删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒在用的可以刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The ones not in use can be deleted."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使われていないものは削除できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용하지 않는 것은 삭제해도 됩니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht verwendete können gelöscht werden."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celles qui ne servent pas peuvent être supprimées."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las que no se usan se pueden borrar."
+          }
+        }
+      }
+    },
+    "系统更新或时间机器做的，删掉的文件要等快照到期才腾出空间；空间紧张时系统会自动删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统更新或时间机器做的，删掉的文件要等快照到期才腾出空间；空间紧张时系统会自动删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系統更新或時光機做的，刪掉的檔案要等快照到期才騰出空間；空間緊張時系統會自動刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made by macOS updates or Time Machine. Deleted files only free space once the snapshot expires; macOS removes snapshots when space runs low."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "システムアップデートや Time Machine が作ったものです。削除したファイルはスナップショットが期限切れになるまで空き容量になりません。容量が足りなくなるとシステムが自動で削除します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 업데이트나 Time Machine이 만든 것입니다. 삭제한 파일은 스냅샷이 만료되어야 공간이 비워지며, 공간이 부족하면 시스템이 자동으로 지웁니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von macOS-Updates oder Time Machine angelegt. Gelöschte Dateien geben erst Platz frei, wenn der Schnappschuss abläuft; bei Platzmangel entfernt macOS Schnappschüsse selbst."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créés par les mises à jour ou Time Machine. Les fichiers supprimés ne libèrent de l'espace qu'à l'expiration de l'instantané ; macOS les retire quand l'espace manque."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los crean las actualizaciones o Time Machine. Los archivos borrados no liberan espacio hasta que caduca la instantánea; macOS las elimina si falta espacio."
+          }
+        }
+      }
+    },
+    "目前没有。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前没有。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前沒有。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None right now."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今はありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금은 없습니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Derzeit keine."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun pour le moment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna por ahora."
+          }
+        }
+      }
+    },
+    "其他用户的文件、系统目录和数据库等 Adieu 看不到的部分。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他用户的文件、系统目录和数据库等 Adieu 看不到的部分。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他使用者的檔案、系統目錄和資料庫等 Adieu 看不到的部分。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other users' files, system folders, databases and anything else Adieu can't see."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "他のユーザのファイル、システムフォルダ、データベースなど、Adieu から見えない部分です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 사용자의 파일, 시스템 폴더, 데이터베이스 등 Adieu가 볼 수 없는 부분입니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien anderer Benutzer, Systemordner, Datenbanken und alles, was Adieu nicht sehen kann."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fichiers d'autres utilisateurs, dossiers système, bases de données et tout ce qu'Adieu ne voit pas."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos de otros usuarios, carpetas del sistema, bases de datos y todo lo que Adieu no puede ver."
+          }
+        }
+      }
+    },
+    "删掉 %lld 份签名副本？": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删掉 %lld 份签名副本？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪掉 %lld 份簽名副本？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld signing copies?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "署名コピーを %lld 個削除しますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서명 복사본 %lld개를 삭제할까요?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Signaturkopien löschen?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %lld copies de signature ?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar %lld copias de firma?"
+          }
+        }
+      }
+    },
+    "已用空间减去上面几类，剩下的就是这一块，系统设置里叫“系统数据”。能看清的部分列在下面，每项都写了会不会自己变小、能不能删。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已用空间减去上面几类，剩下的就是这一块，系统设置里叫“系统数据”。能看清的部分列在下面，每项都写了会不会自己变小、能不能删。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已用空間減去上面幾類，剩下的就是這一塊，系統設定裡叫「系統資料」。能看清的部分列在下面，每項都寫了會不會自己變小、能不能刪。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used space minus the categories above; System Settings calls this “System Data”. The parts Adieu can identify are listed below, each saying whether it shrinks on its own and whether it can be deleted."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用済み容量から上の項目を引いた残りで、システム設定では「システムデータ」と呼ばれます。わかる部分を下に並べ、それぞれ自然に減るか、削除できるかを書いています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용 중인 공간에서 위 항목을 뺀 나머지로, 시스템 설정에서는 ‘시스템 데이터’라고 부릅니다. 확인할 수 있는 부분을 아래에 나열하고, 저절로 줄어드는지와 삭제할 수 있는지를 적었습니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belegter Speicher abzüglich der Kategorien oben; die Systemeinstellungen nennen das „Systemdaten“. Was Adieu erkennen kann, steht unten, jeweils mit dem Hinweis, ob es von selbst schrumpft und ob man es löschen kann."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espace utilisé moins les catégories ci-dessus ; Réglages Système l'appelle « Données système ». Les parties identifiables sont listées ci-dessous, avec pour chacune si elle diminue seule et si on peut la supprimer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espacio usado menos las categorías de arriba; Ajustes del Sistema lo llama «Datos del sistema». Abajo están las partes que Adieu puede identificar, cada una indicando si se reduce sola y si se puede borrar."
+          }
+        }
+      }
+    },
+    "删掉没在用的 %lld 份": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删掉没在用的 %lld 份"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪掉沒在用的 %lld 份"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld unused"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未使用の %lld 個を削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용하지 않는 %lld개 삭제"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld unbenutzte löschen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer les %lld inutilisées"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar las %lld sin usar"
+          }
+        }
+      }
+    },
+    "有 %lld 个本地快照还保留着这些文件，要等快照到期（一般一天内）或空间紧张时系统删掉快照，空间才回来。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %lld 个本地快照还保留着这些文件，要等快照到期（一般一天内）或空间紧张时系统删掉快照，空间才回来。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有 %lld 個本機快照還保留著這些檔案，要等快照到期（一般一天內）或空間緊張時系統刪掉快照，空間才回來。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld local snapshots still hold these files. The space comes back when the snapshots expire (usually within a day) or macOS removes them when space runs low."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個のローカルスナップショットがまだこれらのファイルを保持しています。スナップショットが期限切れになる（通常 1 日以内）か、容量不足でシステムが削除すると空き容量が戻ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로컬 스냅샷 %lld개가 아직 이 파일을 보관하고 있습니다. 스냅샷이 만료되거나(보통 하루 이내) 공간이 부족해 시스템이 지우면 공간이 돌아옵니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld lokale Schnappschüsse enthalten diese Dateien noch. Der Platz kommt zurück, wenn sie ablaufen (meist innerhalb eines Tages) oder macOS sie bei Platzmangel entfernt."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld instantanés locaux conservent encore ces fichiers. L'espace revient à leur expiration (en général sous un jour) ou quand macOS les supprime faute de place."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld instantáneas locales aún conservan estos archivos. El espacio vuelve cuando caducan (normalmente en un día) o cuando macOS las elimina por falta de espacio."
+          }
+        }
+      }
+    },
+    "有些文件和别的文件共用存储（APFS 克隆，比如复制出来的副本），删掉其中一份腾不出空间。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有些文件和别的文件共用存储（APFS 克隆，比如复制出来的副本），删掉其中一份腾不出空间。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有些檔案和別的檔案共用儲存空間（APFS 複製，例如複製出來的副本），刪掉其中一份騰不出空間。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some files share storage with other files (APFS clones, such as duplicated copies), so deleting one copy frees nothing."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一部のファイルは他のファイルと保存領域を共有しています（APFS クローン、複製したコピーなど）。片方を削除しても空きは増えません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부 파일은 다른 파일과 저장 공간을 공유합니다(APFS 클론, 복제한 사본 등). 그중 하나를 지워도 공간이 생기지 않습니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manche Dateien teilen sich Speicher mit anderen (APFS-Klone, etwa duplizierte Kopien); das Löschen einer Kopie gibt nichts frei."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certains fichiers partagent leur stockage avec d'autres (clones APFS, comme des copies dupliquées) ; en supprimer une ne libère rien."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunos archivos comparten almacenamiento con otros (clones APFS, como copias duplicadas); borrar una copia no libera espacio."
+          }
+        }
+      }
+    },
+    "还开着的程序正在用的文件，要等程序退出后空间才会回来。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还开着的程序正在用的文件，要等程序退出后空间才会回来。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還開著的程式正在用的檔案，要等程式結束後空間才會回來。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files still in use by an open app only free their space after that app quits."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開いているアプリが使用中のファイルは、そのアプリを終了するまで空き容量になりません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "열려 있는 앱이 사용 중인 파일은 그 앱을 종료해야 공간이 돌아옵니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien, die eine geöffnete App noch nutzt, geben ihren Platz erst nach dem Beenden der App frei."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les fichiers encore utilisés par une app ouverte ne libèrent leur espace qu'à sa fermeture."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos que aún usa una app abierta solo liberan espacio cuando la app se cierra."
+          }
+        }
+      }
+    },
+    "实际腾出 %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实际腾出 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "實際騰出 %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actually freed %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実際に空いた容量 %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실제로 확보 %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tatsächlich frei: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réellement libéré : %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liberado de verdad: %@"
+          }
+        }
+      }
+    },
+    "预计 %@，少了一些": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预计 %@，少了一些"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "預計 %@，少了一些"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expected %@, a bit less"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "予定は %@、少し足りません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예상 %@보다 적음"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erwartet %@, etwas weniger"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévu %@, un peu moins"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se esperaban %@, algo menos"
+          }
+        }
+      }
+    },
+    "可能的原因：": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可能的原因："
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可能的原因："
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Possible reasons:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "考えられる原因："
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "가능한 원인:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mögliche Gründe:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raisons possibles :"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posibles motivos:"
+          }
+        }
+      }
+    },
+    "· %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        }
+      }
+    },
+    "实际腾出 %@，预计 %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实际腾出 %@，预计 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "實際騰出 %@，預計 %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actually freed %1$@, expected %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実際に空いた容量 %1$@、予定 %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실제 확보 %1$@, 예상 %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tatsächlich frei %1$@, erwartet %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réellement libéré %1$@, prévu %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liberado %1$@, se esperaban %2$@"
+          }
+        }
+      }
+    },
+    "磁盘实际多出 %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁盘实际多出 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "磁碟實際多出 %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The disk actually gained %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ディスクの空きが実際に %@ 増えました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 여유 공간이 실제로 %@ 늘었습니다"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tatsächlich %@ mehr frei auf der Festplatte"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le disque a réellement gagné %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El disco ganó realmente %@"
+          }
+        }
+      }
+    },
     "点选一个应用，再按 − 移除": {
       "localizations": {
         "zh-Hans": {
@@ -23141,58 +24857,6 @@
         }
       }
     },
-    "已用空间减去上面几类，剩下的就是这一块。主要是系统本身，以及 Adieu 看不到的其他用户和系统目录。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已用空间减去上面几类，剩下的就是这一块。主要是系统本身，以及 Adieu 看不到的其他用户和系统目录。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已用空間減去上面幾類，剩下的就是這一塊。主要是系統本身，以及 Adieu 看不到的其他使用者和系統目錄。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This is used space minus the groups above. Most of it is macOS itself, plus other users and system folders Adieu can't see."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用済み容量から上の分類を引いた残りです。ほとんどはシステム本体と、Adieu から見えない他のユーザやシステム用のフォルダです。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "사용한 공간에서 위의 항목을 뺀 나머지예요. 대부분은 시스템 자체와, Adieu가 볼 수 없는 다른 사용자와 시스템 폴더예요."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Es el espacio usado menos los grupos de arriba. Casi todo es el sistema, más otras cuentas y carpetas del sistema que Adieu no puede ver."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "C'est l'espace utilisé moins les groupes ci-dessus. L'essentiel, c'est le système, plus les autres utilisateurs et les dossiers système qu'Adieu ne voit pas."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das ist belegter Speicher minus die Gruppen oben. Das meiste ist das System selbst, plus andere Benutzer und Systemordner, die Adieu nicht sieht."
-          }
-        }
-      }
-    },
     "内存不够时临时写到磁盘，重启后会减少": {
       "localizations": {
         "zh-Hans": {
@@ -23241,110 +24905,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wird auf die Platte geschrieben, wenn der Speicher knapp wird. Nach einem Neustart wird es weniger."
-          }
-        }
-      }
-    },
-    "系统更新或时间机器创建的，系统会自动清理": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "系统更新或时间机器创建的，系统会自动清理"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "系統更新或時光機建立的，系統會自動清理"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Created by a system update or Time Machine. macOS cleans these up on its own."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "システムアップデートか Time Machine が作ったものです。システムが自動で片付けます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시스템 업데이트나 Time Machine이 만든 것이에요. 시스템이 알아서 정리해요"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los crean las actualizaciones del sistema o Time Machine. El sistema los limpia solo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Créés par une mise à jour système ou Time Machine. Le système les nettoie tout seul."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Von einem Systemupdate oder Time Machine erstellt. Das System räumt sie von selbst auf."
-          }
-        }
-      }
-    },
-    "目前没有": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "目前没有"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "目前沒有"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "None right now"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今はありません"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "지금은 없어요"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ahora mismo no hay"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun pour le moment"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gerade keine"
           }
         }
       }

@@ -81,6 +81,16 @@ struct HistoryView: View {
             if e.files.count > 8 {
                 Text("还有 \(e.files.count - 8) 项").font(.caption).foregroundStyle(.secondary)
             }
+            if let actual = e.actualFreed {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("实际腾出 \(Text(actual.gbText).fontWeight(.semibold).monospacedDigit())，预计 \(e.total.gbText)")
+                        .font(.callout)
+                    ForEach(e.shortfall ?? [], id: \.self) { r in
+                        Text("· \(r)").font(.caption).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
             Divider()
             HStack {
                 Text(e.deleted == true ? "直接删除，没有进废纸篓" : e.restored ? "已放回原来的文件夹" : (canRestore ? "还在废纸篓里，清空之前随时可以放回" : (e.files.isEmpty ? "工具命令直接清理，不经过废纸篓，需要时会重新下载" : "废纸篓已经清空，不能再放回")))

@@ -77,12 +77,61 @@ final class AppModel {
     func perform(_ request: TrashRequest) {
         pendingTrash = nil
         Task {
+            let before = freeNow()
             let (entry, admin) = await firstPass(request)
             var result = entry
             if !admin.isEmpty { result = await adminPass(request, admin, entry) }
             if result != nil { DeleteSound.play() }
             request.onDone?(result)
+            await verify(result, freeBefore: before)
         }
+    }
+
+    // MARK: 删后核对
+
+    /// 删完告诉用户实际腾出多少：删除前后各读一次磁盘可用空间
+    struct FreedReport: Identifiable {
+        let id: UUID
+        let title: String
+        let expected: Double
+        let actual: Double
+        let reasons: [String]
+        var short: Bool { !reasons.isEmpty }
+    }
+    var freedReport: FreedReport?
+
+    private func freeNow() -> Double {
+        refreshDisk()
+        return disk.free
+    }
+
+    /// APFS 释放空间有一点延迟，等两秒再读。同时在删别的东西时数字会混在一起，所以只说“约”
+    private func verify(_ entry: HistoryEntry?, freeBefore: Double) async {
+        guard let entry, !useSample else { return }
+        try? await Task.sleep(for: .seconds(2))
+        let actual = max(0, freeNow() - freeBefore)
+        let expected = entry.total
+        // 差得不多不算：可用空间本来就会随系统活动上下浮动几十 MB
+        let reasons = expected - actual > 0.1 && actual < expected * 0.8 ? await blocking { Self.shortfallReasons() } : []
+        if let i = history.firstIndex(where: { $0.id == entry.id }) {
+            history[i].actualFreed = actual
+            history[i].shortfall = reasons.isEmpty ? nil : reasons
+            HistoryStore.saveLater(history)
+        }
+        freedReport = FreedReport(id: entry.id, title: entry.title, expected: expected, actual: actual, reasons: reasons)
+    }
+
+    /// 腾出比预计少的常见原因，能查到的先说
+    nonisolated static func shortfallReasons() -> [String] {
+        var reasons: [String] = []
+        let snapshots = (SpaceScanner.run("/usr/bin/tmutil", ["listlocalsnapshots", "/"]) ?? "")
+            .split(separator: "\n").filter { $0.contains("com.apple") }.count
+        if snapshots > 0 {
+            reasons.append(String(localized: "有 \(snapshots) 个本地快照还保留着这些文件，要等快照到期（一般一天内）或空间紧张时系统删掉快照，空间才回来。"))
+        }
+        reasons.append(String(localized: "有些文件和别的文件共用存储（APFS 克隆，比如复制出来的副本），删掉其中一份腾不出空间。"))
+        reasons.append(String(localized: "还开着的程序正在用的文件，要等程序退出后空间才会回来。"))
+        return reasons
     }
 
     /// 正在删的路径：一大批要删好几秒，这期间再点一次删除，同一个文件不会再删一遍
@@ -102,6 +151,7 @@ final class AppModel {
     func deleteForUninstall(_ request: TrashRequest) async -> HistoryEntry? {
         pendingTrash = nil
         if useSample { return nil }
+        let before = freeNow()
         let first = await delete(request.urls, sizes: request.sizes)
         var entry = record(request, files: first.done, into: nil)
         report(first.failed)
@@ -113,6 +163,7 @@ final class AppModel {
         }
         if entry != nil { DeleteSound.play() }
         request.onDone?(entry)
+        Task { await verify(entry, freeBefore: before) }
         return entry
     }
 
@@ -424,11 +475,52 @@ final class AppModel {
         let known = result.map(\.size).reduce(0, +)
         let system = max(0, disk.used - known)
         result.append(.init(id: "system", label: "macOS 系统与其他", size: system, color: t["system"]!.color,
-                            hint: "已用空间减去上面几类，剩下的就是这一块。主要是系统本身，以及 Adieu 看不到的其他用户和系统目录。",
-                            parts: [.init(label: "交换文件", size: space.swap, note: "内存不够时临时写到磁盘，重启后会减少"),
-                                    .init(label: String(localized: "本地快照 \(space.snapshots) 个"), size: nil, note: space.snapshots > 0 ? "系统更新或时间机器创建的，系统会自动清理" : "目前没有"),
-                                    .init(label: "系统卷", size: nil, note: "只读且有签名保护，不能也不需要清理")]))
+                            hint: "已用空间减去上面几类，剩下的就是这一块，系统设置里叫“系统数据”。能看清的部分列在下面，每项都写了会不会自己变小、能不能删。",
+                            parts: systemParts(space, total: system)))
         return result.sorted { $0.size > $1.size } + [free]
+    }
+
+    /// “macOS 系统与其他”的细分。大小来自 APFS 各卷和几个固定目录；加起来以外的部分记作“其他”
+    private func systemParts(_ space: SpaceScanner.Result, total: Double) -> [SpaceCategory.Part] {
+        var parts: [SpaceCategory.Part] = []
+        func add(_ label: String, _ size: Double?, _ note: String, _ action: SpaceCategory.PartAction? = nil) {
+            guard let size, size >= 0.05 else { return }
+            parts.append(.init(label: label, size: size, note: note, action: action))
+        }
+        add("macOS 本身", space.systemVolume, "系统卷，只读且有签名保护，不会自己变，也不能删。")
+        add("启动与恢复", (space.preboot ?? 0) + (space.recovery ?? 0), "开机和恢复要用的文件，系统更新时会临时变大，装完自己收回，不要手动删。")
+        add("交换文件", space.vmVolume ?? space.swap, "内存不够时把内存写到磁盘，重启后会变小，不能手动删。")
+        add("睡眠镜像", space.sleepImage, "合盖休眠时保存内存内容，系统自己维护，不能删。")
+        add("系统素材", space.assets, "字体、语音、Apple 智能模型等按需下载的资源，系统自己管理，不要手动删。")
+        add("系统日志", space.logs, "系统运行记录，按时间和大小自动轮换，不用管。")
+        add("临时文件", space.temp, "应用运行时放的临时文件和缓存，重启后大多会清掉，不建议手动删。")
+        let c = space.clones
+        if c.count > 0 {
+            let name = c.apps.count == 1 ? c.apps[0].replacing("Google ", with: "") : String(localized: "应用")
+            let note = String(localized: "共 \(c.count) 份。") + String(localized: "\(name) 启动时复制的自己，被强制退出就会留下。和本体共用存储，看着有 \(c.logical.gbText)，实际约 \(c.real.gbText)。")
+                + (c.removable.isEmpty ? String(localized: "现在的都在用，不要删。") : String(localized: "没在用的可以删。"))
+            parts.append(.init(label: String(localized: "\(name) 签名副本"), size: c.real, note: note,
+                               action: c.removable.isEmpty ? nil : .cleanClones(count: c.removable.count)))
+        }
+        parts.sort { ($0.size ?? 0) > ($1.size ?? 0) }
+        parts.append(.init(label: String(localized: "本地快照 \(space.snapshots) 个"), size: nil,
+                           note: space.snapshots > 0 ? "系统更新或时间机器做的，删掉的文件要等快照到期才腾出空间；空间紧张时系统会自动删。" : "目前没有。"))
+        let known = parts.compactMap(\.size).reduce(0, +)
+        parts.append(.init(label: "其他", size: max(0, total - known), note: "其他用户的文件、系统目录和数据库等 Adieu 看不到的部分。"))
+        return parts
+    }
+
+    /// 删掉没在用的签名副本，删完重新数一遍
+    func cleanClones() {
+        guard let c = space?.clones, !c.removable.isEmpty else { return }
+        confirmTrash(.init(title: String(localized: "删掉 \(c.removable.count) 份签名副本？"), source: "空间分布",
+                           urls: c.removable.map { URL(filePath: $0) }, sizes: c.removableSizes,
+                           onDone: { [weak self] _ in
+                               Task { @MainActor in
+                                   let fresh = await blocking { CodeSignClones.scan() }
+                                   self?.space?.clones = fresh
+                               }
+                           }))
     }
 
     // MARK: 规则

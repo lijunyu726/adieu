@@ -15,6 +15,19 @@ enum SpaceScanner {
         var homebrew: Double?
         var swap = 0.0
         var snapshots = 0
+        /// 下面是“macOS 系统与其他”的细分，读不到的是 nil
+        var systemVolume: Double?
+        var preboot: Double?
+        var recovery: Double?
+        /// VM 卷：交换文件
+        var vmVolume: Double?
+        var sleepImage: Double?
+        var logs: Double?
+        /// /var/folders 下当前用户的临时文件和缓存（T、C）
+        var temp: Double?
+        /// /System/Library/AssetsV2：系统按需下载的字体、语音、模型等
+        var assets: Double?
+        var clones = CodeSignClones.Summary()
     }
 
     static func scan() -> Result {
@@ -50,7 +63,47 @@ enum SpaceScanner {
         r.swap = swapUsed()
         r.snapshots = (run("/usr/bin/tmutil", ["listlocalsnapshots", "/"]) ?? "")
             .split(separator: "\n").filter { $0.contains("com.apple") }.count
+        systemParts(into: &r)
         return r
+    }
+
+    /// 系统那一块能看清的部分：APFS 各卷、睡眠镜像、日志、临时文件、系统素材、签名副本。都不用管理员权限
+    static func systemParts(into r: inout Result) {
+        let volumes = apfsVolumes()
+        r.systemVolume = volumes["System"]
+        r.preboot = volumes["Preboot"]
+        r.recovery = volumes["Recovery"]
+        r.vmVolume = volumes["VM"]
+        r.sleepImage = AppScanner.allocatedSize(URL(filePath: "/private/var/vm/sleepimage"))
+        let logs = ["/private/var/db/diagnostics", "/private/var/db/uuidtext", "/private/var/log"]
+            .compactMap { AppScanner.allocatedSize(URL(filePath: $0)) }
+        r.logs = logs.isEmpty ? nil : logs.reduce(0, +)
+        if let x = CodeSignClones.root {
+            let base = x.deletingLastPathComponent()
+            let temp = ["T", "C"].compactMap { AppScanner.allocatedSize(base.appending(path: $0)) }
+            r.temp = temp.isEmpty ? nil : temp.reduce(0, +)
+        }
+        r.assets = AppScanner.allocatedSize(URL(filePath: "/System/Library/AssetsV2"))
+        r.clones = CodeSignClones.scan()
+    }
+
+    /// 启动盘所在 APFS 容器里各卷的占用（GB），按角色（System、Preboot、Recovery、VM、Data）
+    static func apfsVolumes() -> [String: Double] {
+        guard let out = Shell.run("/usr/sbin/diskutil", ["apfs", "list", "-plist"], timeout: 10)?.out,
+              let plist = try? PropertyListSerialization.propertyList(from: Data(out.utf8), format: nil) as? [String: Any],
+              let containers = plist["Containers"] as? [[String: Any]] else { return [:] }
+        for c in containers {
+            let volumes = c["Volumes"] as? [[String: Any]] ?? []
+            let roles = volumes.flatMap { $0["Roles"] as? [String] ?? [] }
+            guard roles.contains("System"), roles.contains("Data") else { continue }
+            var sizes: [String: Double] = [:]
+            for v in volumes {
+                guard let role = (v["Roles"] as? [String])?.first, let used = v["CapacityInUse"] as? Int else { continue }
+                sizes[role, default: 0] += Double(used) / bytesPerGB
+            }
+            return sizes
+        }
+        return [:]
     }
 
     /// 交换文件占用（GB），来自 sysctl vm.swapusage
