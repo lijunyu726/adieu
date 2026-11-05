@@ -29,7 +29,7 @@ https://github.com/user-attachments/assets/0852fe93-0a46-440b-9b32-ae43faf6a4bd
 
 ## English overview
 
-Adieu is a free, MIT-licensed macOS uninstaller and cleanup app built with SwiftUI. It finds app caches, container data, and background services by Bundle ID, and explains why each item can be removed before you delete it. It also helps you review app leftovers, old installers, screenshots, screen recordings, large files, and developer caches.
+Adieu is a free, MIT-licensed macOS uninstaller and cleanup app built with SwiftUI. It finds app caches, container data, and background services by Bundle ID, and explains why each item can be removed before you delete it. It also helps you review app leftovers, old installers, screenshots, screen recordings, large files, developer caches, and Git worktrees.
 
 Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay on your Mac. It has no subscriptions, ads, or in-app purchases. Requires **macOS 26 and Apple silicon**. If a newer version is available, Adieu asks first, then downloads it and replaces itself.
 
@@ -87,6 +87,8 @@ Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay 
 </table>
 
 开发工具支持 Docker、Homebrew、Xcode、Node.js（npm / pnpm / yarn / bun）、Python（uv、pip）、Conda、Go、Rust、Flutter、Maven / Gradle、Deno、Composer、VS Code / Cursor / Windsurf、JetBrains、Playwright / Puppeteer / Cypress / Electron。SDK、模型、工具链、Xcode 归档只告诉你多大，不替你做决定。
+
+开发工具里的 **Git worktree** 按项目显示分支、路径、占用与状态。已合并且工作区干净的显示蓝色“安全移除”；未提交、未合并、锁定、游离 HEAD、Git 操作未结束、子模块等显示红色“强制移除”，分别确认后执行展示的 Git 命令。主工作区和主分支不提供移除；包含其他工作区、状态无法确认或 Git 版本未经验证的也保留。**移除会直接删除整个目录（含 Git 忽略的文件），强制移除还会丢失未提交改动，游离 HEAD 的独有提交也可能丢失。** 已有分支保留。Git 目前只验证了本机 Apple Git 2.50.1，其他版本只展示。项目列表、选中项和结果缓存在本机；超过 5 分钟后台更新，也可点“重新统计”。
 
 文件页（安装包与压缩包、图片与视频、大文件、久未打开）：鼠标指着就在右边预览，整行点一下勾选、按住拖动连选；顶上一句建议一键勾上可以放心删的，按组全选；空格放大看，回车勾选或取消当前这个，⌘A 全选（再按一次全不选），esc 全部取消，⌘⌫ 删除已勾选（照样先确认），这些快捷键都以键帽的样子写在预览栏和底栏上，不用记。“逐个看”里 → 只是标成待删，看完再一起确认。
 
@@ -155,7 +157,11 @@ open -n scratch/DerivedData/Build/Products/Debug/Adieu.app --args \
   -didOnboard YES -AdieuSection apps -AdieuSample YES
 ```
 
+`-AdieuWorktrees YES` 在开发工具页直接显示 worktree（可与 `-AdieuSection devTools -AdieuSample YES` 组合）。
+
 `AdieuSection` 可选值见 `Adieu/App/RootView.swift` 的 `AppSection`；`-AdieuSheet goal`（goal、history、diary）直接打开对应面板。`-AdieuLaunchHidden YES` 模拟开机自启：不弹主窗口，只在后台扫描、跑自动规则。截图用：`-AdieuFileMode grid|list|cards`（文件页的查看方式）、`-AdieuUninstall YES`（直接打开第一个应用的卸载确认）、`-AdieuSettingsTab rules`（safety、rules、general、permissions、about）、`-AdieuSheet menuBar` / `onboarding`（菜单栏面板、欢迎页放在窗口里显示）。
+
+Worktree 的临时仓库验证：`scripts/test-worktrees.sh`；删除后文件分类、侧边栏、建议与扫描竞态验证：`scripts/test-worktree-model.sh`。全部测试目录和产物在 `scratch/`，不清理真实项目。
 
 打包安装包（需要 [uv](https://docs.astral.sh/uv/)，用固定版本的 dmgbuild 排安装窗口）：
 

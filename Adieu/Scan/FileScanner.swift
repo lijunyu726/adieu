@@ -50,8 +50,7 @@ enum FileScanner {
     static let recordingExts: Set<String> = ["mov", "mp4"]
     static let captureExts: Set<String> = screenshotExts.union(recordingExts)
 
-    static func scan() -> Result {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+    static func scan(home: URL = FileManager.default.homeDirectoryForCurrentUser) -> Result {
         let keys: [URLResourceKey] = [.isRegularFileKey, .isDirectoryKey, .isPackageKey, .totalFileAllocatedSizeKey, .fileSizeKey, .contentModificationDateKey]
         var result = Result()
         for root in roots {

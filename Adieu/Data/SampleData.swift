@@ -1,8 +1,63 @@
 import SwiftUI
 
-/// 界面阶段使用的示例数据。数字来自 2026-10 对开发者本机的实测；
-/// 接入真实扫描后，这个文件只用于 SwiftUI 预览。
+/// SwiftUI 预览与 -AdieuSample YES 演示数据。
+/// Worktree 为展示各种状态构造的场景，其余部分数字来自开发者本机实测。
 enum Sample {
+    static let worktreeProjects: [WorktreeProject] = [
+        // 常见工作流：已合并、依赖与构建产物、未提交、未合并，以及很小的工作区。
+        .init(path: "/Users/demo/Projects/website", items: [
+            .init(projectPath: "/Users/demo/Projects/website", path: "/Users/demo/Projects/website", branch: "main", head: "abc123", size: 0.8,
+                  blocked: String(localized: "主工作区，保留"), hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/website", path: "/Users/demo/Projects/website-header", branch: "ai/header", head: "abc123", size: 2.4,
+                  blocked: nil, hasIgnoredFiles: true),
+            .init(projectPath: "/Users/demo/Projects/website", path: "/Users/demo/Projects/website-search", branch: "ai/search", head: "def456", size: 1.2,
+                  blocked: String(localized: "有未提交改动或未跟踪文件"), hasIgnoredFiles: false, allowsForceRemoval: true),
+            .init(projectPath: "/Users/demo/Projects/website", path: "/Users/demo/Projects/website-checkout", branch: "ai/checkout", head: "fed987", size: 0.7,
+                  blocked: String(localized: "尚未合并到主工作区当前提交"), hasIgnoredFiles: true, allowsForceRemoval: true),
+            .init(projectPath: "/Users/demo/Projects/website", path: "/Users/demo/Projects/website-copy", branch: "ai/copy-tweaks", head: "abc123", size: 0.0006,
+                  blocked: nil, hasIgnoredFiles: false)
+        ]),
+        // 需要保留的任务：锁定、游离 HEAD、进行中的 rebase。
+        .init(path: "/Users/demo/Projects/mobile-app", items: [
+            .init(projectPath: "/Users/demo/Projects/mobile-app", path: "/Users/demo/Projects/mobile-app", branch: "main", head: "789abc", size: 1.6,
+                  blocked: String(localized: "主工作区，保留"), hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/mobile-app", path: "/Users/demo/Projects/mobile-app-settings", branch: "ai/settings", head: "789abc", size: 0.6,
+                  blocked: nil, hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/mobile-app", path: "/Users/demo/Projects/mobile-app-release", branch: "release/2.0", head: "789def", size: 4.8,
+                  blocked: String(localized: "工作区已锁定"), hasIgnoredFiles: true, allowsForceRemoval: true, isLocked: true),
+            .init(projectPath: "/Users/demo/Projects/mobile-app", path: "/Users/demo/Projects/mobile-app-experiment", branch: nil, head: "c91e24", size: 0.22,
+                  blocked: String(localized: "游离 HEAD"), hasIgnoredFiles: false, allowsForceRemoval: true),
+            .init(projectPath: "/Users/demo/Projects/mobile-app", path: "/Users/demo/Projects/mobile-app-auth", branch: "ai/auth-refactor", head: "d93f16", size: 2.1,
+                  blocked: String(localized: "Git 操作尚未结束"), hasIgnoredFiles: false, allowsForceRemoval: true)
+        ]),
+        // 长项目名、长分支与路径，以及子模块、嵌套工作区、跳过状态检查。
+        .init(path: "/Users/demo/Projects/design-system-and-component-library", items: [
+            .init(projectPath: "/Users/demo/Projects/design-system-and-component-library", path: "/Users/demo/Projects/design-system-and-component-library", branch: "main", head: "81ab24", size: 1.3,
+                  blocked: String(localized: "主工作区，保留"), hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/design-system-and-component-library", path: "/Users/demo/Projects/design-system-and-component-library/.worktrees/ai-accessibility-keyboard-navigation-and-focus-states", branch: "ai/accessibility-keyboard-navigation-and-focus-states", head: "81ab24", size: 0.09,
+                  blocked: nil, hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/design-system-and-component-library", path: "/Users/demo/Projects/design-system-and-component-library/.worktrees/icon-pack", branch: "ai/icon-pack", head: "82bc35", size: 3.6,
+                  blocked: String(localized: "包含子模块"), hasIgnoredFiles: false, allowsForceRemoval: true),
+            .init(projectPath: "/Users/demo/Projects/design-system-and-component-library", path: "/Users/demo/Projects/design-system-and-component-library/.worktrees/playground", branch: "ai/playground", head: "83cd46", size: 0.9,
+                  blocked: String(localized: "包含其他工作区，保留"), hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/design-system-and-component-library", path: "/Users/demo/Projects/design-system-and-component-library/.worktrees/local-tokens", branch: "ai/local-tokens", head: "84de57", size: 0.04,
+                  blocked: String(localized: "有跳过状态检查的文件"), hasIgnoredFiles: false, allowsForceRemoval: true)
+        ]),
+        // 缺失目录、未知大小与无法验证的状态。
+        .init(path: "/Users/demo/Projects/archive-tools", items: [
+            .init(projectPath: "/Users/demo/Projects/archive-tools", path: "/Users/demo/Projects/archive-tools", branch: "main", head: "91ab24", size: 0.3,
+                  blocked: String(localized: "主工作区，保留"), hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/archive-tools", path: "/Users/demo/Projects/archive-tools-old-export", branch: "ai/old-export", head: "92bc35", size: nil,
+                  blocked: String(localized: "目录已不存在，保留登记"), hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/archive-tools", path: "/Users/demo/Projects/archive-tools-legacy", branch: "legacy/migration", head: "93cd46", size: 0.2,
+                  blocked: String(localized: "Git 版本尚未验证，只展示"), hasIgnoredFiles: false),
+            .init(projectPath: "/Users/demo/Projects/archive-tools", path: "/Users/demo/Projects/archive-tools-import", branch: "ai/import", head: "94de57", size: nil,
+                  blocked: String(localized: "无法确认文件状态，保留"), hasIgnoredFiles: false)
+        ]),
+        .init(path: "/Volumes/WorkDisk/Projects/offline-project", items: [],
+              error: String(localized: "无法读取项目，请确认目录存在且是 Git 仓库。"))
+    ]
+
     static let diskTotal = 460.4
     static let diskUsed = 436.3
     static var diskFree: Double { diskTotal - diskUsed }
