@@ -94,6 +94,8 @@ Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay 
 
 还有：按目标“腾出空间”、删除记录与磁盘日记、菜单栏与桌面小组件、自动规则、保护名单。
 
+应用详情里的数据目录可以点进去逐层查看：后台统计每个文件夹的大小，文件可预览，勾选具体项目后再确认删除。内部项目默认都不勾选；清理前要先退出对应应用。链接和系统管理的容器信息只展示、保留。清理后自动更新目录列表和应用占用。
+
 每个功能怎么用，配图写在 **[使用手册](https://adieu.lijunyu.com.cn/manual/)** 里；软件里点侧边栏底部的“?”或帮助菜单（⌘?）也能打开。
 
 ## 安装
@@ -126,7 +128,7 @@ Adieu 只在这个仓库的 Releases 发布，别处下载的都不是官方版�
 
 - 系统级后台程序（`/Library/LaunchAgents`、`/Library/LaunchDaemons`）只在程序已不存在时清理，且只动其中单个 plist
 - Docker 不在运行时无法统计和清理
-- 应用数据只认 Bundle ID 完全匹配；同一开发者还有应用在的、只有名字的残留都不列
+- 应用数据按主程序和包内扩展、辅助程序的 Bundle ID 完全匹配，也读取声明的共享组；其他应用共用的数据默认不勾。同一开发者还有应用在的、只有名字的残留都不列
 - 自签证书签名（0.1.14 起）：同一台打包机签出来的版本，系统认作同一个应用，更新后不用重新允许权限；从 0.1.13 及以前更新到 0.1.14 要再允许一次。没有 Apple 公证，第一次打开仍可能要点“仍要打开”。本地 Xcode 直接编译的版本还是临时签名，每次编译后系统可能重新询问文件夹访问权限
 - 管理员授权框不提供指纹（Touch ID）选项，需要输入开机密码
 
@@ -156,6 +158,10 @@ open -n scratch/DerivedData/Build/Products/Debug/Adieu.app --args \
 ```
 
 `AdieuSection` 可选值见 `Adieu/App/RootView.swift` 的 `AppSection`；`-AdieuSheet goal`（goal、history、diary）直接打开对应面板。`-AdieuLaunchHidden YES` 模拟开机自启：不弹主窗口，只在后台扫描、跑自动规则。截图用：`-AdieuFileMode grid|list|cards`（文件页的查看方式）、`-AdieuUninstall YES`（直接打开第一个应用的卸载确认）、`-AdieuSettingsTab rules`（safety、rules、general、permissions、about）、`-AdieuSheet menuBar` / `onboarding`（菜单栏面板、欢迎页放在窗口里显示）。
+
+应用组件、共享组、脚本目录与残留归属验证：`scripts/test-app-scanner.sh`。只创建临时应用和数据，不卸载已安装的软件。
+
+应用内部浏览、切换目录的扫描竞态、确认与演示模式隔离：`scripts/test-app-data.sh`。精细删除的目录边界和链接替换验证也包含在 `test-app-scanner.sh` 中。
 
 打包安装包（需要 [uv](https://docs.astral.sh/uv/)，用固定版本的 dmgbuild 排安装窗口）：
 

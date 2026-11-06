@@ -1,0 +1,165 @@
+import Foundation
+
+// 命令行验证不编译窗口；与 RootView 的导航值保持一致。
+enum AppSection: String, Hashable, Sendable {
+    case home, apps, leftovers, launch, installers, captures, bigFiles, stale, devTools
+}
+
+@main
+@MainActor
+struct AppScannerTests {
+    static let fm = FileManager.default
+
+    static func main() throws {
+        let root = URL(filePath: fm.currentDirectoryPath).appending(path: "scratch/app-scanner-tests-\(UUID().uuidString)")
+        try fm.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: root) }
+        let home = root.appending(path: "home")
+        let main = try bundle(root.appending(path: "Main.app"), id: "com.example.Main")
+        let sibling = try bundle(root.appending(path: "Sibling.app"), id: "com.example.Sibling")
+        _ = try bundle(main.appending(path: "Contents/PlugIns/Share.appex"), id: "com.example.Main.Share")
+        _ = try bundle(main.appending(path: "Contents/MacOS/Helper.app"), id: "com.other.Helper")
+        _ = try bundle(main.appending(path: "Contents/Frameworks/Engine.framework/Versions/A/Helpers/Renderer.app"), id: "com.engine.Renderer")
+        _ = try bundle(main.appending(path: "Contents/Helpers/Updater.app"), id: "org.updater.Shared")
+        _ = try bundle(sibling.appending(path: "Contents/Helpers/Updater.app"), id: "org.updater.Shared")
+        _ = try bundle(main.appending(path: "Contents/Resources/Example.app"), id: "com.ignore.Resource")
+        let outside = try bundle(root.appending(path: "Outside.appex"), id: "com.ignore.Outside")
+        try fm.createSymbolicLink(at: main.appending(path: "Contents/PlugIns/Escape.appex"), withDestinationURL: outside)
+
+        let declared = "group.org.suite.Shared"
+        let scriptsOnly = "group.org.suite.ScriptsOnly"
+        let index = AppBundleIndex(urls: [main, sibling, main]) { url in
+            if url == main { return [declared, scriptsOnly, "../bad", "*"] }
+            return url == sibling ? [declared] : []
+        }
+        precondition(index.applications.count == 2, "Duplicate paths must not create another owner")
+        let app = index.applications.first { $0.id == "com.example.Main" }!
+        precondition(app.bundleIDs.contains("com.other.Helper") && app.bundleIDs.contains("com.engine.Renderer"))
+        precondition(!app.bundleIDs.contains("com.ignore.Resource") && !app.bundleIDs.contains("com.ignore.Outside"))
+        precondition(!app.groupIDs.contains("../bad") && !app.groupIDs.contains("*"))
+
+        let expected = [
+            "Containers/com.example.Main", "Containers/com.example.Main.Share",
+            "Containers/com.other.Helper", "Caches/com.engine.Renderer", "Caches/org.updater.Shared",
+            "Group Containers/ABCDE12345.com.example.Main", "Group Containers/\(declared)",
+            "Application Scripts/com.example.Main", "Application Scripts/com.example.Main.Share",
+            "Application Scripts/ABCDE12345.com.example.Main", "Application Scripts/\(declared)",
+            "Application Scripts/\(scriptsOnly)"
+        ]
+        for sub in expected { try fm.createDirectory(at: home.appending(path: "Library/" + sub), withIntermediateDirectories: true) }
+        let nested = home.appending(path: "Library/Containers/com.example.Main/Data/Documents/database.db")
+        try fm.createDirectory(at: nested.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(repeating: 0x41, count: 8192).write(to: nested)
+        try fm.createDirectory(at: home.appending(path: "Library/Containers/com.example.Main.Lookalike"), withIntermediateDirectories: true)
+        let keep = home.appending(path: "Library/Application Support/com.other.Keep")
+        try fm.createDirectory(at: keep, withIntermediateDirectories: true)
+        try fm.createSymbolicLink(at: home.appending(path: "Library/Caches/com.example.Main"), withDestinationURL: keep)
+
+        let parts = AppScanner.dataParts(for: app, index: index, home: home)
+        precondition(Set(parts.map(\.path)) == Set(expected.map { "~/Library/" + $0 }), "Every real component and scripts directory must be listed exactly once")
+        precondition(Set(parts.map(\.id)).count == parts.count, "Part IDs must stay unique")
+        precondition(parts == AppScanner.dataParts(for: app, index: index, home: home), "Ordering and IDs must stay stable across scans")
+        for part in parts {
+            let shared = part.path.contains(declared) || part.path.hasSuffix("org.updater.Shared")
+            precondition(part.defaultOn == !shared && part.evidence == (shared ? .shared : .exact))
+            if shared {
+                precondition(part.ownerIDs.isSuperset(of: ["com.example.Main", "com.example.Sibling"]), "All known owners must travel with shared data")
+            }
+        }
+        let ownedPart = parts.first { $0.path.hasSuffix(declared) }!
+        let absolutePart = AppPart(id: ownedPart.id, kind: ownedPart.kind, label: ownedPart.label,
+                                   path: home.appending(path: String(ownedPart.path.dropFirst(2))).path,
+                                   size: nil, evidence: ownedPart.evidence, defaultOn: ownedPart.defaultOn, ownerIDs: ownedPart.ownerIDs)
+        let measuredApp = AppScanner.measured(.init(id: app.id, name: "Fixture", monogram: "F", color: .gray,
+                                                   meta: "fixture", parts: [absolutePart]))
+        precondition(measuredApp.parts[0].ownerIDs == ownedPart.ownerIDs, "Size measurement must preserve ownership")
+        let unchanged = try Data(contentsOf: nested)
+        precondition(unchanged.count == 8192, "Scanning must leave user data untouched")
+        let linkedHome = root.appending(path: "linked-home")
+        try fm.createDirectory(at: linkedHome, withIntermediateDirectories: true)
+        try fm.createSymbolicLink(at: linkedHome.appending(path: "Library"), withDestinationURL: home.appending(path: "Library"))
+        let linkedParts = AppScanner.dataParts(for: app, index: index, home: linkedHome)
+        precondition(Set(linkedParts.map(\.path)) == Set(expected.map { home.appending(path: "Library/" + $0).path }), "A relocated Library must retain valid absolute paths")
+
+        try leftovers(home: home, index: index)
+        try signedGroups(root: root)
+        let selected = parts.filter(\.defaultOn).map { home.appending(path: String($0.path.dropFirst(2))) }
+        let deleted = TrashService.delete(selected, protected: [])
+        precondition(deleted.failed.isEmpty && deleted.needsAdmin.isEmpty && deleted.done.count == selected.count)
+        precondition(!fm.fileExists(atPath: nested.path))
+        for part in parts where !part.defaultOn {
+            precondition(fm.fileExists(atPath: home.appending(path: String(part.path.dropFirst(2))).path), "Shared data must remain after deleting the default selection")
+        }
+        precondition(fm.fileExists(atPath: keep.path), "A symlink must never pull its unrelated target into deletion")
+        try AppDataScannerTests.run(root: root)
+        print("App scanner tests passed: embedded IDs, scripts, shared ownership, symlink boundaries, stable deduplication, leftovers, signed app groups and deletion of the default selection.")
+    }
+
+    static func leftovers(home: URL, index: AppBundleIndex) throws {
+        let old = Date(timeIntervalSinceNow: -90 * 86400)
+        let orphanPaths = ["Application Scripts/com.gone.Orphan", "Group Containers/ABCDE12345.com.gone.Orphan"]
+        let freshPath = "Application Scripts/com.fresh.Orphan"
+        let runningPath = "Group Containers/group.com.running.App"
+        let installedPath = "Application Scripts/com.elsewhere.App"
+        let protectedPaths = ["Application Scripts/group.org.suite.Shared", "Containers/com.other.Helper"]
+        for sub in orphanPaths + [freshPath, runningPath, installedPath] + protectedPaths {
+            let dir = home.appending(path: "Library/" + sub)
+            try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            try Data(repeating: 0x42, count: 1_100_000).write(to: dir.appending(path: "fixture"))
+            if sub != freshPath { try fm.setAttributes([.modificationDate: old], ofItemAtPath: dir.path) }
+        }
+        let owners = LeftoverScanner.owners(index: index)
+        precondition(owners.ids.contains("com.other.Helper") && owners.groups.contains("group.org.suite.shared"))
+        let items = LeftoverScanner.dataItems(home: home, owners: owners, running: ["com.running.App"],
+                                             applicationExists: { $0 == "com.elsewhere.App" })
+        let orphan = items.first { $0.id == "com.gone.Orphan" }!
+        precondition(orphan.paths.count == 2 && orphan.defaultOn)
+        precondition(items.first { $0.id == "com.fresh.Orphan" }?.defaultOn == false)
+        let reported = Set(items.flatMap(\.paths))
+        for sub in [runningPath, installedPath] + protectedPaths {
+            precondition(!reported.contains(home.appending(path: "Library/" + sub).path))
+        }
+    }
+
+    /// 用真实的临时签名确认 Security API 能读到 App Groups，而非仅验证注入的测试数据。
+    static func signedGroups(root: URL) throws {
+        let app = try bundle(root.appending(path: "Signed.app"), id: "com.signed.Fixture")
+        let executable = app.appending(path: "Contents/MacOS/fixture")
+        try fm.createDirectory(at: executable.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try fm.copyItem(at: URL(filePath: "/usr/bin/true"), to: executable)
+        let entitlements = root.appending(path: "groups.plist")
+        let groupID = "group.org.separate.RunningGroup"
+        let data = try PropertyListSerialization.data(fromPropertyList: ["com.apple.security.application-groups": [groupID]],
+                                                       format: .xml, options: 0)
+        try data.write(to: entitlements)
+        let process = Process()
+        process.executableURL = URL(filePath: "/usr/bin/codesign")
+        process.arguments = ["--force", "--sign", "-", "--entitlements", entitlements.path, app.path]
+        try process.run()
+        process.waitUntilExit()
+        precondition(process.terminationStatus == 0)
+        let index = AppBundleIndex(urls: [], runningURLs: [app])
+        precondition(index.applications.first?.groupIDs.contains(groupID) == true)
+        let home = root.appending(path: "running-owner-home")
+        for place in ["Group Containers", "Application Scripts"] {
+            let dir = home.appending(path: "Library/\(place)/\(groupID)")
+            try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+            try Data(repeating: 0x45, count: 1_100_000).write(to: dir.appending(path: "data"))
+            try fm.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -90 * 86400)], ofItemAtPath: dir.path)
+        }
+        let unindexed = LeftoverScanner.dataItems(home: home, owners: .init(), running: ["com.signed.Fixture"], applicationExists: { _ in false })
+        precondition(unindexed.count == 1 && unindexed[0].defaultOn, "Fixture must reproduce the old group-ID/bundle-ID ownership gap")
+        let owners = LeftoverScanner.owners(index: index)
+        precondition(LeftoverScanner.dataItems(home: home, owners: owners, running: ["com.signed.Fixture"], applicationExists: { _ in false }).isEmpty,
+                     "A running app outside Applications must protect its unrelated group ID, even with old data")
+    }
+
+    @discardableResult static func bundle(_ url: URL, id: String) throws -> URL {
+        try fm.createDirectory(at: url.appending(path: "Contents"), withIntermediateDirectories: true)
+        let info = ["CFBundleIdentifier": id, "CFBundleName": url.deletingPathExtension().lastPathComponent,
+                    "CFBundlePackageType": "APPL", "CFBundleExecutable": "fixture"]
+        let data = try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+        try data.write(to: url.appending(path: "Contents/Info.plist"))
+        return url
+    }
+}

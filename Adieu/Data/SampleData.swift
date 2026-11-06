@@ -3,6 +3,38 @@ import SwiftUI
 /// 界面阶段使用的示例数据。数字来自 2026-10 对开发者本机的实测；
 /// 接入真实扫描后，这个文件只用于 SwiftUI 预览。
 enum Sample {
+    /// 应用内部浏览的演示目录；不访问真实的聊天记录或文件。
+    static func appDataListing(_ target: AppDataTarget, path: String) -> AppDataListing {
+        let root = URL(filePath: target.root).standardizedFileURL.path
+        guard path == root || path.hasPrefix(root + "/") else {
+            return .init(path: path, error: String(localized: "位置已经变化，请重新查看。"))
+        }
+        let relative = path == root ? "" : String(path.dropFirst(root.count + 1))
+        let rows: [(String, Bool, Double)]
+        if target.appID == "wechat" {
+            switch relative {
+            case "": rows = [("Data", true, 22.8), (".com.apple.containermanagerd.metadata.plist", false, 0.000004)]
+            case "Data": rows = [("Documents", true, 22.1), ("Library", true, 0.7)]
+            case "Data/Documents": rows = [("xwechat_files", true, 18.9), ("app_data", true, 3.2)]
+            case "Data/Documents/xwechat_files": rows = [("account", true, 18.9)]
+            case "Data/Documents/xwechat_files/account":
+                rows = [("msg", true, 13.8), ("cache", true, 3.9), ("db_storage", true, 1.2)]
+            case "Data/Documents/app_data": rows = [("radium", true, 2.8), ("log", true, 0.4)]
+            case "Data/Library": rows = [("Caches", true, 0.65), ("Preferences", true, 0.05)]
+            default: rows = [("preview.png", false, 0.0012), ("cache.dat", false, 0.008), ("app.log", false, 0.003)]
+            }
+        } else {
+            rows = relative.isEmpty ? [("Caches", true, 1.2), ("Logs", true, 0.2), ("Documents", true, 2.5)]
+                : [("cache.dat", false, 0.12), ("app.log", false, 0.03)]
+        }
+        return .init(path: path, entries: rows.map { name, folder, size in
+            AppDataEntry(path: URL(filePath: path).appending(path: name).path, name: name, isDirectory: folder,
+                         isPackage: false, modified: Date(timeIntervalSince1970: 1_793_000_000), evidence: target.part.evidence,
+                         size: size, isMeasured: true,
+                         restriction: name.hasPrefix(".com.apple.containermanagerd.") ? String(localized: "系统管理的容器信息，保留。") : nil)
+        })
+    }
+
     static let diskTotal = 460.4
     static let diskUsed = 436.3
     static var diskFree: Double { diskTotal - diskUsed }

@@ -22,6 +22,8 @@ final class AppModel {
     var disk: DiskInfo
     var apps: [AppItem] = []
     var appsLoading = false
+    let appData = AppDataBrowser()
+    @ObservationIgnored private let runningAppNames: () -> [String: String]
 
     // MARK: 删除与记录
 
@@ -35,6 +37,9 @@ final class AppModel {
         var sizes: [String: Double] = [:]
         /// 界面上对应的行：删掉后不再显示
         var keys: [String] = []
+        /// 应用内部的精细清理：确认后、管理员删除前仍要重新核对目录边界。
+        var dataRoot: String? = nil
+        var dataTarget: AppDataTarget? = nil
         var onDone: (@MainActor (HistoryEntry?) -> Void)? = nil
     }
 
@@ -49,7 +54,12 @@ final class AppModel {
     /// 已经删掉的行（界面 key，文件就是路径）。变了就重算文件分类，汇总数字和侧边栏跟着变
     var removedKeys: Set<String> = [] { didSet { rebuildFileCategories() } }
 
-    init() {
+    init(runningAppNames: (() -> [String: String])? = nil) {
+        self.runningAppNames = runningAppNames ?? (useSample ? { [:] } : {
+            NSWorkspace.shared.runningApplications.reduce(into: [:]) { names, app in
+                if let id = app.bundleIdentifier { names[id] = app.localizedName ?? id }
+            }
+        })
         disk = useSample ? .sample : (DiskInfo.current() ?? .sample)
         history = useSample ? Sample.history : HistoryStore.load()
     }
@@ -77,12 +87,15 @@ final class AppModel {
     /// 有权限不够的（如 App Store 装的应用）会接着弹系统密码窗口
     func perform(_ request: TrashRequest) {
         pendingTrash = nil
+        if let target = request.dataTarget, !canCleanAppData(target) { return }
+        if request.dataRoot != nil { appData.deleting = true }
         Task {
             let before = freeNow()
             let (entry, admin) = await firstPass(request)
             var result = entry
             if !admin.isEmpty { result = await adminPass(request, admin, entry) }
             if result != nil { DeleteSound.play() }
+            if request.dataRoot != nil { appData.deleting = false }
             request.onDone?(result)
             await verify(result, freeBefore: before)
         }
@@ -155,13 +168,13 @@ final class AppModel {
     @ObservationIgnored private var deleting: Set<String> = []
 
     /// 在后台线程删，正在删的跳过
-    private func delete(_ urls: [URL], sizes: [String: Double] = [:]) async -> TrashService.Outcome {
+    private func delete(_ urls: [URL], sizes: [String: Double] = [:], dataRoot: String? = nil) async -> TrashService.Outcome {
         let urls = urls.filter { !deleting.contains($0.path) }
         let paths = urls.map(\.path)
         deleting.formUnion(paths)
         defer { deleting.subtract(paths) }
         let protected = protectedPaths
-        return await blocking { TrashService.delete(urls, sizes: sizes, protected: protected) }
+        return await blocking { TrashService.delete(urls, sizes: sizes, protected: protected, dataRoot: dataRoot) }
     }
 
     /// 卸载应用：直接删除，不进废纸篓。权限不够的弹一次系统密码窗口，全部删完才返回
@@ -189,16 +202,18 @@ final class AppModel {
             removedKeys.formUnion(request.keys)
             return (nil, [])
         }
-        let result = await delete(request.urls, sizes: request.sizes)
+        let result = await delete(request.urls, sizes: request.sizes, dataRoot: request.dataRoot)
         let entry = record(request, files: result.done, into: nil)
         report(result.failed)
         return (entry, result.needsAdmin)
     }
 
     private func adminPass(_ request: TrashRequest, _ urls: [URL], _ entry: HistoryEntry?) async -> HistoryEntry? {
+        if let target = request.dataTarget, !canCleanAppData(target) { return entry }
         let sizes = request.sizes
         let protected = protectedPaths
-        let result = await blocking { TrashService.deleteAsAdmin(urls, sizes: sizes, protected: protected) }
+        let root = request.dataRoot
+        let result = await blocking { TrashService.deleteAsAdmin(urls, sizes: sizes, protected: protected, dataRoot: root) }
         let merged = record(request, files: result.done, into: entry?.id)
         report(result.failed)
         return merged ?? entry
@@ -246,6 +261,46 @@ final class AppModel {
     }
 
     // MARK: 应用
+
+    func openAppData(_ app: AppItem, part: AppPart) {
+        guard [.data, .shared].contains(part.kind), app.parts.contains(part) else { return }
+        appData.open(.init(appID: app.id, appName: app.name, part: part), sample: useSample)
+    }
+
+    func cleanAppDataSelection() {
+        guard let target = appData.target, !appData.deleting, !appData.loading else { return }
+        let items = appData.chosen
+        guard !items.isEmpty else { return }
+        guard canCleanAppData(target) else { return }
+        var sizes: [String: Double] = [:]
+        for item in items { if let size = item.size { sizes[item.path] = size } }
+        confirmTrash(.init(title: String(localized: "清理 \(target.appName) 的数据"), source: "已安装",
+                           urls: items.map { URL(filePath: $0.path) }, sizes: sizes,
+                           dataRoot: target.root, dataTarget: target, onDone: { [weak self] entry in
+            guard let self else { return }
+            let removed = self.useSample ? items.map(\.path) : entry?.files.map(\.originalPath) ?? []
+            if self.appData.target?.id == target.id {
+                if removed.contains(target.root) { self.appData.close() }
+                else if self.useSample { self.appData.removeSample(removed) }
+            }
+            Task {
+                if self.appData.target?.id == target.id { await self.appData.refresh() }
+                await self.remeasure(target.appID)
+                self.feedWidget()
+            }
+        }))
+    }
+
+    private func canCleanAppData(_ target: AppDataTarget) -> Bool {
+        let owners = Set(target.ownerIDs.map { $0.lowercased() })
+        let active = runningAppNames().filter { owners.contains($0.key.lowercased()) }
+        if !active.isEmpty {
+            let names = ListFormatter.localizedString(byJoining: Set(active.values).sorted())
+            notice = String(localized: "请先退出 \(names)，再清理它的数据。")
+            return false
+        }
+        return true
+    }
 
     /// 先列出应用，再并行统计大小，每算完一个就更新一个
     func loadApps(force: Bool = false) async {
@@ -662,9 +717,3 @@ final class AppModel {
 }
 
 /// 阻塞的磁盘读取和命令放到 GCD 线程上跑。Swift 并发的协作线程池只有 CPU 核数那么多线程，
-/// 被阻塞读取占满后，别的扫描即使已经开始也会一直排队
-func blocking<T: Sendable>(_ work: @escaping @Sendable () -> T) async -> T {
-    await withCheckedContinuation { c in
-        DispatchQueue.global(qos: .userInitiated).async { c.resume(returning: work()) }
-    }
-}

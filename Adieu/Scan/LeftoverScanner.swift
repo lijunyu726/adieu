@@ -6,7 +6,7 @@ import AppKit
 enum LeftoverScanner {
     /// 资源库里按应用存数据的位置（相对 ~/Library）
     static let places = ["Application Support", "Containers", "Caches", "Preferences", "Saved Application State",
-                         "HTTPStorages", "WebKit", "Logs"]
+                         "HTTPStorages", "WebKit", "Logs", "Application Scripts", "Group Containers"]
 
     /// 系统自己的、名字不像标识符的文件夹
     static let systemNames: Set<String> = ["AddressBook", "Analytics", "Animoji", "AppExit", "AskPermission", "CallHistoryDB",
@@ -19,33 +19,24 @@ enum LeftoverScanner {
         var ids: [String] = []
         var vendors: Set<String> = []
         var names: Set<String> = []
+        var groups: Set<String> = []
     }
 
     /// 所有已装应用（含系统自带）的标识符和名字，外加命令行工具名
-    static func owners() -> Owners {
+    static func owners(index: AppBundleIndex? = nil) -> Owners {
         var o = Owners()
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
-        let roots = ["/Applications", "/System/Applications", "/System/Applications/Utilities", home.appending(path: "Applications").path]
-        func add(_ url: URL) {
-            guard let b = Bundle(url: url) else { return }
-            if let id = b.bundleIdentifier {
-                o.ids.append(id)
-                o.vendors.insert(vendor(id))
-            }
+        let index = index ?? AppBundleIndex.current(home: home)
+        for app in index.applications {
+            o.ids += app.bundleIDs
+            o.vendors.formUnion(app.bundleIDs.map(vendor))
+            o.groups.formUnion(app.groupIDs.map { $0.lowercased() })
+            guard let b = Bundle(url: app.url) else { continue }
             for key in ["CFBundleName", "CFBundleExecutable", "CFBundleDisplayName"] {
                 if let n = b.infoDictionary?[key] as? String { o.names.insert(FileCategorizer.normalize(n)) }
             }
-            o.names.insert(FileCategorizer.normalize(url.deletingPathExtension().lastPathComponent))
-        }
-        for root in roots {
-            for name in (try? fm.contentsOfDirectory(atPath: root)) ?? [] {
-                let url = URL(filePath: root).appending(path: name)
-                if name.hasSuffix(".app") { add(url) }
-                else if (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
-                    for sub in (try? fm.contentsOfDirectory(atPath: url.path)) ?? [] where sub.hasSuffix(".app") { add(url.appending(path: sub)) }
-                }
-            }
+            o.names.insert(FileCategorizer.normalize(app.url.deletingPathExtension().lastPathComponent))
         }
         // 命令行工具也算“还在用”：它们的数据常放在 Application Support
         for dir in Shell.userPATH.split(separator: ":") {
@@ -81,16 +72,39 @@ enum LeftoverScanner {
     }
 
     static func scan() -> [LeftoverGroup] {
+        let apps = NSWorkspace.shared.runningApplications
+        let running = apps.compactMap { $0.bundleIdentifier?.lowercased() }
+        let index = AppBundleIndex.current(runningURLs: apps.compactMap(\.bundleURL))
+        var gone = dataItems(home: FileManager.default.homeDirectoryForCurrentUser, owners: owners(index: index), running: running)
+
+        let broken = LaunchScanner.scan().first { $0.id == "broken" }?.items.filter(\.isUser) ?? []
+        gone += broken.compactMap { item in
+            item.plist.map { .init(id: $0, name: String(localized: "\(item.owner) 的开机启动项"), path: "~/Library/LaunchAgents/" + ($0 as NSString).lastPathComponent,
+                                   evidence: String(localized: "它要启动的程序已经不存在"), size: nil, defaultOn: true, paths: [$0]) }
+        }
+
+        return [
+            LeftoverGroup(id: "gone", title: "应用已经不在了", subtitle: "标识符找不到任何已装应用，默认勾选；最近还有改动的不勾", items: gone.sorted { ($0.size ?? 0) > ($1.size ?? 0) })
+        ]
+        .filter { !$0.items.isEmpty }
+    }
+
+    static func dataItems(home: URL, owners o: Owners, running: [String],
+                          applicationExists: (String) -> Bool = { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) != nil }) -> [LeftoverItem] {
         let fm = FileManager.default
-        let lib = fm.homeDirectoryForCurrentUser.appending(path: "Library")
-        let o = owners()
+        let home = home.standardizedFileURL.resolvingSymlinksInPath()
+        let lib = home.appending(path: "Library")
         // 同一个标识符在几个位置的数据合成一项
         var byKey: [String: [String]] = [:]
         for place in places {
             for name in (try? fm.contentsOfDirectory(atPath: lib.appending(path: place).path)) ?? [] where !name.hasPrefix(".") {
+                if o.groups.contains(name.lowercased()) { continue }
+                let url = lib.appending(path: place).appending(path: name).standardizedFileURL
+                guard url.resolvingSymlinksInPath().path == url.path else { continue }
                 var key = name
                 for ext in [".plist", ".savedState", ".binarycookies"] where key.hasSuffix(ext) { key = String(key.dropLast(ext.count)) }
                 key = stripTeam(key)
+                if key.hasPrefix("group.") { key = String(key.dropFirst(6)) }
                 if key.lowercased().hasPrefix("com.apple.") || systemNames.contains(key) || key.hasPrefix("Analytics") || key.hasPrefix("default.store") { continue }
                 if place == "Preferences" && !looksLikeID(key) { continue }
                 byKey[key, default: []].append(lib.appending(path: place).appending(path: name).path)
@@ -98,22 +112,21 @@ enum LeftoverScanner {
         }
 
         // 正在运行的程序（可能装在别处、或者是命令行工具起的）的数据一律不算残留
-        let running = NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier?.lowercased() }
+        let running = running.map { $0.lowercased() }
         var gone: [LeftoverItem] = []
         for (key, paths) in byKey {
             let lower = key.lowercased()
             guard looksLikeID(key), !o.vendors.contains(vendor(key)) else { continue }
             // 应用本身或它的扩展、辅助程序
             if o.ids.contains(where: { lower == $0.lowercased() || lower.hasPrefix($0.lowercased() + ".") }) { continue }
-            if NSWorkspace.shared.urlForApplication(withBundleIdentifier: key) != nil { continue }
+            if applicationExists(key) { continue }
             if running.contains(where: { lower == $0 || lower.hasPrefix($0 + ".") }) { continue }
             // 标识符里藏着应用名，如 com.citrolabs.EgoUpdater
             let words = key.split(separator: ".").dropFirst(2).map { FileCategorizer.normalize(String($0)) }
             if words.contains(where: { $0.count >= 4 && o.names.contains($0) }) { continue }
             let size = paths.compactMap { AppScanner.allocatedSize(URL(filePath: $0)) }.reduce(0, +)
             guard size >= 1.0 / 1000 else { continue }
-            let home = fm.homeDirectoryForCurrentUser.path
-            let shown = paths.map { "~" + $0.dropFirst(home.count) }
+            let shown = paths.map { "~" + $0.dropFirst(home.path.count) }
             let display = shown[0] + (paths.count > 1 ? String(localized: " 等 \(paths.count) 处") : "")
             // 找不到应用不等于没人在用：最近 30 天还有改动的照样列出来，但不替人勾上
             let touched = paths.compactMap { try? URL(filePath: $0).resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }.max()
@@ -124,15 +137,6 @@ enum LeftoverScanner {
             gone.append(.init(id: key, name: String(localized: "\(readableName(key)) 的数据"), path: display, evidence: evidence, size: size, defaultOn: !fresh, paths: paths))
         }
 
-        let broken = LaunchScanner.scan().first { $0.id == "broken" }?.items.filter(\.isUser) ?? []
-        gone += broken.compactMap { item in
-            item.plist.map { .init(id: $0, name: String(localized: "\(item.owner) 的开机启动项"), path: "~/Library/LaunchAgents/" + ($0 as NSString).lastPathComponent,
-                                   evidence: String(localized: "它要启动的程序已经不存在"), size: nil, defaultOn: true, paths: [$0]) }
-        }
-
-        func sorted(_ items: [LeftoverItem]) -> [LeftoverItem] { items.sorted { ($0.size ?? 0) > ($1.size ?? 0) } }
-        return [
-            LeftoverGroup(id: "gone", title: "应用已经不在了", subtitle: "标识符找不到任何已装应用，默认勾选；最近还有改动的不勾", items: sorted(gone))
-        ].filter { !$0.items.isEmpty }
+        return gone
     }
 }
