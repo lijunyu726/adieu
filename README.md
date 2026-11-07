@@ -96,8 +96,6 @@ Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay 
 
 还有：按目标“腾出空间”、删除记录与磁盘日记、菜单栏与桌面小组件、自动规则、保护名单。
 
-应用详情里的数据目录可以点进去逐层查看：后台统计每个文件夹的大小，文件可预览，勾选具体项目后再确认删除。内部项目默认都不勾选；清理前要先退出对应应用。链接和系统管理的容器信息只展示、保留。清理后自动更新目录列表和应用占用。
-
 每个功能怎么用，配图写在 **[使用手册](https://adieu.lijunyu.com.cn/manual/)** 里；软件里点侧边栏底部的“?”或帮助菜单（⌘?）也能打开。
 
 ## 安装
@@ -164,8 +162,6 @@ open -n scratch/DerivedData/Build/Products/Debug/Adieu.app --args \
 `AdieuSection` 可选值见 `Adieu/App/RootView.swift` 的 `AppSection`；`-AdieuSheet goal`（goal、history、diary）直接打开对应面板。`-AdieuLaunchHidden YES` 模拟开机自启：不弹主窗口，只在后台扫描、跑自动规则。截图用：`-AdieuFileMode grid|list|cards`（文件页的查看方式）、`-AdieuUninstall YES`（直接打开第一个应用的卸载确认）、`-AdieuSettingsTab rules`（safety、rules、general、permissions、about）、`-AdieuSheet menuBar` / `onboarding`（菜单栏面板、欢迎页放在窗口里显示）。
 
 应用组件、共享组、脚本目录与残留归属验证：`scripts/test-app-scanner.sh`。只创建临时应用和数据，不卸载已安装的软件。
-
-应用内部浏览、切换目录的扫描竞态、确认与演示模式隔离：`scripts/test-app-data.sh`。精细删除的目录边界和链接替换验证也包含在 `test-app-scanner.sh` 中。
 
 Worktree 的临时仓库验证：`scripts/test-worktrees.sh`；删除后文件分类、侧边栏、建议与扫描竞态验证：`scripts/test-worktree-model.sh`。全部测试目录和产物在 `scratch/`，不清理真实项目。
 

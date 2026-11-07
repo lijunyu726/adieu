@@ -113,7 +113,7 @@ struct RootView: View {
                 .environment(model)
                 .trashConfirmation()
         }
-        .trashConfirmation(active: model.sheet == nil && model.appData.target == nil)
+        .trashConfirmation(active: model.sheet == nil)
     }
 
     @ViewBuilder

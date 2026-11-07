@@ -91,7 +91,6 @@ struct AppScannerTests {
             precondition(fm.fileExists(atPath: home.appending(path: String(part.path.dropFirst(2))).path), "Shared data must remain after deleting the default selection")
         }
         precondition(fm.fileExists(atPath: keep.path), "A symlink must never pull its unrelated target into deletion")
-        try AppDataScannerTests.run(root: root)
         print("App scanner tests passed: embedded IDs, scripts, shared ownership, symlink boundaries, stable deduplication, leftovers, signed app groups and deletion of the default selection.")
     }
 

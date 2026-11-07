@@ -29,24 +29,13 @@ struct AppsView: View {
         }
         .searchable(text: $search, placement: .toolbar, prompt: "搜索应用")
         .onChange(of: model.apps.isEmpty, initial: true) {
-            if selection == nil {
-                let requested = UserDefaults.standard.string(forKey: "AdieuAppID")
-                selection = requested.flatMap { id in model.apps.first { $0.id == id }?.id } ?? filtered.first?.id
-            }
+            if selection == nil { selection = filtered.first?.id }
             // 启动参数 `-AdieuUninstall YES` 直接打开第一个应用的卸载确认（调试与截图用）
             if UserDefaults.standard.bool(forKey: "AdieuUninstall"), uninstalling == nil, let first = filtered.first { uninstalling = first }
-            if UserDefaults.standard.bool(forKey: "AdieuAppData"), model.appData.target == nil,
-               let app = model.apps.first(where: { $0.id == selection }),
-               let part = app.parts.first(where: { [.data, .shared].contains($0.kind) }) {
-                model.openAppData(app, part: part)
-            }
         }
         .sheet(item: $uninstalling) { app in
             UninstallSheet(app: app, parts: app.parts.filter { isOn(app, $0) })
                 .environment(model)
-        }
-        .sheet(item: Binding(get: { model.appData.target }, set: { if $0 == nil { model.appData.close() } })) { target in
-            AppDataView(target: target).environment(model).trashConfirmation()
         }
     }
 
@@ -98,7 +87,6 @@ struct AppsView: View {
 
 private struct AppInspector: View {
     let app: AppItem
-    @Environment(AppModel.self) private var model
     @Binding var overrides: [String: Bool]
     let onUninstall: () -> Void
     let onCleanData: () -> Void
@@ -182,18 +170,7 @@ private struct AppInspector: View {
                         .labelsHidden()
                         .accessibilityLabel(p.label)
                     FileIcon(path: p.path, size: 28)
-                    if [.data, .shared].contains(p.kind) {
-                        Button { model.openAppData(app, part: p) } label: {
-                            HStack(spacing: 6) {
-                                NameAndPath(name: p.label, path: p.path)
-                                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
-                            }
-                            .contentShape(.rect)
-                        }
-                        .buttonStyle(.plain).help("查看内容")
-                    } else {
-                        NameAndPath(name: p.label, path: p.path).opacity(isOn(p) ? 1 : 0.55)
-                    }
+                    NameAndPath(name: p.label, path: p.path).opacity(isOn(p) ? 1 : 0.55)
                     Spacer()
                     EvidenceChip(evidence: p.evidence)
                     Text(p.size.gbText).fontWeight(.semibold).monospacedDigit().frame(width: 70, alignment: .trailing)
@@ -262,21 +239,18 @@ struct UninstallSheet: View {
                     .padding(10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(Theme.brand.opacity(0.08), in: .rect(cornerRadius: 8))
             }
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(parts) { p in
-                        HStack(spacing: 8) {
-                            FileIcon(path: p.path, size: 18)
-                            Text(Copy.text(p.label))
-                            Spacer()
-                            Text(p.size.gbText).foregroundStyle(.secondary).monospacedDigit()
-                        }
-                        .font(.callout).padding(.vertical, 6)
-                        Divider()
+            VStack(spacing: 0) {
+                ForEach(parts) { p in
+                    HStack(spacing: 8) {
+                        FileIcon(path: p.path, size: 18)
+                        Text(Copy.text(p.label))
+                        Spacer()
+                        Text(p.size.gbText).foregroundStyle(.secondary).monospacedDigit()
                     }
+                        .font(.callout).padding(.vertical, 6)
+                    Divider()
                 }
             }
-            .frame(maxHeight: 280)
             .padding(.horizontal, 12)
             .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 10))
             HStack {
@@ -345,7 +319,7 @@ struct UninstallSheet: View {
             Image(systemName: failures == nil ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                 .font(.system(size: 52)).foregroundStyle(failures == nil ? .green : .orange)
                 .symbolEffect(.bounce, value: step)
-            Text(failures == nil ? "已删除所选项目" : "\(app.name) 没有完全卸载").font(.headline)
+            Text(failures == nil ? "\(app.name) 已经删干净了" : "\(app.name) 没有完全卸载").font(.headline)
             Text(moved.gbText).font(.system(size: 40, weight: .bold)).monospacedDigit()
             // 删后核对两秒后才有结果，到了就补上
             if let actual = model.history.first(where: { $0.id == entry?.id })?.actualFreed {

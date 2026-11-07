@@ -46,18 +46,10 @@ enum TrashService {
     /// 检查一个路径能不能动。只允许：主目录里两层以下、/Applications 里、外置卷里两层以下，
     /// /Library/LaunchAgents、/Library/LaunchDaemons 里的单个 plist（清理已失效的后台程序），
     /// 以及应用留下的签名副本（Chrome 的 code_sign_clone.XXXXXX，只认那一层）
-    static func check(_ url: URL, protected: [String], dataRoot: String? = nil) throws {
+    static func check(_ url: URL, protected: [String]) throws {
         let fm = FileManager.default
         let path = url.standardizedFileURL.resolvingSymlinksInPath().path
         guard fm.fileExists(atPath: path) else { throw Refusal.missing }
-        if let dataRoot {
-            guard AppDataScanner.contains(url.path, root: dataRoot) else {
-                throw Refusal.notAllowed(String(localized: "位置已经变化，请重新查看。"))
-            }
-            if url.lastPathComponent.hasPrefix(".com.apple.containermanagerd.") {
-                throw Refusal.notAllowed(String(localized: "系统管理的容器信息，保留。"))
-            }
-        }
         let home = fm.homeDirectoryForCurrentUser.standardizedFileURL.resolvingSymlinksInPath().path
 
         for raw in protected {
@@ -90,13 +82,12 @@ enum TrashService {
     }
 
     /// 直接删除，不经过废纸篓。已经不在的直接跳过，权限不够的交给 deleteAsAdmin
-    static func delete(_ urls: [URL], sizes: [String: Double] = [:], protected: [String], dataRoot: String? = nil,
-                       worktree: WorktreeItem? = nil, worktreeMode: WorktreeRemovalMode = .safe) -> Outcome {
+    static func delete(_ urls: [URL], sizes: [String: Double] = [:], protected: [String], worktree: WorktreeItem? = nil, worktreeMode: WorktreeRemovalMode = .safe) -> Outcome {
         var out = Outcome()
         for url in urls {
             let name = url.lastPathComponent
             do {
-                try check(url, protected: protected, dataRoot: dataRoot)
+                try check(url, protected: protected)
                 let size = sizes[url.path] ?? AppScanner.allocatedSize(url)
                 let folder = isFolder(url)
                 // 要管理员密码的应用也先走到这里，图标在这一步就存好
@@ -128,22 +119,13 @@ enum TrashService {
     }
 
     /// 用管理员身份删除（系统弹出密码窗口，只问一次）。路径照样先过安全检查
-    static func deleteAsAdmin(_ urls: [URL], sizes: [String: Double] = [:], protected: [String], dataRoot: String? = nil) -> Outcome {
-        var out = Outcome()
-        let targets = urls.filter { url in
-            do {
-                try check(url, protected: protected, dataRoot: dataRoot)
-                return true
-            } catch Refusal.missing { return false }
-            catch {
-                out.failed.append((url.lastPathComponent, error.localizedDescription))
-                return false
-            }
-        }
+    static func deleteAsAdmin(_ urls: [URL], sizes: [String: Double] = [:], protected: [String]) -> Outcome {
+        let targets = urls.filter { (try? check($0, protected: protected)) != nil }
         let jobs = targets.map { (src: $0, size: sizes[$0.path] ?? AppScanner.allocatedSize($0), folder: isFolder($0)) }
-        guard !jobs.isEmpty else { return out }
+        guard !jobs.isEmpty else { return Outcome() }
         let shell = jobs.map { "/bin/rm -rf \(quote($0.src.path))" }.joined(separator: "; ")
         let cancelled = runAsAdmin(shell, prompt: String(localized: "Adieu 要删除 \(displayNames(targets))。它们归系统管理员所有，需要输入你的开机密码。"))
+        var out = Outcome()
         for j in jobs {
             if !FileManager.default.fileExists(atPath: j.src.path) {
                 out.done.append(TrashedFile(name: j.src.lastPathComponent, originalPath: j.src.path, trashedPath: nil, size: j.size, folder: j.folder))

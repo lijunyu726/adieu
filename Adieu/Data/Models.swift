@@ -64,7 +64,7 @@ struct AppPart: Identifiable, Hashable, Sendable {
     let evidence: Evidence
     /// 独占的应用数据默认全选；其他应用也在用的默认不选
     let defaultOn: Bool
-    /// 使用这份数据的主程序及声明共享组的组件；精细清理前必须全部退出。
+    /// 扫描得到的主程序及声明共享组的组件标识符。
     var ownerIDs: Set<String> = []
 }
 
@@ -85,41 +85,6 @@ struct AppItem: Identifiable, Hashable, Sendable {
     var total: Double { parts.compactMap(\.size).reduce(0, +) }
     var appSize: Double { parts.filter { $0.kind == .app }.compactMap(\.size).reduce(0, +) }
     var dataSize: Double { total - appSize }
-}
-
-/// 正在查看的应用数据根目录；浏览和清理始终限定在这一项内。
-struct AppDataTarget: Identifiable, Hashable, Sendable {
-    let appID: String
-    let appName: String
-    let part: AppPart
-
-    var id: String { appID + ":" + part.id }
-    var root: String { (part.path as NSString).expandingTildeInPath }
-    var ownerIDs: Set<String> { part.ownerIDs.union([appID]) }
-}
-
-struct AppDataEntry: Identifiable, Hashable, Sendable {
-    let path: String
-    let name: String
-    let isDirectory: Bool
-    let isPackage: Bool
-    let modified: Date?
-    let evidence: Evidence
-    var size: Double?
-    var isMeasured = false
-    var sizeIsPartial = false
-    /// 链接、容器管理信息等只展示，不提供删除或深入查看。
-    var restriction: String?
-
-    var id: String { path }
-    var canEnter: Bool { isDirectory && !isPackage && restriction == nil }
-    var canSelect: Bool { restriction == nil }
-}
-
-struct AppDataListing: Sendable {
-    let path: String
-    var entries: [AppDataEntry] = []
-    var error: String?
 }
 
 // MARK: - 空间分布
