@@ -40,6 +40,8 @@ final class AppModel {
         /// 应用内部的精细清理：确认后、管理员删除前仍要重新核对目录边界。
         var dataRoot: String? = nil
         var dataTarget: AppDataTarget? = nil
+        var worktree: WorktreeItem? = nil
+        var worktreeMode: WorktreeRemovalMode = .safe
         var onDone: (@MainActor (HistoryEntry?) -> Void)? = nil
     }
 
@@ -54,12 +56,15 @@ final class AppModel {
     /// 已经删掉的行（界面 key，文件就是路径）。变了就重算文件分类，汇总数字和侧边栏跟着变
     var removedKeys: Set<String> = [] { didSet { rebuildFileCategories() } }
 
+    let worktrees: WorktreeCatalog
+
     init(runningAppNames: (() -> [String: String])? = nil) {
         self.runningAppNames = runningAppNames ?? (useSample ? { [:] } : {
             NSWorkspace.shared.runningApplications.reduce(into: [:]) { names, app in
                 if let id = app.bundleIdentifier { names[id] = app.localizedName ?? id }
             }
         })
+        worktrees = WorktreeCatalog(sample: useSample ? Sample.worktreeProjects : nil)
         disk = useSample ? .sample : (DiskInfo.current() ?? .sample)
         history = useSample ? Sample.history : HistoryStore.load()
     }
@@ -168,13 +173,17 @@ final class AppModel {
     @ObservationIgnored private var deleting: Set<String> = []
 
     /// 在后台线程删，正在删的跳过
-    private func delete(_ urls: [URL], sizes: [String: Double] = [:], dataRoot: String? = nil) async -> TrashService.Outcome {
+    private func delete(_ urls: [URL], sizes: [String: Double] = [:], dataRoot: String? = nil,
+                        worktree: WorktreeItem? = nil, worktreeMode: WorktreeRemovalMode = .safe) async -> TrashService.Outcome {
         let urls = urls.filter { !deleting.contains($0.path) }
         let paths = urls.map(\.path)
         deleting.formUnion(paths)
         defer { deleting.subtract(paths) }
         let protected = protectedPaths
-        return await blocking { TrashService.delete(urls, sizes: sizes, protected: protected, dataRoot: dataRoot) }
+        return await blocking {
+            TrashService.delete(urls, sizes: sizes, protected: protected, dataRoot: dataRoot,
+                                worktree: worktree, worktreeMode: worktreeMode)
+        }
     }
 
     /// 卸载应用：直接删除，不进废纸篓。权限不够的弹一次系统密码窗口，全部删完才返回
@@ -202,7 +211,8 @@ final class AppModel {
             removedKeys.formUnion(request.keys)
             return (nil, [])
         }
-        let result = await delete(request.urls, sizes: request.sizes, dataRoot: request.dataRoot)
+        let result = await delete(request.urls, sizes: request.sizes, dataRoot: request.dataRoot,
+                                  worktree: request.worktree, worktreeMode: request.worktreeMode)
         let entry = record(request, files: result.done, into: nil)
         report(result.failed)
         return (entry, result.needsAdmin)
@@ -415,6 +425,26 @@ final class AppModel {
         devLoading = false
     }
 
+    func removeWorktree(_ item: WorktreeItem, mode: WorktreeRemovalMode) {
+        guard worktrees.beginRemoval(item, mode: mode) else {
+            notice = String(localized: "工作区状态已经变化，请重新统计后再试。")
+            return
+        }
+        perform(.init(title: mode.title, source: "开发工具",
+                      urls: [URL(filePath: item.path)], sizes: item.size.map { [item.path: $0] } ?? [:],
+                      worktree: item, worktreeMode: mode, onDone: { [weak self] entry in
+            guard let self else { return }
+            self.worktrees.finishRemoval(item, succeeded: self.useSample || entry != nil)
+            Task { await self.worktrees.refresh(item.projectPath, force: true) }
+            if !self.useSample, entry != nil {
+                Task {
+                    await self.loadFiles()
+                    self.feedWidget()
+                }
+            }
+        }))
+    }
+
     /// 依次执行一个工具的清理步骤：命令直接跑，目录直接删除；前后对比记一笔。
     /// 几个工具可以同时清，所以腾出的空间按这个工具自己清理前后的占用算，不看磁盘剩余（会混进别的工具腾出的）
     func runDev(_ tool: DevTool) async {
@@ -467,12 +497,18 @@ final class AppModel {
         }
     }
 
-    private func loadFiles() async {
+    @ObservationIgnored private var fileScanRun = 0
+
+    func loadFiles(using scanner: @escaping @Sendable () -> FileScanner.Result = { FileScanner.scan() }) async {
+        fileScanRun += 1
+        let run = fileScanRun
         filesLoading = true
-        fileScan = await blocking { FileScanner.scan() }
+        let result = await blocking { scanner() }
+        guard run == fileScanRun else { return }
+        fileScan = result
         // 分好类再算扫完：不然页面会先闪一下“这里是空的”
         await categorize()
-        filesLoading = false
+        if run == fileScanRun { filesLoading = false }
     }
 
     private func loadSpace() async {
@@ -715,5 +751,3 @@ final class AppModel {
         showOnboarding = false
     }
 }
-
-/// 阻塞的磁盘读取和命令放到 GCD 线程上跑。Swift 并发的协作线程池只有 CPU 核数那么多线程，

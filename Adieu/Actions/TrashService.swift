@@ -90,7 +90,8 @@ enum TrashService {
     }
 
     /// 直接删除，不经过废纸篓。已经不在的直接跳过，权限不够的交给 deleteAsAdmin
-    static func delete(_ urls: [URL], sizes: [String: Double] = [:], protected: [String], dataRoot: String? = nil) -> Outcome {
+    static func delete(_ urls: [URL], sizes: [String: Double] = [:], protected: [String], dataRoot: String? = nil,
+                       worktree: WorktreeItem? = nil, worktreeMode: WorktreeRemovalMode = .safe) -> Outcome {
         var out = Outcome()
         for url in urls {
             let name = url.lastPathComponent
@@ -100,7 +101,14 @@ enum TrashService {
                 let folder = isFolder(url)
                 // 要管理员密码的应用也先走到这里，图标在这一步就存好
                 IconStore.remember(url.path)
-                try FileManager.default.removeItem(at: url)
+                if let worktree {
+                    guard urls.count == 1, url.path == worktree.path else {
+                        throw Refusal.notAllowed(String(localized: "工作区路径发生变化，已保留。"))
+                    }
+                    try WorktreeCleanup.remove(worktree, mode: worktreeMode, protected: protected)
+                } else {
+                    try FileManager.default.removeItem(at: url)
+                }
                 out.done.append(TrashedFile(name: name, originalPath: url.path, trashedPath: nil, size: size, folder: folder))
             } catch Refusal.missing {
                 continue
@@ -108,8 +116,8 @@ enum TrashService {
                 out.failed.append((name, r.localizedDescription))
             } catch {
                 let ns = error as NSError
-                if ns.code == NSFileWriteNoPermissionError || ns.code == NSFileReadNoPermissionError
-                    || (ns.underlyingErrors.first as NSError?)?.code == Int(EACCES) || (ns.underlyingErrors.first as NSError?)?.code == Int(EPERM) {
+                if worktree == nil && (ns.code == NSFileWriteNoPermissionError || ns.code == NSFileReadNoPermissionError
+                    || (ns.underlyingErrors.first as NSError?)?.code == Int(EACCES) || (ns.underlyingErrors.first as NSError?)?.code == Int(EPERM)) {
                     out.needsAdmin.append(url)
                 } else {
                     out.failed.append((name, ns.localizedDescription))

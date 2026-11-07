@@ -9,9 +9,59 @@ struct DevSpaceView: View {
     @State private var ran: Set<String> = []
     @State private var confirming: DevTool?
 
+    @State private var confirmingWorktree: WorktreeItem?
+    @State private var hoveredProject: WorktreeProject.ID?
+    @State private var confirmingProject: WorktreeProject?
+    @State private var hoveredWorktree: WorktreeItem.ID?
+
     var body: some View {
+        @Bindable var worktrees = model.worktrees
+        return VStack(alignment: .leading, spacing: 0) {
+            Picker("开发工具", selection: $worktrees.showsWorktrees) {
+                Text("开发缓存").tag(false)
+                Text("Git worktree").tag(true)
+            }
+            .pickerStyle(.segmented).labelsHidden().frame(width: 300).padding(.horizontal, 28).padding(.top, 20)
+            if worktrees.showsWorktrees { worktreeContent } else { cacheContent }
+        }
+        .task(id: worktrees.showsWorktrees) { if worktrees.showsWorktrees { await worktrees.load() } }
+        .alert(confirmingWorktree?.removalMode?.title ?? "", isPresented: Binding(get: { confirmingWorktree != nil }, set: {
+            if !$0 { confirmingWorktree = nil }
+        }), presenting: confirmingWorktree) { item in
+            if let mode = item.removalMode {
+                Button(mode.title, role: mode == .force ? .destructive : nil) { model.removeWorktree(item, mode: mode) }
+            }
+            Button("取消", role: .cancel) {}
+        } message: { item in
+            Text(worktreeConfirmationMessage(item))
+        }
+        .alert("移出列表", isPresented: Binding(get: { confirmingProject != nil }, set: {
+            if !$0 { confirmingProject = nil }
+        }), presenting: confirmingProject) { project in
+            Button("移出列表", role: .destructive) {
+                confirmingProject = nil
+                model.worktrees.forget(project.path)
+            }
+            .disabled(!model.worktrees.removing.isEmpty)
+            Button("取消", role: .cancel) {}
+        } message: { project in
+            Text(project.path + "\n\n" + String(localized: "只移出列表，保留磁盘上的项目和 worktree。"))
+        }
+    }
+
+    private func worktreeConfirmationMessage(_ item: WorktreeItem) -> String {
+        let warning: String
+        if item.removalMode == .force {
+            warning = String(localized: "将永久删除整个工作区，包括未提交、未跟踪和忽略的文件。游离 HEAD 的独有提交可能丢失。已有分支保留。此操作无法撤销。")
+        } else {
+            warning = String(localized: "将直接删除整个工作区，包括 Git 忽略的文件（例如依赖、构建产物和 .env）。不进废纸篓，删了不能放回。Git 分支会保留。")
+        }
+        return [item.path, item.blocked, item.command, warning].compactMap { $0 }.joined(separator: "\n\n")
+    }
+
+    private var cacheContent: some View {
         let tools = model.devTools
-        VStack(alignment: .leading, spacing: 18) {
+        return VStack(alignment: .leading, spacing: 18) {
             PageHeader(.devTools, subtitle: "Docker、Xcode、npm 这类工具留下的缓存。用它们自己的清理命令回收，以后需要时会重新下载。") {
                 Button(model.devLoading ? "统计中…" : "重新统计") { Task { await model.loadDev() } }
                     .disabled(model.devLoading || !model.devRunning.isEmpty)
@@ -147,4 +197,167 @@ struct DevSpaceView: View {
             .padding(20)
         }
     }
+
+    private var worktreeContent: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            PageHeader("Git worktree", subtitle: "") {
+                Button("添加项目") { chooseProject() }
+                    .disabled(model.useSample || model.worktrees.adding)
+                if model.worktrees.isRefreshing || model.worktrees.adding { ProgressView().controlSize(.small) }
+                Button("重新统计") { Task { await model.worktrees.load(force: true) } }
+                    .disabled(model.worktrees.isRefreshing || !model.worktrees.removing.isEmpty)
+            }
+            if model.worktrees.projects.isEmpty {
+                if model.worktrees.adding { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
+                else {
+                    ContentUnavailableView("添加一个 Git 项目", systemImage: "point.3.connected.trianglepath.dotted")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            } else {
+                HStack(alignment: .top, spacing: 18) {
+                    ScrollView {
+                        LazyVStack(spacing: 6) {
+                            ForEach(model.worktrees.projects) { project in projectRow(project) }
+                        }.padding(6)
+                    }
+                    .frame(width: 220)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .card()
+                    if let project = selectedWorktreeProject {
+                        worktreeDetail(project)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                            .card()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+        }.padding(28)
+    }
+
+    private var selectedWorktreeProject: WorktreeProject? {
+        model.worktrees.selectedProject
+    }
+
+    private func projectRow(_ project: WorktreeProject) -> some View {
+        let active = project.id == selectedWorktreeProject?.id
+        return Button { model.worktrees.selectedID = project.id } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(URL(filePath: project.path).lastPathComponent)
+                    .fontWeight(.semibold).lineLimit(1).truncationMode(.middle)
+                    .padding(.trailing, 22)
+                Text(project.path).font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(2).truncationMode(.middle)
+                HStack {
+                    Text("Git worktree")
+                    Spacer()
+                    if model.worktrees.loaded.contains(project.path) {
+                        Text(project.items.count, format: .number).monospacedDigit()
+                    } else { Text("—") }
+                }.font(.caption).foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+            .background(active ? Theme.brand.opacity(0.12) : .clear, in: .rect(cornerRadius: 10))
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .help(project.path)
+        .overlay(alignment: .topTrailing) {
+            Button {
+                hoveredProject = nil
+                confirmingProject = project
+            } label: {
+                Image(systemName: "minus.circle")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.red)
+                    .frame(width: 20, height: 20)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("移出列表")
+            .help("只移出列表，保留磁盘上的项目和 worktree。")
+            .disabled(hoveredProject != project.id || !model.worktrees.removing.isEmpty)
+            .opacity(hoveredProject == project.id ? 1 : 0)
+            .accessibilityHidden(hoveredProject != project.id)
+            .padding(6)
+        }
+        .onHover { hovering in
+            if hovering { hoveredProject = project.id }
+            else if hoveredProject == project.id { hoveredProject = nil }
+        }
+    }
+
+    private func worktreeDetail(_ project: WorktreeProject) -> some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(URL(filePath: project.path).lastPathComponent).font(.title3.bold())
+                    Text(project.path).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if let error = project.error { Text(error).foregroundStyle(.orange) }
+                if !model.worktrees.loaded.contains(project.path) {
+                    ProgressView().frame(maxWidth: .infinity).padding(.top, 32)
+                }
+                ForEach(project.items) { item in worktreeRow(item) }
+            }.padding(20)
+        }
+    }
+
+    private func worktreeRow(_ item: WorktreeItem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+            HStack(alignment: .top, spacing: 12) {
+                FileIcon(path: item.path, size: 32)
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack {
+                        Text(item.branch ?? String(localized: "游离 HEAD")).fontWeight(.semibold)
+                        if item.branch == nil { Text(String(item.head.prefix(8))).font(.caption.monospaced()).foregroundStyle(.secondary) }
+                        Spacer()
+                        Text(item.size?.gbText ?? "—").monospacedDigit().foregroundStyle(.secondary)
+                    }
+                    Text(item.path).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                    Text(item.blocked ?? String(localized: "已合并"))
+                        .font(.callout).foregroundStyle(item.blocked == nil ? .green : .secondary)
+                    if item.hasIgnoredFiles {
+                        Text("含忽略文件").font(.caption).foregroundStyle(.orange)
+                    }
+                    if let mode = item.removalMode {
+                        let visible = mode == .safe || hoveredWorktree == item.id
+                        Text(item.command).font(.caption.monospaced()).textSelection(.enabled)
+                        HStack {
+                            Spacer()
+                            Button(mode.title, role: mode == .force ? .destructive : nil) { confirmingWorktree = item }
+                                .buttonStyle(.borderedProminent)
+                                .tint(mode == .force ? .red : Theme.brand)
+                                .disabled(!visible || !model.worktrees.removing.isEmpty)
+                                .opacity(visible ? 1 : 0)
+                                .allowsHitTesting(visible)
+                                .accessibilityHidden(!visible)
+                        }
+                    }
+                }
+                if model.worktrees.removing.contains(item.id) { ProgressView().controlSize(.small) }
+            }
+        }
+        .contentShape(.rect)
+        .onHover { hovering in
+            if hovering { hoveredWorktree = item.id }
+            else if hoveredWorktree == item.id { hoveredWorktree = nil }
+        }
+    }
+
+    private func chooseProject() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = String(localized: "添加项目")
+        if panel.runModal() == .OK, let url = panel.url {
+            Task {
+                if await model.worktrees.add(url.path) == nil { model.notice = model.worktrees.addError }
+            }
+        }
+    }
+
 }
