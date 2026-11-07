@@ -68,6 +68,7 @@
 - Git worktree 移除只走 `/usr/bin/git worktree remove`，入口仅 `TrashService.delete(worktree:)`。版本按下限判断（`WorktreeScanner.minimumVersion`，低于或认不出的只展示）：不写死单个版本，否则命令行工具一更新，移除就对所有人失效。已实测 Apple Git 2.50.1、2.54.0；验证用 `scripts/test-worktrees.sh`、`scripts/test-worktree-model.sh`
 - 长列表用 `LazyVStack`（残留、历史、按天分组）；`ForEach` 的 id 要稳定，模型里不要放 `UUID()` 当 id（`SegmentBar` 曾因此每次重画都重建全部分段）；`body` 里不要反复调用有开销的计算属性，先 `let` 一次
 - 页面的“没有找到”必须同时判断对应的 loading 标志；`model.scanning` 为真时，“0 MB”“空”都不可信
+- 应用数据可点进逐层查看（`AppDataView`）；状态挂在 `AppModel.appData`（`AppDataBrowser`），`AppDataScanner` 只读一层。`AppDataMeasurementLimiter.shared` 在所有目录和会话之间共用 6 个统计名额；切换、重扫、关闭时取消旧令牌，磁盘遍历在每项之间检查取消，revision 另行丢掉旧结果。内部项目一律默认不勾，删除始终确认；确认前、执行前及管理员阶段都检查全部已知拥有者是否退出，拥有者快照随 `dataTarget` 带入请求，不依赖面板当前状态。请求带 `dataRoot`，普通与管理员删除都重新核对边界，禁止沿链接越界、删除容器管理元数据。示例目录只在 `SampleData.swift`，演示模式不能读取真实文件预览。截图参数 `-AdieuAppID wechat -AdieuAppData YES -AdieuDataPath Data/Documents/xwechat_files/account` 可与 `-AdieuSample YES -AdieuSection apps` 组合。
 - 文件扫描跳过 `.photoslibrary`：一读里面就弹“照片”权限，而且图库内部文件不能单独删
 - 界面语言：简体中文、繁体中文、英语、日语、韩语、西班牙语、法语、德语。没在设置里选过时跟随系统。设置「通用 › 语言」写入 `AppleLanguages`，重新打开后整个界面换成那种语言。判断用的状态（「已安装」、分组名、分类名）在数据里是固定简体词，嵌进句子前先换成当前语言，界面上不出现中文词
 - 安装包、压缩包、图片、视频按后缀认。安装包 `dmg` / `pkg` / `mpkg` / `xip`，压缩包 `zip` / `rar` / `7z` / `tar` / `gz` / `tgz` / `bz2` / `xz`，只在桌面、文稿、下载。图片 `png` / `jpg` / `jpeg` / `heic` / `gif`，视频 `mov` / `mp4`，六个个人文件夹都查（所以这一页叫“图片与视频”：实际收的是这些文件夹里所有这类文件，真正的截图往往只占很少，代码里仍沿用 `captures` / `isScreenCapture` 这些名字）。大文件不看后缀，50 MB 以上。文件列表不定时重扫：启动时一遍，⌘R、授权完全磁盘、腾出空间之后再扫；每小时只查自动规则和剩余空间
