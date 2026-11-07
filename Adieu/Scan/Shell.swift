@@ -33,11 +33,11 @@ enum Shell {
     static let busyMarkers = ["Cache is currently in-use"]
 
     /// 运行命令并等它结束；超时返回 nil
-    static func run(_ exe: String, _ args: [String], timeout: TimeInterval = 600) -> Output? {
+    static func run(_ exe: String, _ args: [String], timeout: TimeInterval = 600, environment: [String: String]? = nil) -> Output? {
         let p = Process()
         p.executableURL = URL(filePath: exe)
         p.arguments = args
-        var env = ProcessInfo.processInfo.environment
+        var env = environment ?? ProcessInfo.processInfo.environment
         env["PATH"] = userPATH
         p.environment = env
         let out = Pipe(), err = Pipe()

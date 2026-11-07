@@ -286,3 +286,56 @@ enum RuleToken: Hashable, Sendable {
     case condition(String)
     case action(String)
 }
+
+// MARK: - Git worktree
+
+struct WorktreeProject: Identifiable, Codable, Sendable {
+    var id: String { path }
+    let path: String
+    var items: [WorktreeItem]
+    var error: String? = nil
+}
+
+enum WorktreeRemovalMode: String, Codable, Sendable {
+    case safe, force
+
+    var title: String {
+        switch self {
+        case .safe: String(localized: "安全移除")
+        case .force: String(localized: "强制移除")
+        }
+    }
+}
+
+struct WorktreeItem: Identifiable, Codable, Hashable, Sendable {
+    var id: String { path }
+    let projectPath: String
+    let path: String
+    let branch: String?
+    let head: String
+    let size: Double?
+    let blocked: String?
+    let hasIgnoredFiles: Bool
+    var allowsForceRemoval = false
+    var isLocked = false
+    var removalMode: WorktreeRemovalMode? { blocked == nil ? .safe : (allowsForceRemoval ? .force : nil) }
+    /// 归属由 Git 登记确认；不默认选中，始终逐项确认。
+    var evidence: Evidence { .exact }
+    var command: String {
+        func quote(_ s: String) -> String { "'" + s.replacing("'", with: "'\\''") + "'" }
+        let flags = removalArguments(mode: removalMode ?? .safe).dropLast().joined(separator: " ")
+        return "git -C " + quote(projectPath) + " " + flags + " " + quote(path)
+    }
+
+    func removalArguments(mode: WorktreeRemovalMode) -> [String] {
+        let force = mode == .force ? Array(repeating: "--force", count: isLocked ? 2 : 1) : []
+        return ["worktree", "remove"] + force + ["--", path]
+    }
+}
+
+struct WorktreeSnapshot: Codable, Sendable {
+    var version = 2
+    let language: String
+    let projects: [WorktreeProject]
+    let updatedAt: [String: Date]
+}
