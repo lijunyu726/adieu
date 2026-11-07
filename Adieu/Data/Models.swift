@@ -62,8 +62,10 @@ struct AppPart: Identifiable, Hashable, Sendable {
     /// 单位 GB；nil 表示未统计（如很小的 plist）
     let size: Double?
     let evidence: Evidence
-    /// 默认是否勾选：个人数据和共享组件默认不选
+    /// 独占的应用数据默认全选；其他应用也在用的默认不选
     let defaultOn: Bool
+    /// 扫描得到的主程序及声明共享组的组件标识符。
+    var ownerIDs: Set<String> = []
 }
 
 struct AppItem: Identifiable, Hashable, Sendable {

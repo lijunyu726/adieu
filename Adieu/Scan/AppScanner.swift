@@ -1,20 +1,22 @@
 import Foundation
 
 /// 读取已安装的应用。只读，不改动任何文件。
-/// 数据目录只收 Bundle ID 完全匹配的几处；按开发者或名称推断的归“残留文件”处理。
+/// 数据目录只认应用包内实际声明的 Bundle ID 和共享组，不按名称猜归属。
 enum AppScanner {
     /// 第一步：列出应用，不统计大小，很快
     static func list(running: Set<String>) -> [AppItem] {
         let fm = FileManager.default
         let roots = [URL(filePath: "/Applications"), fm.homeDirectoryForCurrentUser.appending(path: "Applications")]
+        let urls = roots.flatMap { AppBundleIndex.installed(in: $0) }
+        let index = AppBundleIndex(urls: urls + AppBundleIndex.installed(in: URL(filePath: "/System/Applications")),
+                                   runningURLs: AppBundleIndex.runningURLs())
         var seen: Set<String> = []
         var result: [AppItem] = []
         let agents = LaunchScanner.entries().filter(\.isUser)
-        for root in roots {
-            for url in bundles(in: root, depth: 1) {
-                guard let item = item(at: url, running: running, agents: agents), seen.insert(item.id).inserted else { continue }
-                result.append(item)
-            }
+        let listed = Set(urls.map { $0.standardizedFileURL.resolvingSymlinksInPath().path })
+        for app in index.applications where listed.contains(app.url.path) {
+            guard let item = item(app, running: running, agents: agents, index: index), seen.insert(item.id).inserted else { continue }
+            result.append(item)
         }
         return result
     }
@@ -26,29 +28,24 @@ enum AppScanner {
         app.parts = app.parts.map { p in
             AppPart(id: p.id, kind: p.kind, label: p.label, path: p.path,
                     size: allocatedSize(URL(filePath: (p.path as NSString).expandingTildeInPath)),
-                    evidence: p.evidence, defaultOn: p.defaultOn)
+                    evidence: p.evidence, defaultOn: p.defaultOn, ownerIDs: p.ownerIDs)
         }
         return app
-    }
-
-    /// 根目录下的 .app；普通文件夹（如 Utilities、Adobe 的套件目录）再往下看一层
-    private static func bundles(in dir: URL, depth: Int) -> [URL] {
-        let urls = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])) ?? []
-        return urls.flatMap { url -> [URL] in
-            if url.pathExtension == "app" { return [url] }
-            let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
-            return isDir && depth > 0 ? bundles(in: url, depth: depth - 1) : []
-        }
     }
 
     /// 重新读一个应用（清理过数据后用），已经不在了返回 nil
     static func rescan(_ app: AppItem, running: Set<String>) -> AppItem? {
         guard let path = app.path else { return app }
-        return item(at: URL(filePath: path), running: running, agents: LaunchScanner.entries().filter(\.isUser)).map(measured)
+        let url = URL(filePath: path).standardizedFileURL.resolvingSymlinksInPath()
+        let urls = AppBundleIndex.roots(home: FileManager.default.homeDirectoryForCurrentUser).flatMap { AppBundleIndex.installed(in: $0) }
+        let index = AppBundleIndex(urls: urls + [url], runningURLs: AppBundleIndex.runningURLs())
+        guard let application = index.applications.first(where: { $0.url == url }) else { return nil }
+        return item(application, running: running, agents: LaunchScanner.entries().filter(\.isUser), index: index).map(measured)
     }
 
-    private static func item(at url: URL, running: Set<String>, agents: [LaunchScanner.Entry]) -> AppItem? {
-        guard let bundle = Bundle(url: url), let id = bundle.bundleIdentifier else { return nil }
+    private static func item(_ app: AppBundleIndex.Application, running: Set<String>, agents: [LaunchScanner.Entry], index: AppBundleIndex) -> AppItem? {
+        let url = app.url, id = app.id
+        guard let bundle = Bundle(url: url) else { return nil }
         let fm = FileManager.default
         let fromAppStore = fm.fileExists(atPath: url.appending(path: "Contents/_MASReceipt").path)
         // 系统自带的应用受签名保护，不能也不需要卸载
@@ -61,23 +58,7 @@ enum AppScanner {
 
         var parts = [AppPart(id: "app", kind: .app, label: url.lastPathComponent, path: tilde(url.path),
                              size: nil, evidence: .bundle, defaultOn: true)]
-        for (key, label, sub) in dataLocations(for: id) {
-            let path = "\(home)/Library/\(sub)"
-            if fm.fileExists(atPath: path) {
-                parts.append(AppPart(id: key, kind: .data, label: label, path: tilde(path),
-                                     size: nil, evidence: .exact, defaultOn: true))
-            }
-        }
-
-        // 组容器：名字去掉开发者前缀后正好是这个标识符（或 group.标识符）
-        let groups = "\(home)/Library/Group Containers"
-        for g in (try? fm.contentsOfDirectory(atPath: groups)) ?? [] {
-            let bare = LeftoverScanner.stripTeam(g)
-            if bare == id || bare == "group.\(id)" {
-                parts.append(AppPart(id: "group.\(g)", kind: .data, label: "共享容器", path: tilde("\(groups)/\(g)"),
-                                     size: nil, evidence: .exact, defaultOn: true))
-            }
-        }
+        parts += dataParts(for: app, index: index)
         // 这个应用自己装的开机启动项（只限 ~/Library/LaunchAgents，系统目录里的要管理员密码）
         for a in agents where a.program?.hasPrefix(url.path + "/") == true {
             parts.append(AppPart(id: "agent.\(a.label)", kind: .background, label: String(localized: "开机启动项 \(a.label)"), path: tilde(a.plist),
@@ -91,16 +72,70 @@ enum AppScanner {
                        parts: parts, path: url.path, isMeasured: false)
     }
 
+    /// 只查库内的独立数据目录，不把主容器里的数据库、缓存再列一次。
+    static func dataParts(for app: AppBundleIndex.Application, index: AppBundleIndex,
+                          home: URL = FileManager.default.homeDirectoryForCurrentUser) -> [AppPart] {
+        let fm = FileManager.default
+        let library = home.appending(path: "Library").standardizedFileURL.resolvingSymlinksInPath()
+        let homePath = home.standardizedFileURL.resolvingSymlinksInPath().path
+        var parts: [AppPart] = []
+        var positions: [String: Int] = [:]
+        let ids = app.bundleIDs.filter { $0 == app.id || !$0.lowercased().hasPrefix("com.apple.") }.sorted()
+        let lowerIDs = Set(ids.map { $0.lowercased() })
+        let groups = Set(app.groupIDs.map { $0.lowercased() })
+
+        func add(_ key: String, _ label: String, _ sub: String, shared: Bool, owners: Set<String>) {
+            let url = library.appending(path: sub).standardizedFileURL
+            // TrashService 会解析链接后删除目标；此处不收指向别处的替身，防止误归属或重复计算。
+            guard fm.fileExists(atPath: url.path), url.resolvingSymlinksInPath().path == url.path else { return }
+            let path = url.path.hasPrefix(homePath + "/") ? "~" + url.path.dropFirst(homePath.count) : url.path
+            let part = AppPart(id: key, kind: shared ? .shared : .data, label: label,
+                               path: path, size: nil,
+                               evidence: shared ? .shared : .exact, defaultOn: !shared, ownerIDs: owners.union([app.id]))
+            if let position = positions[url.path] {
+                let combined = parts[position].ownerIDs.union(part.ownerIDs)
+                if shared { parts[position] = part }
+                parts[position].ownerIDs = combined
+            } else {
+                positions[url.path] = parts.count
+                parts.append(part)
+            }
+        }
+
+        for id in ids {
+            let shared = index.otherAppsUse(bundleID: id, than: app)
+            for (key, label, sub) in dataLocations(for: id) {
+                add(id == app.id ? key : "\(key).\(id)", id == app.id ? label : label + " · " + id, sub,
+                    shared: shared, owners: index.ownerIDs(bundleID: id))
+            }
+        }
+        for (place, key, label) in [("Group Containers", "group", String(localized: "共享容器")),
+                                     ("Application Scripts", "scripts.group", String(localized: "应用脚本"))] {
+            for name in ((try? fm.contentsOfDirectory(atPath: library.appending(path: place).path)) ?? []).sorted() {
+                guard AppBundleIndex.validIdentifier(name) else { continue }
+                let bare = LeftoverScanner.stripTeam(name).lowercased()
+                let ownerID = bare.hasPrefix("group.") ? String(bare.dropFirst(6)) : bare
+                guard groups.contains(name.lowercased()) || lowerIDs.contains(ownerID) else { continue }
+                let shared = index.otherAppsUse(groupID: name, than: app)
+                    || index.otherAppsUse(bundleID: ownerID, than: app)
+                add("\(key).\(name)", label, "\(place)/\(name)", shared: shared,
+                    owners: index.ownerIDs(groupID: name).union(index.ownerIDs(bundleID: ownerID)))
+            }
+        }
+        return parts
+    }
+
     /// 以 Bundle ID 命名、只属于这个应用的位置（相对 ~/Library）
     private static func dataLocations(for id: String) -> [(String, String, String)] {
-        [("container", "沙盒数据", "Containers/\(id)"),
-         ("support", "应用支持文件", "Application Support/\(id)"),
-         ("caches", "缓存", "Caches/\(id)"),
-         ("http", "网络缓存", "HTTPStorages/\(id)"),
-         ("webkit", "网页数据", "WebKit/\(id)"),
-         ("logs", "日志", "Logs/\(id)"),
-         ("prefs", "偏好设置", "Preferences/\(id).plist"),
-         ("state", "窗口状态", "Saved Application State/\(id).savedState")]
+        [("container", String(localized: "沙盒数据"), "Containers/\(id)"),
+         ("support", String(localized: "应用支持文件"), "Application Support/\(id)"),
+         ("caches", String(localized: "缓存"), "Caches/\(id)"),
+         ("http", String(localized: "网络缓存"), "HTTPStorages/\(id)"),
+         ("webkit", String(localized: "网页数据"), "WebKit/\(id)"),
+         ("logs", String(localized: "日志"), "Logs/\(id)"),
+         ("prefs", String(localized: "偏好设置"), "Preferences/\(id).plist"),
+         ("state", String(localized: "窗口状态"), "Saved Application State/\(id).savedState"),
+         ("scripts", String(localized: "应用脚本"), "Application Scripts/\(id)")]
     }
 
     /// 实际占用的磁盘空间（GB）；读不了的子项跳过，整项不存在时返回 nil

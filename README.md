@@ -128,7 +128,7 @@ Adieu 只在这个仓库的 Releases 发布，别处下载的都不是官方版�
 
 - 系统级后台程序（`/Library/LaunchAgents`、`/Library/LaunchDaemons`）只在程序已不存在时清理，且只动其中单个 plist
 - Docker 不在运行时无法统计和清理
-- 应用数据只认 Bundle ID 完全匹配；同一开发者还有应用在的、只有名字的残留都不列
+- 应用数据按主程序和包内扩展、辅助程序的 Bundle ID 完全匹配，也读取声明的共享组；其他应用共用的数据默认不勾。同一开发者还有应用在的、只有名字的残留都不列
 - 自签证书签名（0.1.14 起）：同一台打包机签出来的版本，系统认作同一个应用，更新后不用重新允许权限；从 0.1.13 及以前更新到 0.1.14 要再允许一次。没有 Apple 公证，第一次打开仍可能要点“仍要打开”。本地 Xcode 直接编译的版本还是临时签名，每次编译后系统可能重新询问文件夹访问权限
 - 管理员授权框不提供指纹（Touch ID）选项，需要输入开机密码
 
@@ -160,6 +160,8 @@ open -n scratch/DerivedData/Build/Products/Debug/Adieu.app --args \
 `-AdieuWorktrees YES` 在开发工具页直接显示 worktree（可与 `-AdieuSection devTools -AdieuSample YES` 组合）。
 
 `AdieuSection` 可选值见 `Adieu/App/RootView.swift` 的 `AppSection`；`-AdieuSheet goal`（goal、history、diary）直接打开对应面板。`-AdieuLaunchHidden YES` 模拟开机自启：不弹主窗口，只在后台扫描、跑自动规则。截图用：`-AdieuFileMode grid|list|cards`（文件页的查看方式）、`-AdieuUninstall YES`（直接打开第一个应用的卸载确认）、`-AdieuSettingsTab rules`（safety、rules、general、permissions、about）、`-AdieuSheet menuBar` / `onboarding`（菜单栏面板、欢迎页放在窗口里显示）。
+
+应用组件、共享组、脚本目录与残留归属验证：`scripts/test-app-scanner.sh`。只创建临时应用和数据，不卸载已安装的软件。
 
 Worktree 的临时仓库验证：`scripts/test-worktrees.sh`；删除后文件分类、侧边栏、建议与扫描竞态验证：`scripts/test-worktree-model.sh`。全部测试目录和产物在 `scratch/`，不清理真实项目。
 
