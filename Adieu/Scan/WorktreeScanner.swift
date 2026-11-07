@@ -3,11 +3,20 @@ import Foundation
 /// 只读取用户添加的项目；不遍历整块磁盘，也不按目录名猜测 worktree。
 enum WorktreeScanner {
     /// 本机的临时仓库测试覆盖这一版本；其他版本先只展示。
-    static let verifiedVersion = "git version 2.50.1 (Apple Git-155)"
+    /// 实测过的最低版本（主版本，次版本）。低于它或认不出来的只展示，不移除；
+    /// 不写死单个版本：命令行工具一更新，移除功能就会对所有人失效
+    static let minimumVersion = [2, 50]
     static let versionIsVerified: Bool = {
-        git(FileManager.default.homeDirectoryForCurrentUser.path, ["--version"])?.out
-            .trimmingCharacters(in: .whitespacesAndNewlines) == verifiedVersion
+        git(FileManager.default.homeDirectoryForCurrentUser.path, ["--version"]).map { isVerified($0.out) } ?? false
     }()
+
+    /// 只认 /usr/bin/git 的 Apple 版本号，如 git version 2.54.0 (Apple Git-157)
+    static func isVerified(_ version: String) -> Bool {
+        let words = version.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: " ")
+        guard words.count >= 4, words[0] == "git", words[1] == "version", words[3] == "(Apple" else { return false }
+        let numbers = words[2].split(separator: ".").prefix(2).compactMap { Int($0) }
+        return numbers.count == 2 && !numbers.lexicographicallyPrecedes(minimumVersion)
+    }
 
     static func git(_ path: String, _ args: [String]) -> Shell.Output? {
         var env = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("GIT_") }

@@ -9,7 +9,13 @@ enum AppSection: String, Hashable, Sendable {
 struct WorktreeTests {
     @MainActor
     static func main() async throws {
-        precondition(WorktreeScanner.versionIsVerified, "This Git version has not been verified for cleanup; update the verified version only after testing it.")
+        precondition(WorktreeScanner.versionIsVerified, "This Git version has not been verified for cleanup; update the minimum version only after testing it.")
+        for ok in ["git version 2.50.1 (Apple Git-155)", "git version 2.54.0 (Apple Git-157)\n", "git version 3.0.0 (Apple Git-200)", "git version 2.100.0 (Apple Git-300)"] {
+            precondition(WorktreeScanner.isVerified(ok), ok)
+        }
+        for bad in ["git version 2.49.0 (Apple Git-154)", "git version 1.99.0 (Apple Git-1)", "git version 2.54.0", "git version x.y (Apple Git-1)", ""] {
+            precondition(!WorktreeScanner.isVerified(bad), bad)
+        }
         let fm = FileManager.default
         let base = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "scratch/worktree-test-" + UUID().uuidString)
