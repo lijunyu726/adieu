@@ -266,7 +266,9 @@ struct UninstallSheet: View {
     /// 应用包本身不归当前用户所有时，移动它要管理员密码
     private var needsPassword: Bool {
         guard let path = app.path, parts.contains(where: { $0.kind == .app }) else { return false }
-        return !FileManager.default.isWritableFile(atPath: path)
+        // 删除要能改它所在的文件夹（/Library/Input Methods 归 root）
+        let fm = FileManager.default
+        return !fm.isWritableFile(atPath: path) || !fm.isWritableFile(atPath: (path as NSString).deletingLastPathComponent)
     }
 
     /// 先让应用退出（最多等 5 秒），再直接删除勾选的部分
@@ -275,7 +277,16 @@ struct UninstallSheet: View {
         if model.useSample {
             try? await Task.sleep(for: .seconds(1.2))
         } else {
-            for running in NSRunningApplication.runningApplications(withBundleIdentifier: app.id) {
+            // 输入法要先在系统里停用，不然退出后系统会马上再把它拉起来
+            if let path = app.path, InputMethods.isInputMethod(URL(filePath: path), info: Bundle(url: URL(filePath: path))?.infoDictionary) {
+                InputMethods.disable(bundleID: app.id)
+            }
+            // 连同包里正在运行的扩展、助手程序一起退出（如输入法的 Finder 扩展）
+            let inside = app.path.map { $0 + "/" }
+            let processes = NSWorkspace.shared.runningApplications.filter { r in
+                r.bundleIdentifier == app.id || inside.map { r.bundleURL?.standardizedFileURL.path.hasPrefix($0) == true } == true
+            }
+            for running in processes {
                 running.terminate()
                 for _ in 0..<25 where !running.isTerminated { try? await Task.sleep(for: .milliseconds(200)) }
             }

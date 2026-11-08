@@ -7,6 +7,7 @@ enum AppScanner {
     static func list(running: Set<String>) -> [AppItem] {
         let fm = FileManager.default
         let roots = [URL(filePath: "/Applications"), fm.homeDirectoryForCurrentUser.appending(path: "Applications")]
+            + InputMethods.roots(home: fm.homeDirectoryForCurrentUser)
         let urls = roots.flatMap { AppBundleIndex.installed(in: $0) }
         let index = AppBundleIndex(urls: urls + AppBundleIndex.installed(in: URL(filePath: "/System/Applications")),
                                    runningURLs: AppBundleIndex.runningURLs())
@@ -65,10 +66,18 @@ enum AppScanner {
                                  size: nil, evidence: .bundle, defaultOn: true))
         }
 
+        let inputMethod = InputMethods.isInputMethod(url, info: bundle.infoDictionary)
+        var meta = fromAppStore ? String(localized: "App Store · 随时可以重新下载") : [version.map { String(localized: "版本 \($0)") }, id].compactMap(\.self).joined(separator: " · ")
+        if inputMethod { meta = String(localized: "输入法") + " · " + meta }
+        var notice = fromAppStore ? String(localized: "这是 App Store 应用，卸载后可以在 App Store 免费重新下载。") : nil
+        if inputMethod {
+            notice = String(localized: "这是输入法。卸载时 Adieu 会先在系统里停用它；删完注销或重启一次，输入法菜单里才会彻底消失。")
+        }
+
         return AppItem(id: id, name: name, monogram: String(name.prefix(1)), color: .gray,
-                       meta: fromAppStore ? String(localized: "App Store · 随时可以重新下载") : [version.map { String(localized: "版本 \($0)") }, id].compactMap(\.self).joined(separator: " · "),
+                       meta: meta,
                        isRunning: running.contains(id),
-                       notice: fromAppStore ? String(localized: "这是 App Store 应用，卸载后可以在 App Store 免费重新下载。") : nil,
+                       notice: notice,
                        parts: parts, path: url.path, isMeasured: false)
     }
 

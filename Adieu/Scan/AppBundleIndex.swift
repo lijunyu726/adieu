@@ -18,7 +18,13 @@ struct AppBundleIndex {
 
     init(urls: [URL], runningURLs: [URL] = [], readGroups: (URL) -> Set<String> = AppBundleIndex.groups) {
         var seen: Set<String> = []
-        applications = (urls + runningURLs).compactMap { url in
+        let listed = urls.map { $0.standardizedFileURL.resolvingSymlinksInPath().path }
+        // 运行中的扩展、助手程序就在已列出的应用包里，归那个应用，不另算一个
+        let outside = runningURLs.filter { url in
+            let path = url.standardizedFileURL.resolvingSymlinksInPath().path
+            return !listed.contains { path.hasPrefix($0 + "/") }
+        }
+        applications = (urls + outside).compactMap { url in
             let url = url.standardizedFileURL.resolvingSymlinksInPath()
             guard seen.insert(url.path).inserted else { return nil }
             return Self.application(at: url, readGroups: readGroups)
@@ -62,6 +68,7 @@ struct AppBundleIndex {
 
     static func roots(home: URL) -> [URL] {
         [URL(filePath: "/Applications"), home.appending(path: "Applications"), URL(filePath: "/System/Applications")]
+            + InputMethods.roots(home: home)
     }
 
     /// Applications 中普通文件夹再看一层，不进入已经找到的应用包。

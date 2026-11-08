@@ -14,6 +14,7 @@ struct AppScannerTests {
         let root = URL(filePath: fm.currentDirectoryPath).appending(path: "scratch/app-scanner-tests-\(UUID().uuidString)")
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
+        inputMethods(root: root)
         let home = root.appending(path: "home")
         let main = try bundle(root.appending(path: "Main.app"), id: "com.example.Main")
         let sibling = try bundle(root.appending(path: "Sibling.app"), id: "com.example.Sibling")
@@ -33,6 +34,9 @@ struct AppScannerTests {
             return url == sibling ? [declared] : []
         }
         precondition(index.applications.count == 2, "Duplicate paths must not create another owner")
+        let withRunning = AppBundleIndex(urls: [main, sibling], runningURLs: [main.appending(path: "Contents/MacOS/Helper.app")]) { _ in [] }
+        precondition(withRunning.applications.count == 2 && !withRunning.otherAppsUse(bundleID: "com.other.Helper", than: withRunning.applications[0]),
+                     "A running helper inside a listed app must not become a second owner")
         let app = index.applications.first { $0.id == "com.example.Main" }!
         precondition(app.bundleIDs.contains("com.other.Helper") && app.bundleIDs.contains("com.engine.Renderer"))
         precondition(!app.bundleIDs.contains("com.ignore.Resource") && !app.bundleIDs.contains("com.ignore.Outside"))
@@ -92,6 +96,21 @@ struct AppScannerTests {
         }
         precondition(fm.fileExists(atPath: keep.path), "A symlink must never pull its unrelated target into deletion")
         print("App scanner tests passed: embedded IDs, scripts, shared ownership, symlink boundaries, stable deduplication, leftovers, signed app groups and deletion of the default selection.")
+    }
+
+    static func inputMethods(root: URL) {
+        let inFolder = URL(filePath: "/Library/Input Methods/Some.app")
+        precondition(InputMethods.isInputMethod(inFolder, info: nil), "Bundles in an Input Methods folder are input methods")
+        precondition(InputMethods.isInputMethod(root.appending(path: "Any.app"), info: ["tsInputModeListKey": [:]]))
+        precondition(!InputMethods.isInputMethod(URL(filePath: "/Applications/Plain.app"), info: ["LSUIElement": true]))
+        precondition(InputMethods.roots(home: URL(filePath: "/Users/x")).map(\.path) == ["/Library/Input Methods", "/Users/x/Library/Input Methods"])
+        precondition(AppBundleIndex.roots(home: URL(filePath: "/Users/x")).contains(URL(filePath: "/Library/Input Methods")),
+                     "Data of installed input methods must not be reported as leftovers")
+        // 只放行输入法文件夹里的单个应用包，文件夹本身不行
+        for path in try! fm.contentsOfDirectory(atPath: "/Library/Input Methods") where path.hasSuffix(".app") {
+            precondition((try? TrashService.check(URL(filePath: "/Library/Input Methods/" + path), protected: [])) != nil)
+        }
+        precondition((try? TrashService.check(URL(filePath: "/Library/Input Methods"), protected: [])) == nil)
     }
 
     static func leftovers(home: URL, index: AppBundleIndex) throws {

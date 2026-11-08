@@ -41,6 +41,7 @@
 - 大文件方块图已去掉：和首页长条图重复，具体文件由“大文件”列表回答
 - 首页空间分布用长条图，不用环形图（用户比较后认为环形看不清）。顶部一整条按磁盘总量分段；下面每类一行，条以最大的一类为满格，否则小类几乎看不见
 - 应用的数据目录只认 Bundle ID 完全匹配的位置（`AppScanner.dataLocations`，含 `Application Scripts`）；`AppBundleIndex` 从包内的扩展、辅助程序读真实标识符，从签名读声明的共享组，不遍历 Resources。索引包括正在运行应用的真实 bundle 路径（不限安装目录），残留扫描用同一份运行快照保护共享组。多个应用使用同一组件标识符或共享组时，其数据标为 shared、默认不勾；所有已知拥有者及声明共享组的组件 ID 保存在 `AppPart.ownerIDs`，统计大小时不能丢失。残留文件只认标识符：曾有“同一开发者的残留”“无法确定归属”两组，按名字猜会误判（如两个字的“抖音”、开发商名“Citro Labs”），用户决定不显示这两组，不要加回来
+- 输入法：`InputMethods.roots` 同时加进应用列表和 `AppBundleIndex.roots`（后者让已安装输入法的数据不被当成残留）。`TrashService.check` 只放行 `/Library/Input Methods` 里的单个 `.app`，文件夹本身不放行。卸载前用 `TISDisableInputSource` 停用，只能在主线程调用，所以扫描时不判断是否启用；`com.apple.HIToolbox` 偏好里的 `AppleEnabledInputSources` 会漏掉已启用的输入法（微信输入法实测查不到），不要用它判断。运行中的程序如果在已列出的应用包内（如输入法的 FinderSync 扩展），不另算一个应用，否则它的数据会被误标为共享
 - 系统自带应用（`com.apple.` 且没有 `Contents/_MASReceipt`）不列出；App Store 来的 Apple 应用（iMovie、Xcode 等）列出
 - 应用大小先列表、后并行统计：77 个应用串行统计约 11 秒，所以列表先出，每算完一个更新一个
 - 容量单位按 1000³ 字节为 1 GB（`bytesPerGB`），和访达、系统设置一致；用过 1024³，首页数字和系统设置对不上；可用空间取 `volumeAvailableCapacityForImportantUsage`，含可清除空间，和访达一致

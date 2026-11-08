@@ -1,6 +1,162 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "这是输入法。卸载时 Adieu 会先在系统里停用它；删完注销或重启一次，输入法菜单里才会彻底消失。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这是输入法。卸载时 Adieu 会先在系统里停用它；删完注销或重启一次，输入法菜单里才会彻底消失。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這是輸入法。解除安裝時 Adieu 會先在系統裡停用它；刪除後登出或重新開機一次，輸入法選單裡才會完全消失。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is an input method. Adieu will turn it off in the system before uninstalling; log out or restart once afterwards for it to disappear from the input menu completely."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これは入力メソッドです。アンインストール時に Adieu がまずシステムで無効にします。削除後に一度ログアウトまたは再起動すると、入力メニューから完全に消えます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "입력기입니다. 제거할 때 Adieu가 먼저 시스템에서 비활성화합니다. 삭제 후 로그아웃하거나 한 번 재시동해야 입력 메뉴에서 완전히 사라집니다."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il s’agit d’une méthode de saisie. Adieu la désactivera dans le système avant la désinstallation ; fermez la session ou redémarrez une fois ensuite pour qu’elle disparaisse complètement du menu de saisie."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies ist eine Eingabemethode. Adieu deaktiviert sie vor dem Deinstallieren im System; melde dich danach einmal ab oder starte neu, damit sie ganz aus dem Eingabemenü verschwindet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es un método de entrada. Adieu lo desactivará en el sistema antes de desinstalarlo; después, cierra sesión o reinicia una vez para que desaparezca por completo del menú de entrada."
+          }
+        }
+      }
+    },
+    "不在 Adieu 允许清理的范围内（只处理主目录、应用程序、输入法和外置硬盘）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不在 Adieu 允许清理的范围内（只处理主目录、应用程序、输入法和外置硬盘）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不在 Adieu 允許清理的範圍內（只處理個人目錄、應用程式、輸入法和外接硬碟）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside what Adieu is allowed to clean (only your home folder, Applications, input methods and external drives)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adieu が整理できる範囲外です（ホームフォルダ、アプリケーション、入力メソッド、外付けドライブのみ）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adieu가 정리할 수 있는 범위가 아닙니다(홈 폴더, 응용 프로그램, 입력기, 외장 드라이브만 처리)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hors de ce qu’Adieu peut nettoyer (uniquement le dossier personnel, Applications, les méthodes de saisie et les disques externes)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Außerhalb dessen, was Adieu bereinigen darf (nur Benutzerordner, Programme, Eingabemethoden und externe Laufwerke)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuera de lo que Adieu puede limpiar (solo la carpeta personal, Aplicaciones, los métodos de entrada y los discos externos)"
+          }
+        }
+      }
+    },
+    "输入法": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入法"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "輸入法"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input method"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力メソッド"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "입력기"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Méthode de saisie"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingabemethode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Método de entrada"
+          }
+        }
+      }
+    },
     "安全移除": {
       "localizations": {
         "zh-Hans": {
@@ -39153,58 +39309,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Das ist ein Ordner, den das System braucht. Er kann nicht gelöscht werden."
-          }
-        }
-      }
-    },
-    "不在 Adieu 允许清理的范围内（只处理主目录、应用程序和外置硬盘）": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不在 Adieu 允许清理的范围内（只处理主目录、应用程序和外置硬盘）"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不在 Adieu 允許清理的範圍內（只處理主目錄、應用程式和外接硬碟）"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This is outside what Adieu is allowed to clean (only your home folder, Applications, and external drives)."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu が整理できる範囲外です（ホームフォルダ、アプリケーション、外付けドライブだけを扱います）。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adieu가 정리할 수 있는 범위가 아니에요 (홈 폴더, 응용 프로그램, 외장 드라이브만 다뤄요)."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Está fuera de lo que Adieu puede limpiar (solo tu carpeta de inicio, Aplicaciones y discos externos)."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En dehors de ce qu’Adieu peut nettoyer (uniquement votre dossier de départ, Applications et les disques externes)."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Außerhalb dessen, was Adieu aufräumen darf (nur dein Benutzerordner, Programme und externe Festplatten)."
           }
         }
       }
