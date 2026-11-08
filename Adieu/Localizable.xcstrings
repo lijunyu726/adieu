@@ -1,54 +1,54 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
-    "卸载前要先关掉它。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来卸载。": {
+    "%@ 还开着。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来卸载。": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "卸载前要先关掉它。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来卸载。"
+            "value": "%@ 还开着。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来卸载。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "解除安裝前要先關掉它。強制結束的話，未儲存的內容會遺失；想先儲存就取消，自行結束它之後再來解除安裝。"
+            "value": "%@ 仍在執行。強制結束的話，未儲存的內容會遺失；想先儲存就取消，自行結束它之後再來解除安裝。"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It needs to be closed before uninstalling. Forcing it to quit loses unsaved work; to save first, cancel, quit it yourself and come back."
+            "value": "%@ is still open. Forcing it to quit loses unsaved work; to save first, cancel, quit it yourself and come back to uninstall."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アンインストールする前に終了する必要があります。強制終了すると保存していない内容は失われます。先に保存したい場合はキャンセルし、自分で終了してから戻ってください。"
+            "value": "%@ は起動中です。強制終了すると保存していない内容は失われます。先に保存したい場合はキャンセルし、自分で終了してからアンインストールしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "제거하기 전에 먼저 닫아야 합니다. 강제 종료하면 저장하지 않은 내용이 사라집니다. 먼저 저장하려면 취소하고 직접 종료한 뒤 다시 제거하세요."
+            "value": "%@이(가) 아직 열려 있습니다. 강제 종료하면 저장하지 않은 내용이 사라집니다. 먼저 저장하려면 취소하고 직접 종료한 뒤 다시 제거하세요."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il doit être fermé avant la désinstallation. Le forcer à quitter fait perdre ce qui n’est pas enregistré ; pour enregistrer d’abord, annulez, quittez-le vous-même puis revenez."
+            "value": "%@ est encore ouvert. Le forcer à quitter fait perdre ce qui n’est pas enregistré ; pour enregistrer d’abord, annulez, quittez-le vous-même puis revenez désinstaller."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sie muss vor dem Deinstallieren geschlossen werden. Beim erzwungenen Beenden geht Ungespeichertes verloren; zum Speichern abbrechen, selbst beenden und wiederkommen."
+            "value": "%@ ist noch geöffnet. Beim erzwungenen Beenden geht Ungespeichertes verloren; zum Speichern abbrechen, selbst beenden und dann deinstallieren."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Debe cerrarse antes de desinstalarla. Forzar la salida pierde lo no guardado; para guardar primero, cancela, ciérrala tú y vuelve."
+            "value": "%@ sigue abierta. Forzar la salida pierde lo no guardado; para guardar primero, cancela, ciérrala tú y vuelve a desinstalarla."
           }
         }
       }
@@ -101,58 +101,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Primero debe cerrarse; si no, volverá a escribir los datos y los datos en uso podrían dañarse. Forzar la salida pierde lo no guardado; para guardar primero, cancela, ciérrala tú y vuelve."
-          }
-        }
-      }
-    },
-    "%@ 还开着，卸载前要先关掉它。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 还开着，卸载前要先关掉它。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 仍在執行，解除安裝前要先關掉它。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ is still open and needs to be closed before uninstalling."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ は起動中です。アンインストールする前に終了する必要があります。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@이(가) 아직 열려 있어 제거하기 전에 닫아야 합니다."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ est encore ouvert et doit être fermé avant la désinstallation."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ ist noch geöffnet und muss vor dem Deinstallieren geschlossen werden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ sigue abierta y debe cerrarse antes de desinstalarla."
           }
         }
       }
