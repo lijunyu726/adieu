@@ -81,17 +81,31 @@ struct AppBundleIndex {
         "google", "microsoft", "adobe", "apple", "tencent", "jetbrains", "mozilla", "electron", "chromium",
     ]
 
+    /// 版本后缀：去掉后还是同一个软件（如 Foo Beta 的数据常放在 Foo 里）
+    static let editionSuffixes = [" beta", " nightly", " preview", " canary"]
+
     /// 按名字找数据时用的名字：只取应用包自己写的英文名（CFBundleName、可执行文件名、.app 文件名），
-    /// 至少 5 个字符、只含英文字母数字和空格 - _ .，并去掉通用词。返回小写。
+    /// 再加同一个名字的几种写法（去空格、空格换成 - 或 _、去掉版本后缀）。
+    /// 每个写法都要至少 5 个字符、只含英文字母数字和空格 - _ .，并去掉通用词。返回小写。
     static func matchNames(_ url: URL) -> Set<String> {
         let info = NSDictionary(contentsOf: url.appending(path: "Contents/Info.plist")) as? [String: Any]
         let raw = [info?["CFBundleName"] as? String, info?["CFBundleExecutable"] as? String,
                    url.deletingPathExtension().lastPathComponent]
-        return Set(raw.compactMap { $0?.trimmingCharacters(in: .whitespaces).lowercased() }.filter { name in
+        var names: Set<String> = []
+        for name in raw.compactMap({ $0?.trimmingCharacters(in: .whitespaces).lowercased() }) {
+            var bases = [name]
+            for suffix in editionSuffixes where name.hasSuffix(suffix) {
+                bases.append(String(name.dropLast(suffix.count)).trimmingCharacters(in: .whitespaces))
+            }
+            for base in bases {
+                names.formUnion([base, base.replacing(" ", with: ""), base.replacing(" ", with: "-"), base.replacing(" ", with: "_")])
+            }
+        }
+        return names.filter { name in
             name.count >= 5 && !commonNames.contains(name)
                 && name.unicodeScalars.contains { CharacterSet.lowercaseLetters.contains($0) && $0.isASCII }
                 && name.utf8.allSatisfy { (97...122).contains($0) || (48...57).contains($0) || [32, 45, 46, 95].contains($0) }
-        })
+        }
     }
 
     static func roots(home: URL) -> [URL] {

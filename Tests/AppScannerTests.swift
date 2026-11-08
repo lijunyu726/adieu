@@ -136,6 +136,15 @@ struct AppScannerTests {
         precondition(paths(helper).isEmpty, "Common words are never used as names")
         precondition(paths(duo).isEmpty, "Names shorter than five characters are never used")
         precondition(AppBundleIndex.matchNames(wetype) == ["wetype"], "Localized file names (non-ASCII) are not used")
+        let studio = try app("Light Studio Beta.app", id: "com.named.Studio", name: "Light Studio Beta")
+        precondition(AppBundleIndex.matchNames(studio).isSuperset(of: ["light studio beta", "light studio", "lightstudio", "light-studio", "light_studio"]),
+                     "Spacing variants and the name without an edition suffix must be tried")
+        let stable = try app("Light Studio.app", id: "com.named.StudioStable", name: "Light Studio")
+        let both = AppBundleIndex(urls: [studio, stable]) { _ in [] }
+        precondition(both.otherAppsUse(name: "lightstudio", than: both.applications[0]),
+                     "When the stable edition is installed too, the shared base name belongs to neither")
+        let short = try app("Pro Beta.app", id: "com.named.B", name: "Pro Beta")
+        precondition(!AppBundleIndex.matchNames(short).contains("pro"), "Stripping a suffix must not leave a too-short name")
     }
 
     static func inputMethods(root: URL) {
