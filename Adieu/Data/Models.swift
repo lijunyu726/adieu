@@ -68,6 +68,28 @@ struct AppPart: Identifiable, Hashable, Sendable {
     var ownerIDs: Set<String> = []
 }
 
+extension AppPart {
+    /// 种类取自扫描时的 id 前缀（container、support、group…），按名字找到的也一样
+    private var locationKind: String { String(id.split(separator: ".").first ?? "") }
+
+    /// 可能装着聊天记录、文档、账号的那几类，删了找不回来
+    var isPersonalData: Bool { kind != .app && ["container", "support", "group"].contains(locationKind) }
+
+    /// 列表里名字下面的一句说明，告诉用户这一项是什么
+    var hint: String? {
+        guard kind != .app else { return nil }
+        switch locationKind {
+        case "container", "support", "group": return String(localized: "个人数据，可能有聊天记录、文档和账号")
+        case "caches", "http", "webkit": return String(localized: "缓存，删了会自动重新生成")
+        case "prefs": return String(localized: "应用的设置项")
+        case "logs": return String(localized: "运行日志")
+        case "state": return String(localized: "窗口位置等，删了不影响使用")
+        case "scripts": return String(localized: "扩展用的脚本目录，一般是空的")
+        default: return nil
+        }
+    }
+}
+
 struct AppItem: Identifiable, Hashable, Sendable {
     let id: String
     let name: String

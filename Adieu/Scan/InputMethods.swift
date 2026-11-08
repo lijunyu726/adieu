@@ -21,4 +21,12 @@ enum InputMethods {
         let sources = (TISCreateInputSourceList(filter, false)?.takeRetainedValue() as? [TISInputSource]) ?? []
         for source in sources { TISDisableInputSource(source) }
     }
+
+    /// 卸载取消时把刚停用的输入源恢复回来
+    @MainActor
+    static func enable(bundleID: String) {
+        let filter = [kTISPropertyBundleID as String: bundleID] as CFDictionary
+        let sources = (TISCreateInputSourceList(filter, true)?.takeRetainedValue() as? [TISInputSource]) ?? []
+        for source in sources { TISEnableInputSource(source) }
+    }
 }

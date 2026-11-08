@@ -7,6 +7,16 @@ struct AppsView: View {
     @State private var overrides: [String: Bool] = [:]
     @State private var uninstalling: AppItem?
     @State private var search = ""
+    /// “只清理数据”前应用还开着：running 问要不要退出，stuck 是请了没退、问要不要强制退出
+    @State private var quitPrompt: QuitPrompt?
+
+    struct QuitPrompt: Identifiable {
+        enum Stage { case running, stuck }
+        let app: AppItem
+        let stage: Stage
+        let names: String
+        var id: String { app.id + "\(stage)" }
+    }
 
     private var filtered: [AppItem] {
         let list = model.apps.sorted { $0.total > $1.total }
@@ -36,6 +46,21 @@ struct AppsView: View {
         .sheet(item: $uninstalling) { app in
             UninstallSheet(app: app, parts: app.parts.filter { isOn(app, $0) })
                 .environment(model)
+        }
+        .alert(quitPrompt.map { $0.stage == .running ? String(localized: "\($0.names) 正在运行") : String(localized: "\($0.names) 没有退出") } ?? "",
+               isPresented: Binding(get: { quitPrompt != nil }, set: { if !$0 { quitPrompt = nil } }), presenting: quitPrompt) { prompt in
+            switch prompt.stage {
+            case .running:
+                Button("退出并清理") { Task { await quitThenClean(prompt.app, force: false) } }
+            case .stuck:
+                Button("强制退出并清理", role: .destructive) { Task { await quitThenClean(prompt.app, force: true) } }
+            }
+            Button("取消", role: .cancel) {}
+        } message: { prompt in
+            switch prompt.stage {
+            case .running: Text("清理前要先退出它，不然它可能马上把数据写回去，正在用的数据也可能删坏。")
+            case .stuck: Text("它可能在问你要不要保存，或者卡住了。强制退出的话，没保存的内容会丢掉。")
+            }
         }
     }
 
@@ -72,8 +97,29 @@ struct AppsView: View {
         overrides["\(app.id):\(p.id)"] ?? p.defaultOn
     }
 
-    /// 只清理数据：应用留着，勾选的数据直接删除，完成后重新统计这个应用
+    /// 只清理数据：应用开着就先请它退出，再删勾选的数据
     private func cleanData(_ app: AppItem) {
+        if !model.useSample, AppQuit.isRunning(app) {
+            quitPrompt = .init(app: app, stage: .running, names: AppQuit.names(AppQuit.processes(of: app), fallback: app.name))
+        } else {
+            requestClean(app)
+        }
+    }
+
+    private func quitThenClean(_ app: AppItem, force: Bool) async {
+        quitPrompt = nil
+        let left = force ? await AppQuit.forceQuit(app) : await AppQuit.quit(app)
+        if left.isEmpty {
+            requestClean(app)
+        } else if force {
+            model.notice = String(localized: "\(AppQuit.names(left, fallback: app.name)) 强制退出也没有退出，什么都没删。")
+        } else {
+            quitPrompt = .init(app: app, stage: .stuck, names: AppQuit.names(left, fallback: app.name))
+        }
+    }
+
+    /// 应用已经不在运行：勾选的数据直接删除，完成后重新统计这个应用
+    private func requestClean(_ app: AppItem) {
         let parts = app.parts.filter { $0.kind != .app && isOn(app, $0) }
         var sizes: [String: Double] = [:]
         for p in parts { if let s = p.size { sizes[(p.path as NSString).expandingTildeInPath] = s } }
@@ -170,7 +216,7 @@ private struct AppInspector: View {
                         .labelsHidden()
                         .accessibilityLabel(p.label)
                     FileIcon(path: p.path, size: 28)
-                    NameAndPath(name: p.label, path: p.path).opacity(isOn(p) ? 1 : 0.55)
+                    NameAndPath(name: p.label, path: p.path, hint: p.hint, important: p.isPersonalData).opacity(isOn(p) ? 1 : 0.55)
                     Spacer()
                     EvidenceChip(evidence: p.evidence)
                     Text(p.size.gbText).fontWeight(.semibold).monospacedDigit().frame(width: 70, alignment: .trailing)
@@ -210,7 +256,10 @@ struct UninstallSheet: View {
     @State private var entry: HistoryEntry?
     @State private var failures: String?
 
-    enum Step { case confirm, working, done }
+    /// stuck：请应用退出 5 秒后还没退，等用户决定强制退出还是取消
+    enum Step: Equatable { case confirm, working, stuck(String), done }
+    /// 卸载前在系统里停用了输入法；取消时要恢复
+    @State private var disabledInputMethod = false
 
     private var total: Double { parts.compactMap(\.size).reduce(0, +) }
 
@@ -219,6 +268,7 @@ struct UninstallSheet: View {
             switch step {
             case .confirm: confirm
             case .working: working
+            case .stuck(let names): stuck(names)
             case .done: done
             }
         }
@@ -238,6 +288,14 @@ struct UninstallSheet: View {
                     .font(.callout).foregroundStyle(.secondary)
                     .padding(10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(Theme.brand.opacity(0.08), in: .rect(cornerRadius: 8))
+            }
+            let personal = parts.filter(\.isPersonalData)
+            if !personal.isEmpty {
+                Label(String(localized: "其中 \(personal.count) 项是个人数据（共 \(personal.compactMap(\.size).reduce(0, +).gbText)），可能有聊天记录、文档和账号，删了找不回来。想保留就取消，回到详情里不勾它们。"),
+                      systemImage: "exclamationmark.triangle")
+                    .font(.callout).foregroundStyle(.secondary)
+                    .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.orange.opacity(0.1), in: .rect(cornerRadius: 8))
             }
             VStack(spacing: 0) {
                 ForEach(parts) { p in
@@ -271,44 +329,80 @@ struct UninstallSheet: View {
         return !fm.isWritableFile(atPath: path) || !fm.isWritableFile(atPath: (path as NSString).deletingLastPathComponent)
     }
 
-    /// 先让应用退出（最多等 5 秒），再直接删除勾选的部分
+    /// 先请应用退出（最多等 5 秒），退不出就停下来问用户；退出了再直接删除勾选的部分
     private func uninstall() async {
         step = .working
         if model.useSample {
             try? await Task.sleep(for: .seconds(1.2))
-        } else {
-            // 输入法要先在系统里停用，不然退出后系统会马上再把它拉起来
-            if let path = app.path, InputMethods.isInputMethod(URL(filePath: path), info: Bundle(url: URL(filePath: path))?.infoDictionary) {
-                InputMethods.disable(bundleID: app.id)
-            }
-            // 连同包里正在运行的扩展、助手程序一起退出（如输入法的 Finder 扩展）
-            let inside = app.path.map { $0 + "/" }
-            let processes = NSWorkspace.shared.runningApplications.filter { r in
-                r.bundleIdentifier == app.id || inside.map { r.bundleURL?.standardizedFileURL.path.hasPrefix($0) == true } == true
-            }
-            for running in processes {
-                running.terminate()
-                for _ in 0..<25 where !running.isTerminated { try? await Task.sleep(for: .milliseconds(200)) }
-            }
-            let agents = parts.filter { $0.kind == .background && $0.id.hasPrefix("agent.") }
-                .map { LaunchItem(owner: app.name, label: String($0.id.dropFirst(6)), isUser: true) }
-            await blocking { for a in agents { LaunchScanner.unload(a) } }
-            let appPath = app.path
-            let logins = await blocking { appPath.map(LoginItems.names(pointingInto:)) ?? [] }
-            let urls = parts.map { URL(filePath: ($0.path as NSString).expandingTildeInPath) }
-            var sizes: [String: Double] = [:]
-            for (u, p) in zip(urls, parts) { if let s = p.size { sizes[u.path] = s } }
-            model.notice = nil
-            entry = await model.deleteForUninstall(.init(title: String(localized: "卸载 \(app.name)"), source: "已安装", urls: urls, sizes: sizes))
-            // 失败原因在这里直接显示，不再弹第二个提示
-            failures = model.notice
-            model.notice = nil
-            if let entry, entry.files.contains(where: { $0.originalPath == app.path }) {
-                model.apps.removeAll { $0.id == app.id }
-                await blocking { for name in logins { _ = LoginItems.remove(name) } }
-            }
+            step = .done
+            return
+        }
+        // 输入法要先在系统里停用，不然退出后系统会马上再把它拉起来
+        if let path = app.path, InputMethods.isInputMethod(URL(filePath: path), info: Bundle(url: URL(filePath: path))?.infoDictionary) {
+            InputMethods.disable(bundleID: app.id)
+            disabledInputMethod = true
+        }
+        let left = await AppQuit.quit(app)
+        if !left.isEmpty {
+            step = .stuck(AppQuit.names(left, fallback: app.name))
+            return
+        }
+        await remove()
+    }
+
+    private func forceQuitAndUninstall() async {
+        step = .working
+        let left = await AppQuit.forceQuit(app)
+        if !left.isEmpty {
+            failures = String(localized: "\(AppQuit.names(left, fallback: app.name)) 强制退出也没有退出，什么都没删。")
+            cancelStuck(keepOpen: true)
+            step = .done
+            return
+        }
+        await remove()
+    }
+
+    /// 取消卸载：把停用的输入法恢复回来
+    private func cancelStuck(keepOpen: Bool = false) {
+        if disabledInputMethod { InputMethods.enable(bundleID: app.id); disabledInputMethod = false }
+        if !keepOpen { dismiss() }
+    }
+
+    /// 应用已经退出，停掉启动项、删除勾选的部分
+    private func remove() async {
+        let agents = parts.filter { $0.kind == .background && $0.id.hasPrefix("agent.") }
+            .map { LaunchItem(owner: app.name, label: String($0.id.dropFirst(6)), isUser: true) }
+        await blocking { for a in agents { LaunchScanner.unload(a) } }
+        let appPath = app.path
+        let logins = await blocking { appPath.map(LoginItems.names(pointingInto:)) ?? [] }
+        let urls = parts.map { URL(filePath: ($0.path as NSString).expandingTildeInPath) }
+        var sizes: [String: Double] = [:]
+        for (u, p) in zip(urls, parts) { if let s = p.size { sizes[u.path] = s } }
+        model.notice = nil
+        entry = await model.deleteForUninstall(.init(title: String(localized: "卸载 \(app.name)"), source: "已安装", urls: urls, sizes: sizes))
+        // 失败原因在这里直接显示，不再弹第二个提示
+        failures = model.notice
+        model.notice = nil
+        if let entry, entry.files.contains(where: { $0.originalPath == app.path }) {
+            model.apps.removeAll { $0.id == app.id }
+            await blocking { for name in logins { _ = LoginItems.remove(name) } }
         }
         step = .done
+    }
+
+    private func stuck(_ names: String) -> some View {
+        VStack(spacing: 14) {
+            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 44)).foregroundStyle(.orange)
+            Text("\(names) 没有退出").font(.headline)
+            Text("它可能在问你要不要保存，或者卡住了。可以先切过去处理一下再回来卸载；强制退出的话，没保存的内容会丢掉。")
+                .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            HStack {
+                Button("取消") { cancelStuck() }.keyboardShortcut(.cancelAction).frame(maxWidth: .infinity)
+                Button("强制退出并卸载") { Task { await forceQuitAndUninstall() } }
+                    .buttonStyle(.borderedProminent).tint(.red)
+            }
+            .controlSize(.large)
+        }
     }
 
     private var working: some View {

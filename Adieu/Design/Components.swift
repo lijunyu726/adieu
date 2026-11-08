@@ -270,10 +270,16 @@ struct SegmentBar: View {
 struct NameAndPath: View {
     let name: String
     let path: String
+    /// 名字下面的一句说明；important 时用橙色
+    var hint: String? = nil
+    var important = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(name).fontWeight(.medium).lineLimit(1)
+            if let hint {
+                Text(hint).font(.caption).foregroundStyle(important ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary)).lineLimit(1)
+            }
             Text(path).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
         }
     }

@@ -46,6 +46,8 @@
 - 大文件方块图已去掉：和首页长条图重复，具体文件由“大文件”列表回答
 - 首页空间分布用长条图，不用环形图（用户比较后认为环形看不清）。顶部一整条按磁盘总量分段；下面每类一行，条以最大的一类为满格，否则小类几乎看不见
 - 应用的数据目录只认 Bundle ID 完全匹配的位置（`AppScanner.dataLocations`，含 `Application Scripts`）；`AppBundleIndex` 从包内的扩展、辅助程序读真实标识符，从签名读声明的共享组，不遍历 Resources。索引包括正在运行应用的真实 bundle 路径（不限安装目录），残留扫描用同一份运行快照保护共享组。多个应用使用同一组件标识符或共享组时，其数据标为 shared、默认不勾；所有已知拥有者及声明共享组的组件 ID 保存在 `AppPart.ownerIDs`，统计大小时不能丢失。卸载时另按名字找数据（`AppBundleIndex.matchNames`）：只取 CFBundleName、可执行文件名、`.app` 文件名，限 ASCII、至少 5 个字符、去掉 `commonNames` 通用词，另试去空格、空格换成 `-`/`_`、去掉 `editionSuffixes`（Beta、Nightly 等）的写法，每种写法同样过这些门槛，只在 Application Support、Caches、HTTPStorages、Logs 下找整名相等（不分大小写）的文件夹，别的已装应用也有这个名字就不列；用户认为找不全比误报更糟，这类条目默认勾选，用 `.name` 标“按名字找到”。11-08 在本机 69 个应用上实测 39 处命中全部正确。残留文件只认标识符：曾有“同一开发者的残留”“无法确定归属”两组，按名字猜会误判（如两个字的“抖音”、开发商名“Citro Labs”），用户决定不显示这两组，不要加回来
+- 退出应用统一走 `AppQuit`：先 `terminate()` 等 5 秒，没退就交给用户选“强制退出”或取消，不要退不出也照删（应用活着会把偏好、缓存写回去，没保存的内容也会丢）。卸载和“只清理数据”都这样；卸载取消时要把刚停用的输入法 `InputMethods.enable` 回来。测“退不出”不能用文本编辑（会自动保存直接退出），要用 `applicationShouldTerminate` 返回 `.terminateCancel` 的小程序
+- 应用详情的数据行名字下有一句说明（`AppPart.hint`，按扫描 id 前缀分类），沙盒数据、应用支持文件、共享容器标为个人数据（`isPersonalData`，橙色），卸载确认里会提醒其中有几项个人数据
 - 输入法：`InputMethods.roots` 同时加进应用列表和 `AppBundleIndex.roots`（后者让已安装输入法的数据不被当成残留）。`TrashService.check` 只放行 `/Library/Input Methods` 里的单个 `.app`，文件夹本身不放行。卸载前用 `TISDisableInputSource` 停用，只能在主线程调用，所以扫描时不判断是否启用；`com.apple.HIToolbox` 偏好里的 `AppleEnabledInputSources` 会漏掉已启用的输入法（微信输入法实测查不到），不要用它判断。运行中的程序如果在已列出的应用包内（如输入法的 FinderSync 扩展），不另算一个应用，否则它的数据会被误标为共享
 - 系统自带应用（`com.apple.` 且没有 `Contents/_MASReceipt`）不列出；App Store 来的 Apple 应用（iMovie、Xcode 等）列出
 - 应用大小先列表、后并行统计：77 个应用串行统计约 11 秒，所以列表先出，每算完一个更新一个
