@@ -7,15 +7,13 @@ struct AppsView: View {
     @State private var overrides: [String: Bool] = [:]
     @State private var uninstalling: AppItem?
     @State private var search = ""
-    /// “只清理数据”前应用还开着：running 问要不要退出，stuck 是请了没退、问要不要强制退出
+    /// “只清理数据”时应用还开着，问用户要不要强制退出
     @State private var quitPrompt: QuitPrompt?
 
     struct QuitPrompt: Identifiable {
-        enum Stage { case running, stuck }
         let app: AppItem
-        let stage: Stage
         let names: String
-        var id: String { app.id + "\(stage)" }
+        var id: String { app.id }
     }
 
     private var filtered: [AppItem] {
@@ -47,20 +45,12 @@ struct AppsView: View {
             UninstallSheet(app: app, parts: app.parts.filter { isOn(app, $0) })
                 .environment(model)
         }
-        .alert(quitPrompt.map { $0.stage == .running ? String(localized: "\($0.names) 正在运行") : String(localized: "\($0.names) 没有退出") } ?? "",
+        .alert(quitPrompt.map { String(localized: "\($0.names) 没有退出") } ?? "",
                isPresented: Binding(get: { quitPrompt != nil }, set: { if !$0 { quitPrompt = nil } }), presenting: quitPrompt) { prompt in
-            switch prompt.stage {
-            case .running:
-                Button("退出并清理") { Task { await quitThenClean(prompt.app, force: false) } }
-            case .stuck:
-                Button("强制退出并清理", role: .destructive) { Task { await quitThenClean(prompt.app, force: true) } }
-            }
+            Button("强制退出并清理", role: .destructive) { Task { await forceQuitThenClean(prompt.app) } }
             Button("取消", role: .cancel) {}
-        } message: { prompt in
-            switch prompt.stage {
-            case .running: Text("清理前要先退出它，不然它可能马上把数据写回去，正在用的数据也可能删坏。")
-            case .stuck: Text("它可能在问你要不要保存，或者卡住了。强制退出的话，没保存的内容会丢掉。")
-            }
+        } message: { _ in
+            Text("清理前要先关掉它，不然它会把数据写回去，正在用的数据也可能删坏。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来清理。")
         }
     }
 
@@ -100,21 +90,19 @@ struct AppsView: View {
     /// 只清理数据：应用开着就先请它退出，再删勾选的数据
     private func cleanData(_ app: AppItem) {
         if !model.useSample, AppQuit.isRunning(app) {
-            quitPrompt = .init(app: app, stage: .running, names: AppQuit.names(AppQuit.processes(of: app), fallback: app.name))
+            quitPrompt = .init(app: app, names: AppQuit.names(AppQuit.processes(of: app), fallback: app.name))
         } else {
             requestClean(app)
         }
     }
 
-    private func quitThenClean(_ app: AppItem, force: Bool) async {
+    private func forceQuitThenClean(_ app: AppItem) async {
         quitPrompt = nil
-        let left = force ? await AppQuit.forceQuit(app) : await AppQuit.quit(app)
+        let left = await AppQuit.forceQuit(app)
         if left.isEmpty {
             requestClean(app)
-        } else if force {
-            model.notice = String(localized: "\(AppQuit.names(left, fallback: app.name)) 强制退出也没有退出，什么都没删。")
         } else {
-            quitPrompt = .init(app: app, stage: .stuck, names: AppQuit.names(left, fallback: app.name))
+            model.notice = String(localized: "\(AppQuit.names(left, fallback: app.name)) 强制退出也没有退出，什么都没删。")
         }
     }
 
@@ -281,7 +269,7 @@ struct UninstallSheet: View {
         VStack(spacing: 14) {
             AppIcon(app: app, size: 64)
             Text("卸载 \(app.name)？").font(.headline)
-            Text(String(localized: "将删除 \(parts.count) 项、共 \(total.gbText)，不进废纸篓，删完立刻腾出空间。") + (app.isRunning ? String(localized: "\(app.name) 会先退出。") : ""))
+            Text(String(localized: "将删除 \(parts.count) 项、共 \(total.gbText)，不进废纸篓，删完立刻腾出空间。") + (app.isRunning ? String(localized: "\(app.name) 还开着，卸载前要先关掉它。") : ""))
                 .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
             if needsPassword {
                 Label(String(localized: "\(app.name) 归系统管理员所有（App Store 装的应用常这样），点“卸载”后系统会请你输入一次开机密码。"), systemImage: "lock")
@@ -329,29 +317,26 @@ struct UninstallSheet: View {
         return !fm.isWritableFile(atPath: path) || !fm.isWritableFile(atPath: (path as NSString).deletingLastPathComponent)
     }
 
-    /// 先请应用退出（最多等 5 秒），退不出就停下来问用户；退出了再直接删除勾选的部分
+    /// 应用开着就先停下来问用户要不要强制退出；没开着直接删除勾选的部分
     private func uninstall() async {
+        if !model.useSample, AppQuit.isRunning(app) {
+            step = .stuck(AppQuit.names(AppQuit.processes(of: app), fallback: app.name))
+            return
+        }
         step = .working
         if model.useSample {
             try? await Task.sleep(for: .seconds(1.2))
             step = .done
             return
         }
-        // 输入法要先在系统里停用，不然退出后系统会马上再把它拉起来
-        if let path = app.path, InputMethods.isInputMethod(URL(filePath: path), info: Bundle(url: URL(filePath: path))?.infoDictionary) {
-            InputMethods.disable(bundleID: app.id)
-            disabledInputMethod = true
-        }
-        let left = await AppQuit.quit(app)
-        if !left.isEmpty {
-            step = .stuck(AppQuit.names(left, fallback: app.name))
-            return
-        }
+        disableInputMethod()
         await remove()
     }
 
     private func forceQuitAndUninstall() async {
         step = .working
+        // 输入法要先在系统里停用，不然退出后系统会马上再把它拉起来
+        disableInputMethod()
         let left = await AppQuit.forceQuit(app)
         if !left.isEmpty {
             failures = String(localized: "\(AppQuit.names(left, fallback: app.name)) 强制退出也没有退出，什么都没删。")
@@ -360,6 +345,12 @@ struct UninstallSheet: View {
             return
         }
         await remove()
+    }
+
+    private func disableInputMethod() {
+        guard let path = app.path, InputMethods.isInputMethod(URL(filePath: path), info: Bundle(url: URL(filePath: path))?.infoDictionary) else { return }
+        InputMethods.disable(bundleID: app.id)
+        disabledInputMethod = true
     }
 
     /// 取消卸载：把停用的输入法恢复回来
@@ -394,7 +385,7 @@ struct UninstallSheet: View {
         VStack(spacing: 14) {
             Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 44)).foregroundStyle(.orange)
             Text("\(names) 没有退出").font(.headline)
-            Text("它可能在问你要不要保存，或者卡住了。可以先切过去处理一下再回来卸载；强制退出的话，没保存的内容会丢掉。")
+            Text("卸载前要先关掉它。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来卸载。")
                 .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
             HStack {
                 Button("取消") { cancelStuck() }.keyboardShortcut(.cancelAction).frame(maxWidth: .infinity)
@@ -411,7 +402,7 @@ struct UninstallSheet: View {
                 AppIcon(app: app, size: 40)
                 VStack(alignment: .leading) {
                     Text("正在卸载 \(app.name)").fontWeight(.semibold)
-                    Text(needsPassword ? "要输入开机密码的话，系统会弹窗…" : (app.isRunning ? "正在退出并删除…" : "正在删除…")).font(.caption).foregroundStyle(.secondary)
+                    Text(needsPassword ? "要输入开机密码的话，系统会弹窗…" : "正在删除…").font(.caption).foregroundStyle(.secondary)
                 }
             }
             ProgressView().progressViewStyle(.linear)

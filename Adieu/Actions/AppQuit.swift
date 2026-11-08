@@ -1,7 +1,7 @@
 import AppKit
 
-/// 删除应用或它的数据前先让它退出：开着的应用会把数据写回去，正在写的数据库也可能删坏。
-/// 先“请”它退出（同 ⌘Q，能保存、也能拒绝），退不出由用户决定要不要强制退出。
+/// 删除应用或它的数据前要先关掉它：开着的应用会把数据写回去，正在写的数据库也可能删坏。
+/// 应用开着时直接问用户要不要强制退出（用户的决定：不先请它退出、不等）。
 @MainActor
 enum AppQuit {
     /// 这个应用本身，以及它包里正在运行的扩展、助手程序（如输入法的 Finder 扩展）
@@ -15,13 +15,6 @@ enum AppQuit {
     }
 
     static func isRunning(_ app: AppItem) -> Bool { !processes(of: app).isEmpty }
-
-    /// 请它退出，最多等 5 秒；返回还没退出的
-    static func quit(_ app: AppItem) async -> [NSRunningApplication] {
-        let list = processes(of: app)
-        for r in list { r.terminate() }
-        return await wait(list, seconds: 5)
-    }
 
     /// 强制退出（没保存的内容会丢），最多等 3 秒；返回还没退出的
     static func forceQuit(_ app: AppItem) async -> [NSRunningApplication] {
