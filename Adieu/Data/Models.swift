@@ -7,7 +7,7 @@ enum Evidence: String, Sendable {
     case bundle    // 应用包本身
     case exact     // 标识符完全匹配（如容器名就是 Bundle ID）
     case team      // 同一开发者（Team ID 前缀）
-    case name      // 只是名字相似
+    case name      // 文件夹名和应用包里写的名字相同
     case shared    // 其他应用也在用
 
     var label: String {
@@ -15,7 +15,7 @@ enum Evidence: String, Sendable {
         case .bundle: String(localized: "应用本身")
         case .exact: String(localized: "确定是它的")
         case .team: String(localized: "同一家开发商")
-        case .name: String(localized: "名字像，要你确认")
+        case .name: String(localized: "按名字找到")
         case .shared: String(localized: "别的应用也在用")
         }
     }

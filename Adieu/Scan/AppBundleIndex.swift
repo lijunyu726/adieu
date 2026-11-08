@@ -15,6 +15,7 @@ struct AppBundleIndex {
     let applications: [Application]
     private var bundleOwners: [String: Set<String>] = [:]
     private var groupOwners: [String: Set<String>] = [:]
+    private var nameOwners: [String: Set<String>] = [:]
 
     init(urls: [URL], runningURLs: [URL] = [], readGroups: (URL) -> Set<String> = AppBundleIndex.groups) {
         var seen: Set<String> = []
@@ -30,6 +31,7 @@ struct AppBundleIndex {
             return Self.application(at: url, readGroups: readGroups)
         }
         for app in applications {
+            for name in Self.matchNames(app.url) { nameOwners[name, default: []].insert(app.url.path) }
             for id in app.bundleIDs { bundleOwners[id.lowercased(), default: []].insert(app.url.path) }
             for id in app.groupIDs { groupOwners[id.lowercased(), default: []].insert(app.url.path) }
         }
@@ -64,6 +66,32 @@ struct AppBundleIndex {
 
     func otherAppsUse(groupID: String, than app: Application) -> Bool {
         groupOwners[groupID.lowercased(), default: []].contains { $0 != app.url.path }
+    }
+
+    func otherAppsUse(name: String, than app: Application) -> Bool {
+        nameOwners[name.lowercased(), default: []].contains { $0 != app.url.path }
+    }
+
+    /// 太普通、会撞上别的软件或厂商文件夹的名字，不拿来匹配
+    static let commonNames: Set<String> = [
+        "helper", "helpers", "agent", "agents", "daemon", "service", "services", "update", "updater", "updates",
+        "support", "launcher", "client", "server", "plugin", "plugins", "common", "shared", "cache", "caches",
+        "cloud", "settings", "config", "tools", "utility", "utilities", "manager", "installer", "uninstaller",
+        "assistant", "extension", "extensions", "crashpad", "crashes", "default", "library", "documents",
+        "google", "microsoft", "adobe", "apple", "tencent", "jetbrains", "mozilla", "electron", "chromium",
+    ]
+
+    /// 按名字找数据时用的名字：只取应用包自己写的英文名（CFBundleName、可执行文件名、.app 文件名），
+    /// 至少 5 个字符、只含英文字母数字和空格 - _ .，并去掉通用词。返回小写。
+    static func matchNames(_ url: URL) -> Set<String> {
+        let info = NSDictionary(contentsOf: url.appending(path: "Contents/Info.plist")) as? [String: Any]
+        let raw = [info?["CFBundleName"] as? String, info?["CFBundleExecutable"] as? String,
+                   url.deletingPathExtension().lastPathComponent]
+        return Set(raw.compactMap { $0?.trimmingCharacters(in: .whitespaces).lowercased() }.filter { name in
+            name.count >= 5 && !commonNames.contains(name)
+                && name.unicodeScalars.contains { CharacterSet.lowercaseLetters.contains($0) && $0.isASCII }
+                && name.utf8.allSatisfy { (97...122).contains($0) || (48...57).contains($0) || [32, 45, 46, 95].contains($0) }
+        })
     }
 
     static func roots(home: URL) -> [URL] {

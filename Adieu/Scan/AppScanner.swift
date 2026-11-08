@@ -93,15 +93,17 @@ enum AppScanner {
         let lowerIDs = Set(ids.map { $0.lowercased() })
         let groups = Set(app.groupIDs.map { $0.lowercased() })
 
-        func add(_ key: String, _ label: String, _ sub: String, shared: Bool, owners: Set<String>) {
+        func add(_ key: String, _ label: String, _ sub: String, shared: Bool, owners: Set<String>, byName: Bool = false) {
             let url = library.appending(path: sub).standardizedFileURL
             // TrashService 会解析链接后删除目标；此处不收指向别处的替身，防止误归属或重复计算。
             guard fm.fileExists(atPath: url.path), url.resolvingSymlinksInPath().path == url.path else { return }
             let path = url.path.hasPrefix(homePath + "/") ? "~" + url.path.dropFirst(homePath.count) : url.path
             let part = AppPart(id: key, kind: shared ? .shared : .data, label: label,
                                path: path, size: nil,
-                               evidence: shared ? .shared : .exact, defaultOn: !shared, ownerIDs: owners.union([app.id]))
+                               evidence: shared ? .shared : byName ? .name : .exact, defaultOn: !shared, ownerIDs: owners.union([app.id]))
             if let position = positions[url.path] {
+                // 已经按标识符找到的，不再按名字重复列
+                if byName { return }
                 let combined = parts[position].ownerIDs.union(part.ownerIDs)
                 if shared { parts[position] = part }
                 parts[position].ownerIDs = combined
@@ -129,6 +131,20 @@ enum AppScanner {
                     || index.otherAppsUse(bundleID: ownerID, than: app)
                 add("\(key).\(name)", label, "\(place)/\(name)", shared: shared,
                     owners: index.ownerIDs(groupID: name).union(index.ownerIDs(bundleID: ownerID)))
+            }
+        }
+        // 有的应用按名字建文件夹（如微信输入法的 Application Support/WeType）。只认整名相等（不分大小写），
+        // 别的已装应用也叫这个名字时不列
+        let names = AppBundleIndex.matchNames(app.url).filter { !index.otherAppsUse(name: $0, than: app) }
+        if !names.isEmpty {
+            for (place, key, label) in [("Application Support", "support", String(localized: "应用支持文件")),
+                                         ("Caches", "caches", String(localized: "缓存")),
+                                         ("HTTPStorages", "http", String(localized: "网络缓存")),
+                                         ("Logs", "logs", String(localized: "日志"))] {
+                for entry in ((try? fm.contentsOfDirectory(atPath: library.appending(path: place).path)) ?? []).sorted()
+                where names.contains(entry.lowercased()) {
+                    add("\(key).name.\(entry)", label + " · " + entry, "\(place)/\(entry)", shared: false, owners: [], byName: true)
+                }
             }
         }
         return parts

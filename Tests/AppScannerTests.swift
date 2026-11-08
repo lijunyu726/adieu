@@ -15,6 +15,7 @@ struct AppScannerTests {
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
         inputMethods(root: root)
+        try namedData(root: root)
         let home = root.appending(path: "home")
         let main = try bundle(root.appending(path: "Main.app"), id: "com.example.Main")
         let sibling = try bundle(root.appending(path: "Sibling.app"), id: "com.example.Sibling")
@@ -96,6 +97,45 @@ struct AppScannerTests {
         }
         precondition(fm.fileExists(atPath: keep.path), "A symlink must never pull its unrelated target into deletion")
         print("App scanner tests passed: embedded IDs, scripts, shared ownership, symlink boundaries, stable deduplication, leftovers, signed app groups and deletion of the default selection.")
+    }
+
+    /// 按应用包里写的名字找数据：整名相等、不分大小写；短名字、通用词、和别的应用同名的都不用
+    static func namedData(root: URL) throws {
+        let base = root.appending(path: "named")
+        let home = base.appending(path: "home")
+        let support = home.appending(path: "Library/Application Support"), caches = home.appending(path: "Library/Caches")
+        for dir in [support.appending(path: "WeType"), caches.appending(path: "wetype"), support.appending(path: "WeType Pro"),
+                    support.appending(path: "Twins"), support.appending(path: "Helper"), support.appending(path: "Duo"),
+                    support.appending(path: "com.named.WeType")] {
+            try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        func app(_ file: String, id: String, name: String) throws -> URL {
+            let url = try bundle(base.appending(path: file), id: id)
+            let info = ["CFBundleIdentifier": id, "CFBundleName": name, "CFBundlePackageType": "APPL", "CFBundleExecutable": name]
+            try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0).write(to: url.appending(path: "Contents/Info.plist"))
+            return url
+        }
+        let wetype = try app("微信输入法.app", id: "com.named.WeType", name: "WeType")
+        let twinA = try app("TwinA.app", id: "com.named.TwinA", name: "Twins")
+        let twinB = try app("TwinB.app", id: "com.named.TwinB", name: "Twins")
+        let helper = try app("Helper.app", id: "com.named.Helper", name: "Helper")
+        let duo = try app("Duo.app", id: "com.named.Duo", name: "Duo")
+        let index = AppBundleIndex(urls: [wetype, twinA, twinB, helper, duo]) { _ in [] }
+        func paths(_ url: URL) -> [String: Evidence] {
+            let app = index.applications.first { $0.url == url.standardizedFileURL.resolvingSymlinksInPath() }!
+            return Dictionary(uniqueKeysWithValues: AppScanner.dataParts(for: app, index: index, home: home).map { ($0.path, $0.evidence) })
+        }
+        let found = paths(wetype)
+        let library = "~/Library"
+        precondition(found[library + "/Application Support/WeType"] == .name && found[library + "/Caches/wetype"] == .name,
+                     "Folders named exactly like the bundle name must be found, ignoring case")
+        precondition(found[library + "/Application Support/com.named.WeType"] == .exact, "An identifier match keeps its stronger evidence")
+        precondition(found[library + "/Application Support/WeType Pro"] == nil, "Only whole-name matches count")
+        precondition(found.count == 3)
+        precondition(paths(twinA).isEmpty && paths(twinB).isEmpty, "A name shared by two installed apps belongs to neither")
+        precondition(paths(helper).isEmpty, "Common words are never used as names")
+        precondition(paths(duo).isEmpty, "Names shorter than five characters are never used")
+        precondition(AppBundleIndex.matchNames(wetype) == ["wetype"], "Localized file names (non-ASCII) are not used")
     }
 
     static func inputMethods(root: URL) {
