@@ -4,13 +4,16 @@ import AppKit
 /// 应用开着时直接问用户要不要强制退出（用户的决定：不先请它退出、不等）。
 @MainActor
 enum AppQuit {
-    /// 这个应用本身，以及它包里正在运行的扩展、助手程序（如输入法的 Finder 扩展）
+    /// 这个应用本身，以及它包里正在运行的扩展、助手程序（如输入法的 Finder 扩展）。
+    /// 按应用包路径认：同一个应用装了两份（QQ 和 QQ 2）时 Bundle ID 一样，不能把另一份也关掉
     static func processes(of app: AppItem) -> [NSRunningApplication] {
-        let inside = app.path.map { $0 + "/" }
         let me = ProcessInfo.processInfo.processIdentifier
+        let path = app.path.map { URL(filePath: $0).standardizedFileURL.resolvingSymlinksInPath().path }
         return NSWorkspace.shared.runningApplications.filter { r in
-            r.processIdentifier != me && !r.isTerminated
-                && (r.bundleIdentifier == app.id || inside.map { r.bundleURL?.standardizedFileURL.path.hasPrefix($0) == true } == true)
+            guard r.processIdentifier != me, !r.isTerminated else { return false }
+            guard let path else { return r.bundleIdentifier == app.bundleID }
+            guard let url = r.bundleURL?.standardizedFileURL.resolvingSymlinksInPath().path else { return false }
+            return url == path || url.hasPrefix(path + "/")
         }
     }
 

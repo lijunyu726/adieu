@@ -3,7 +3,7 @@ import Foundation
 /// 读取已安装的应用。只读，不改动任何文件。
 /// 数据目录只认应用包内实际声明的 Bundle ID 和共享组，不按名称猜归属。
 enum AppScanner {
-    /// 第一步：列出应用，不统计大小，很快
+    /// 第一步：列出应用，不统计大小，很快。running 是正在运行的应用包路径
     static func list(running: Set<String>) -> [AppItem] {
         let fm = FileManager.default
         let roots = [URL(filePath: "/Applications"), fm.homeDirectoryForCurrentUser.appending(path: "Applications")]
@@ -74,11 +74,11 @@ enum AppScanner {
             notice = String(localized: "这是输入法。卸载时 Adieu 会先在系统里停用它；删完注销或重启一次，输入法菜单里才会彻底消失。")
         }
 
-        return AppItem(id: id, name: name, monogram: String(name.prefix(1)), color: .gray,
+        return AppItem(id: url.path, name: name, monogram: String(name.prefix(1)), color: .gray,
                        meta: meta,
-                       isRunning: running.contains(id),
+                       isRunning: running.contains(url.path),
                        notice: notice,
-                       parts: parts, path: url.path, isMeasured: false)
+                       parts: parts, path: url.path, isMeasured: false, bundle: id)
     }
 
     /// 只查库内的独立数据目录，不把主容器里的数据库、缓存再列一次。

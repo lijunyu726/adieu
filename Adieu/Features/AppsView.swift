@@ -367,13 +367,13 @@ struct UninstallSheet: View {
 
     private func disableInputMethod() {
         guard let path = app.path, InputMethods.isInputMethod(URL(filePath: path), info: Bundle(url: URL(filePath: path))?.infoDictionary) else { return }
-        InputMethods.disable(bundleID: app.id)
+        InputMethods.disable(bundleID: app.bundleID)
         disabledInputMethod = true
     }
 
     /// 强制退出失败没删：把停用的输入法恢复回来
     private func restoreInputMethod() {
-        if disabledInputMethod { InputMethods.enable(bundleID: app.id); disabledInputMethod = false }
+        if disabledInputMethod { InputMethods.enable(bundleID: app.bundleID); disabledInputMethod = false }
     }
 
     /// 应用已经退出，停掉启动项、删除勾选的部分

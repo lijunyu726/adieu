@@ -91,6 +91,7 @@ extension AppPart {
 }
 
 struct AppItem: Identifiable, Hashable, Sendable {
+    /// 列表里的唯一键：真实扫描的是应用包路径（同一个应用装两份时 Bundle ID 相同，如 QQ 和 QQ 2）；示例数据就是标识符
     let id: String
     let name: String
     let monogram: String
@@ -103,6 +104,10 @@ struct AppItem: Identifiable, Hashable, Sendable {
     var path: String? = nil
     /// 各部分大小是否已经统计完
     var isMeasured = true
+    /// Bundle ID；示例数据为 nil，用 id 代替
+    var bundle: String? = nil
+
+    var bundleID: String { bundle ?? id }
 
     var total: Double { parts.compactMap(\.size).reduce(0, +) }
     var appSize: Double { parts.filter { $0.kind == .app }.compactMap(\.size).reduce(0, +) }

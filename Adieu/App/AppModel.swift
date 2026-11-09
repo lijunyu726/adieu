@@ -252,13 +252,18 @@ final class AppModel {
 
     // MARK: 应用
 
+    /// 正在运行的应用包路径。同一个应用装了两份时 Bundle ID 一样，只能按路径分辨开着的是哪一份
+    private static func runningPaths() -> Set<String> {
+        Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleURL?.standardizedFileURL.resolvingSymlinksInPath().path })
+    }
+
     /// 先列出应用，再并行统计大小，每算完一个就更新一个
     func loadApps(force: Bool = false) async {
         guard force || apps.isEmpty, !appsLoading else { return }
         if useSample { apps = Sample.apps; return }
         appsLoading = true
         defer { appsLoading = false }
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+        let running = Self.runningPaths()
         let listed = await blocking { AppScanner.list(running: running) }
         apps = listed
         // 同时最多统计 6 个：全部一起跑会让磁盘来回寻道，也会拖慢其他扫描
@@ -681,7 +686,7 @@ final class AppModel {
 
     func remeasure(_ id: String) async {
         guard let app = apps.first(where: { $0.id == id }) else { return }
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+        let running = Self.runningPaths()
         let fresh = await blocking { AppScanner.rescan(app, running: running) }
         if let fresh, let i = apps.firstIndex(where: { $0.id == id }) { apps[i] = fresh } else if fresh == nil { apps.removeAll { $0.id == id } }
     }
