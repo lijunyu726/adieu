@@ -82,7 +82,7 @@ struct LaunchItemsView: View {
                         HStack(spacing: 12) {
                             Image(nsImage: FileIcon.image(row.path.isEmpty ? "/Applications/\(row.name).app" : row.path, folder: false, size: 30)).resizable().frame(width: 30, height: 30)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(row.name).lineLimit(1).foregroundStyle(row.on ? .primary : .secondary)
+                                Text(row.title).lineLimit(1).foregroundStyle(row.on ? .primary : .secondary)
                                 if let note = row.note {
                                     Text(note).font(.caption).foregroundStyle(row.kind == .missing ? .orange : .secondary).lineLimit(1)
                                 }
@@ -92,7 +92,7 @@ struct LaunchItemsView: View {
                             case .missing:
                                 Button("移除") { toggle(row.name, row.path, false, keep: false) }
                             default:
-                                Toggle(row.name, isOn: Binding(get: { row.on }, set: { flip(row, $0) }))
+                                Toggle(row.title, isOn: Binding(get: { row.on }, set: { flip(row, $0) }))
                                     .toggleStyle(.switch).labelsHidden()
                             }
                         }
@@ -195,7 +195,18 @@ struct LaunchItemsView: View {
         let kind: Kind
         let on: Bool
         var note: String?
+        /// 显示用的名字。登录项的 name 是加进去那一刻系统记下的，之后不会跟着改
+        /// （装过第二份时会记成“Tailscale 2”），显示用应用现在的名字，移除还得用系统记下的 name
+        var label: String?
+        var title: String { label ?? name }
         var id: String { path.isEmpty ? "#" + name : path }
+    }
+
+    /// 应用现在的名字（访达里看到的，不带 .app）；路径不在了返回 nil
+    private static func currentName(_ path: String) -> String? {
+        guard !path.isEmpty, FileManager.default.fileExists(atPath: path) else { return nil }
+        let name = FileManager.default.displayName(atPath: path)
+        return name.hasSuffix(".app") ? String(name.dropLast(4)) : name
     }
 
     /// 每个软件一行：登录项（能直接开关）> 软件自己登记的（只显示，拨了去系统设置）> 没开的（打开就加进登录项）。
@@ -219,21 +230,21 @@ struct LaunchItemsView: View {
             if missingLogin.contains(item.name) {
                 extra.append(Row(name: item.name, path: item.path, kind: .missing, on: false, note: String(localized: "应用已经不在了")))
             } else {
-                byPath[item.path] = Row(name: item.name, path: item.path, kind: .login, on: true)
+                byPath[item.path] = Row(name: item.name, path: item.path, kind: .login, on: true, label: byPath[item.path]?.name ?? Self.currentName(item.path))
             }
         }
         for (name, path) in removedLogin where byPath[path] == nil {
-            byPath[path] = Row(name: name, path: path, kind: .login, on: false)
+            byPath[path] = Row(name: name, path: path, kind: .login, on: false, label: Self.currentName(path))
         }
         func rank(_ r: Row) -> Int { r.on ? 0 : r.kind == .byApp ? 1 : r.kind == .off || r.kind == .login ? 3 : 2 }
         return (Array(byPath.values) + extra).sorted {
-            rank($0) != rank($1) ? rank($0) < rank($1) : $0.name.localizedStandardCompare($1.name) == .orderedAscending
+            rank($0) != rank($1) ? rank($0) < rank($1) : $0.title.localizedStandardCompare($1.title) == .orderedAscending
         }
     }
 
     private var selectedHint: String {
         guard let row = rows.first(where: { $0.id == selected }) else { return String(localized: "点选一个应用，再按 − 移除") }
-        return canRemove(row) ? String(localized: "已选 \(row.name)") : String(localized: "\(row.name) 没在登录时打开")
+        return canRemove(row) ? String(localized: "已选 \(row.title)") : String(localized: "\(row.title) 没在登录时打开")
     }
 
     private func canRemove(_ row: Row) -> Bool {
@@ -259,7 +270,7 @@ struct LaunchItemsView: View {
         switch row.kind {
         case .byApp:
             // 苹果不让别的软件改这一类，带人去系统设置
-            model.notice = String(localized: "\(row.name) 是在自己的设置里开的开机启动，到 \(row.name) 的设置里，或系统设置“登录项与扩展”里改。")
+            model.notice = String(localized: "\(row.title) 是在自己的设置里开的开机启动，到 \(row.title) 的设置里，或系统设置“登录项与扩展”里改。")
             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension")!)
         case .login, .off:
             toggle(row.name, row.path, on)
