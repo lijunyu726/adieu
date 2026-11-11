@@ -90,9 +90,13 @@ Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay 
 
 开发工具里的 **Git worktree** 按项目显示分支、路径、占用与状态。已合并且工作区干净的显示蓝色“安全移除”；未提交、未合并、锁定、游离 HEAD、Git 操作未结束、子模块等显示红色“强制移除”，分别确认后执行展示的 Git 命令。主工作区和主分支不提供移除；包含其他工作区、状态无法确认或 Git 版本未经验证的也保留。**移除会直接删除整个目录（含 Git 忽略的文件），强制移除还会丢失未提交改动，游离 HEAD 的独有提交也可能丢失。** 已有分支保留。移除要求系统自带的 Git（Apple Git）不低于 2.50，已实测 2.50.1 和 2.54.0；更低的版本只展示。项目列表、选中项和结果缓存在本机；超过 5 分钟后台更新，也可点“重新统计”。
 
-开发工具里的 **Agent 技能** 管理 Codex、Claude Code 和 DeepSeek Harness 的本机用户技能。每个技能可以全部停用、恢复上次启用的 agent，也可以为每个 agent 单独启用并切换调用方式。选择「仅点名调用」后，在 Codex 输入 `$技能名`，在 Claude Code 或 DeepSeek Harness 输入 `/技能名`。
+打开「开发工具 → **Agent 技能**」，可以管理 Codex、Claude Code 和 DeepSeek Harness 的本机用户级技能。选中一个技能后，可分别为各个 agent 启用或停用，也可以用「全部停用」一次关闭，再用「恢复启用」恢复之前启用的 agent。
 
-Adieu 会扫描 `~/.agents/skills`、`~/.codex/skills`、`~/.claude/skills` 和 `~/.dsh/skills`，并读取 Adieu 进程环境中的 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`、`DSH_HOME`、`DSH_AGENTS_HOME` 覆盖路径。停用的技能移到对应配置目录下的 `adieu-disabled-skills`，启用到新客户端时会复制技能。外部工具重新安装同名技能后，Adieu 会保留每个停用版本，恢复时优先恢复最近停用的一份。Codex 和 DeepSeek Harness 共享的技能可以拆到各自的目录，其他读取共享目录的客户端也会看到目录变化。共享同一源文件的链接技能会沿用该文件的调用策略。项目、插件、同步和内置技能由对应客户端管理，各客户端自己的配置仍可覆盖本机的技能发现和调用规则。改动后可以新开 agent 会话加载设置。
+- **仅点名调用**：在 Codex 输入 `$技能名`，在 Claude Code 或 DeepSeek Harness 输入 `/技能名`。修改后可以新开一个 agent 会话加载设置。
+- **同名技能的停用与恢复**：停用时，技能会移到对应配置目录下的 `adieu-disabled-skills`。如果外部工具重新安装了同名技能，再次停用时会分别保留新旧两份。恢复到同一安装位置时，优先使用最近停用的一份，较早的版本仍可在停用目录中找到。
+- **共享技能**：为新的 agent 启用时会复制技能文件。单独停用 Codex 或 DeepSeek Harness 的共享技能时，仍启用的一方会使用自己的目录。其他读取共享目录的客户端也会看到目录变化。指向同一源文件的链接共用该文件的调用策略。
+
+Adieu 扫描 `~/.agents/skills`、`~/.codex/skills`、`~/.claude/skills` 和 `~/.dsh/skills`，并读取 Adieu 进程环境中的 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`、`DSH_HOME`、`DSH_AGENTS_HOME` 覆盖路径。项目、插件、同步和内置技能由对应客户端管理。客户端自身的配置可以覆盖本机的发现和调用规则。
 
 文件页（安装包与压缩包、图片与视频、大文件、久未打开）：鼠标指着就在右边预览，整行点一下勾选、按住拖动连选；顶上一句建议一键勾上可以放心删的，按组全选；空格放大看，回车勾选或取消当前这个，⌘A 全选（再按一次全不选），esc 全部取消，⌘⌫ 删除已勾选（照样先确认），这些快捷键都以键帽的样子写在预览栏和底栏上，不用记。“逐个看”里 → 只是标成待删，看完再一起确认。
 
