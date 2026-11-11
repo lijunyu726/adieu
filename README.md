@@ -90,6 +90,10 @@ Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay 
 
 开发工具里的 **Git worktree** 按项目显示分支、路径、占用与状态。已合并且工作区干净的显示蓝色“安全移除”；未提交、未合并、锁定、游离 HEAD、Git 操作未结束、子模块等显示红色“强制移除”，分别确认后执行展示的 Git 命令。主工作区和主分支不提供移除；包含其他工作区、状态无法确认或 Git 版本未经验证的也保留。**移除会直接删除整个目录（含 Git 忽略的文件），强制移除还会丢失未提交改动，游离 HEAD 的独有提交也可能丢失。** 已有分支保留。移除要求系统自带的 Git（Apple Git）不低于 2.50，已实测 2.50.1 和 2.54.0；更低的版本只展示。项目列表、选中项和结果缓存在本机；超过 5 分钟后台更新，也可点“重新统计”。
 
+开发工具里的 **Agent 技能** 管理 Codex、Claude Code 和 DeepSeek Harness 的本机用户技能。每个技能可以全部停用、恢复上次启用的 agent，也可以为每个 agent 单独启用并切换调用方式。选择「仅点名调用」后，在 Codex 输入 `$技能名`，在 Claude Code 或 DeepSeek Harness 输入 `/技能名`。
+
+Adieu 会扫描 `~/.agents/skills`、`~/.codex/skills`、`~/.claude/skills` 和 `~/.dsh/skills`，并读取 Adieu 进程环境中的 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`、`DSH_HOME`、`DSH_AGENTS_HOME` 覆盖路径。停用的技能移到对应配置目录下的 `adieu-disabled-skills`，启用到新客户端时会复制技能。外部工具重新安装同名技能后，Adieu 会保留每个停用版本，恢复时优先恢复最近停用的一份。Codex 和 DeepSeek Harness 共享的技能可以拆到各自的目录，其他读取共享目录的客户端也会看到目录变化。共享同一源文件的链接技能会沿用该文件的调用策略。项目、插件、同步和内置技能由对应客户端管理，各客户端自己的配置仍可覆盖本机的技能发现和调用规则。改动后可以新开 agent 会话加载设置。
+
 文件页（安装包与压缩包、图片与视频、大文件、久未打开）：鼠标指着就在右边预览，整行点一下勾选、按住拖动连选；顶上一句建议一键勾上可以放心删的，按组全选；空格放大看，回车勾选或取消当前这个，⌘A 全选（再按一次全不选），esc 全部取消，⌘⌫ 删除已勾选（照样先确认），这些快捷键都以键帽的样子写在预览栏和底栏上，不用记。“逐个看”里 → 只是标成待删，看完再一起确认。
 
 概览页右边的“今日建议”和各文件页顶上的建议是同一套规则，点“去 X 勾选”跳过去时已经替你勾好，删不删自己定。存储日记每次扫描记一次，讲清这几天空间去了哪：哪个应用、哪个文件夹多了多少，点一下就去那一页。
@@ -159,11 +163,13 @@ open -n scratch/DerivedData/Build/Products/Debug/Adieu.app --args \
   -didOnboard YES -AdieuSection apps -AdieuSample YES
 ```
 
-`-AdieuWorktrees YES` 在开发工具页直接显示 worktree（可与 `-AdieuSection devTools -AdieuSample YES` 组合）。
+`-AdieuWorktrees YES` 在开发工具页直接显示 worktree，`-AdieuAgentSkills YES` 直接显示 Agent 技能（可与 `-AdieuSection devTools -AdieuSample YES` 组合）。
 
 `AdieuSection` 可选值见 `Adieu/App/RootView.swift` 的 `AppSection`；`-AdieuSheet goal`（goal、history、diary）直接打开对应面板。`-AdieuLaunchHidden YES` 模拟开机自启：不弹主窗口，只在后台扫描、跑自动规则。截图用：`-AdieuFileMode grid|list|cards`（文件页的查看方式）、`-AdieuUninstall YES`（直接打开第一个应用的卸载确认）、`-AdieuSettingsTab rules`（safety、rules、general、permissions、about）、`-AdieuSheet menuBar` / `onboarding`（菜单栏面板、欢迎页放在窗口里显示）。
 
 应用组件、共享组、脚本目录与残留归属验证：`scripts/test-app-scanner.sh`。只创建临时应用和数据，不卸载已安装的软件。
+
+Agent 技能的临时目录验证可运行 `scripts/test-agent-skills.sh`。
 
 Worktree 的临时仓库验证：`scripts/test-worktrees.sh`；删除后文件分类、侧边栏、建议与扫描竞态验证：`scripts/test-worktree-model.sh`。全部测试目录和产物在 `scratch/`，不清理真实项目。
 

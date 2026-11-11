@@ -368,3 +368,68 @@ struct WorktreeSnapshot: Codable, Sendable {
     let projects: [WorktreeProject]
     let updatedAt: [String: Date]
 }
+
+// MARK: - Agent 技能
+
+enum SkillAgent: String, CaseIterable, Identifiable, Sendable {
+    case codex, claudeCode, deepSeekHarness
+
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .codex: "Codex"
+        case .claudeCode: "Claude Code"
+        case .deepSeekHarness: "DeepSeek Harness"
+        }
+    }
+
+    func invocation(_ name: String) -> String { (self == .codex ? "$" : "/") + name }
+}
+
+enum SkillInvocation: Hashable, Sendable {
+    case automatic, explicit, unavailable
+
+    var title: String {
+        switch self {
+        case .automatic: String(localized: "允许自动调用")
+        case .explicit: String(localized: "仅点名调用")
+        case .unavailable: String(localized: "调用方式未知")
+        }
+    }
+}
+
+struct AgentSkill: Identifiable, Sendable {
+    struct Installation: Sendable {
+        let entry: URL
+        let activePath: URL
+        let content: URL
+        let instruction: URL
+        let agents: Set<SkillAgent>
+        let isActive: Bool
+        let isBundle: Bool
+        let declaredName: String?
+        let invocation: [SkillAgent: SkillInvocation]
+
+        func commandName(for agent: SkillAgent, folderName: String) -> String {
+            agent == .claudeCode ? folderName : (declaredName ?? folderName)
+        }
+    }
+
+    let id: String
+    let installations: [Installation]
+    var activeAgents: Set<SkillAgent> {
+        installations.filter(\.isActive).reduce(into: []) { $0.formUnion($1.agents) }
+    }
+    var installedAgents: Set<SkillAgent> {
+        installations.reduce(into: []) { $0.formUnion($1.agents) }
+    }
+
+    func activeInstallations(for agent: SkillAgent) -> [Installation] {
+        installations.filter { $0.isActive && $0.agents.contains(agent) }
+    }
+
+    func mode(for agent: SkillAgent) -> SkillInvocation {
+        let modes = Set(activeInstallations(for: agent).map { $0.invocation[agent] ?? .unavailable })
+        return modes.count == 1 ? modes.first ?? .unavailable : .unavailable
+    }
+}

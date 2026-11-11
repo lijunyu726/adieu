@@ -52,9 +52,11 @@ final class AppModel {
     var removedKeys: Set<String> = [] { didSet { rebuildFileCategories() } }
 
     let worktrees: WorktreeCatalog
+    let agentSkills: AgentSkillCatalog
 
     init() {
         worktrees = WorktreeCatalog(sample: useSample ? Sample.worktreeProjects : nil)
+        agentSkills = AgentSkillCatalog(sample: useSample ? Sample.agentSkills : nil)
         disk = useSample ? .sample : (DiskInfo.current() ?? .sample)
         history = useSample ? Sample.history : HistoryStore.load()
     }
