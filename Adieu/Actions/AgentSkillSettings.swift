@@ -76,7 +76,7 @@ struct AgentSkillSettings: Sendable {
 
             var result = TrashService.Outcome()
             func remove(_ entry: AgentSkill.Installation, linked: Bool) {
-                guard AgentSkillScanner.fileIdentity(at: entry.entry) == entry.fileIdentity else {
+                guard TrashService.fileIdentity(at: entry.entry) == entry.fileIdentity else {
                     result.failed.append((entry.entry.path, ChangeError.changed(entry.entry).localizedDescription))
                     return
                 }

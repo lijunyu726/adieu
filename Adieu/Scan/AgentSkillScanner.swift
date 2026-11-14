@@ -1,4 +1,3 @@
-import Darwin
 import Foundation
 
 struct AgentSkillScanner: Sendable {
@@ -83,7 +82,7 @@ struct AgentSkillScanner: Sendable {
                         continue
                     }
                     guard !agents.isEmpty, instruction.isRegularSkillFile,
-                          let identity = Self.fileIdentity(at: entry) else { continue }
+                          let identity = TrashService.fileIdentity(at: entry) else { continue }
                     if agents.contains(.claudeCode), folder.lowercased() == "synced" { continue }
                     let metadata = try? Self.metadata(at: instruction, frontmatter: true)
                     let modes = Dictionary(uniqueKeysWithValues: agents.map { agent in
@@ -125,12 +124,6 @@ struct AgentSkillScanner: Sendable {
             return target.resolvingSymlinksInPath()
         }
         return entry.resolvingSymlinksInPath()
-    }
-
-    static func fileIdentity(at url: URL) -> String? {
-        var info = stat()
-        guard lstat(url.path, &info) == 0 else { return nil }
-        return "\(info.st_dev):\(info.st_ino):\(info.st_birthtimespec.tv_sec):\(info.st_birthtimespec.tv_nsec)"
     }
 
     static func metadata(at url: URL, frontmatter: Bool) throws -> SkillMetadata {

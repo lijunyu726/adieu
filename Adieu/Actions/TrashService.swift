@@ -91,6 +91,67 @@ enum TrashService {
         throw Refusal.notAllowed("不在 Adieu 允许清理的范围内（只处理主目录、应用程序、输入法和外置硬盘）")
     }
 
+    static func fileIdentity(at url: URL) -> String? {
+        var info = stat()
+        guard lstat(url.path, &info) == 0 else { return nil }
+        return "\(info.st_dev):\(info.st_ino):\(info.st_birthtimespec.tv_sec):\(info.st_birthtimespec.tv_nsec)"
+    }
+
+    static var personalTrash: URL {
+        FileManager.default.homeDirectoryForCurrentUser.appending(path: ".Trash", directoryHint: .isDirectory)
+    }
+
+    struct TrashItem: Sendable {
+        let url: URL
+        let identity: String
+    }
+
+    static func trashContents(in directory: URL = personalTrash) throws -> [TrashItem] {
+        guard isTrashDirectory(directory) else {
+            throw Refusal.notAllowed(String(localized: "废纸篓的位置已变化，请重试。"))
+        }
+        let entries: [URL]
+        do {
+            entries = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
+            return []
+        }
+        return entries.compactMap { url in
+            fileIdentity(at: url).map { TrashItem(url: url, identity: $0) }
+        }
+    }
+
+    static func emptyTrash(_ items: [TrashItem], protected: [String], in directory: URL = personalTrash) -> Outcome {
+        var result = Outcome()
+        for item in items {
+            let url = item.url
+            let name = url.lastPathComponent
+            guard isTrashDirectory(directory),
+                  url.deletingLastPathComponent().standardizedFileURL.path == directory.standardizedFileURL.path else {
+                result.failed.append((name, String(localized: "废纸篓的位置已变化，请重试。")))
+                continue
+            }
+            guard let identity = fileIdentity(at: url) else { continue }
+            guard identity == item.identity else {
+                result.failed.append((name, String(localized: "项目已变化，请重新确认。")))
+                continue
+            }
+            let linked = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+            let deletion = delete([url], protected: protected, symbolicLinkOnly: linked)
+            result.done += deletion.done
+            result.failed += deletion.failed
+            result.failed += deletion.needsAdmin.map { ($0.lastPathComponent, String(localized: "没有权限删除此项目。")) }
+        }
+        return result
+    }
+
+    private static func isTrashDirectory(_ url: URL) -> Bool {
+        // 主目录可以经过系统路径别名，但废纸篓本身必须是实际目录。
+        let expected = url.deletingLastPathComponent().resolvingSymlinksInPath().appending(path: url.lastPathComponent)
+        return expected.path == url.resolvingSymlinksInPath().path
+            && (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil
+    }
+
     struct Outcome {
         var done: [TrashedFile] = []
         var failed: [(name: String, reason: String)] = []

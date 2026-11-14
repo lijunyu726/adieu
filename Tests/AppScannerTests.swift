@@ -89,6 +89,7 @@ struct AppScannerTests {
         try leftovers(home: home, index: index)
         try signedGroups(root: root)
         let selected = parts.filter(\.defaultOn).map { home.appending(path: String($0.path.dropFirst(2))) }
+        try emptyTrash(root: root)
         let deleted = TrashService.delete(selected, protected: [])
         precondition(deleted.failed.isEmpty && deleted.needsAdmin.isEmpty && deleted.done.count == selected.count)
         precondition(!fm.fileExists(atPath: nested.path))
@@ -100,6 +101,43 @@ struct AppScannerTests {
     }
 
     /// 按应用包里写的名字找数据：整名相等、不分大小写；短名字、通用词、和别的应用同名的都不用
+    static func emptyTrash(root: URL) throws {
+        let fm = FileManager.default
+        let trash = root.appending(path: "isolated-trash")
+        let outside = root.appending(path: "outside")
+        let replaced = trash.appending(path: "replace.txt")
+        let added = trash.appending(path: "new.txt")
+        let protected = trash.appending(path: "protected.txt")
+        let remove = trash.appending(path: "folder")
+        let link = trash.appending(path: "link")
+        try fm.createDirectory(at: remove, withIntermediateDirectories: true)
+        for file in [outside, replaced, protected, remove.appending(path: "inside.txt")] {
+            try Data("fixture".utf8).write(to: file)
+        }
+        try fm.createSymbolicLink(at: link, withDestinationURL: outside)
+
+        let selected = try TrashService.trashContents(in: trash)
+        precondition(selected.count == 4)
+        try fm.moveItem(at: replaced, to: root.appending(path: "original.txt"))
+        try Data("replacement".utf8).write(to: replaced)
+        try Data("added after confirmation".utf8).write(to: added)
+
+        let outcome = TrashService.emptyTrash(selected, protected: [protected.path], in: trash)
+        precondition(Set(outcome.done.map(\.name)) == ["folder", "link"])
+        precondition(Set(outcome.failed.map(\.name)) == ["protected.txt", "replace.txt"])
+        let outsideContents = try String(contentsOf: outside, encoding: .utf8)
+        precondition(outsideContents == "fixture" && fm.fileExists(atPath: added.path))
+        precondition(fm.fileExists(atPath: protected.path) && fm.fileExists(atPath: replaced.path))
+        precondition(!fm.fileExists(atPath: link.path) && !fm.fileExists(atPath: remove.path))
+        precondition(fm.fileExists(atPath: trash.path))
+
+        let renamedTrash = root.appending(path: "renamed-trash")
+        try fm.moveItem(at: trash, to: renamedTrash)
+        try fm.createSymbolicLink(at: trash, withDestinationURL: renamedTrash)
+        precondition((try? TrashService.trashContents(in: trash)) == nil)
+        precondition(TrashService.emptyTrash(selected, protected: [], in: trash).done.isEmpty)
+    }
+
     static func namedData(root: URL) throws {
         let base = root.appending(path: "named")
         let home = base.appending(path: "home")
