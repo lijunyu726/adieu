@@ -4,6 +4,8 @@ import SwiftUI
 /// 命令原样展示，点“清理”前再确认一次。
 struct DevSpaceView: View {
     @Environment(AppModel.self) private var model
+    private enum Tab: String { case caches, worktrees, skills }
+    @State private var tab: Tab? = UserDefaults.standard.bool(forKey: "AdieuAgentSkills") ? .skills : nil
     @State private var selection: DevTool.ID?
     /// 示例模式下演示“已完成”
     @State private var ran: Set<String> = []
@@ -15,16 +17,25 @@ struct DevSpaceView: View {
     @State private var hoveredWorktree: WorktreeItem.ID?
 
     var body: some View {
-        @Bindable var worktrees = model.worktrees
+        let worktrees = model.worktrees
+        let selected = tab ?? (worktrees.showsWorktrees ? .worktrees : .caches)
         return VStack(alignment: .leading, spacing: 0) {
-            Picker("开发工具", selection: $worktrees.showsWorktrees) {
-                Text("开发缓存").tag(false)
-                Text("Git worktree").tag(true)
+            Picker("开发工具", selection: Binding(get: { selected }, set: { next in
+                tab = next
+                if next != .skills { worktrees.showsWorktrees = next == .worktrees }
+            })) {
+                Text("开发缓存").tag(Tab.caches)
+                Text("Git worktree").tag(Tab.worktrees)
+                Text("Agent 技能").tag(Tab.skills)
             }
-            .pickerStyle(.segmented).labelsHidden().frame(width: 300).padding(.horizontal, 28).padding(.top, 20)
-            if worktrees.showsWorktrees { worktreeContent } else { cacheContent }
+            .pickerStyle(.segmented).labelsHidden().frame(width: 390).padding(.horizontal, 28).padding(.top, 20)
+            switch selected {
+            case .caches: cacheContent
+            case .worktrees: worktreeContent
+            case .skills: AgentSkillsView()
+            }
         }
-        .task(id: worktrees.showsWorktrees) { if worktrees.showsWorktrees { await worktrees.load() } }
+        .task(id: selected) { if selected == .worktrees { await worktrees.load() } }
         .alert(confirmingWorktree?.removalMode?.title ?? "", isPresented: Binding(get: { confirmingWorktree != nil }, set: {
             if !$0 { confirmingWorktree = nil }
         }), presenting: confirmingWorktree) { item in

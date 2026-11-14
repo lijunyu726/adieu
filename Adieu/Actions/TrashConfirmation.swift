@@ -15,11 +15,15 @@ struct TrashConfirmation: ViewModifier {
                 Button("删除", role: .destructive) { model.perform(req) }
                 Button("取消", role: .cancel) { model.pendingTrash = nil }
             } message: { req in
-                let size = req.sizes.values.reduce(0, +)
-                let what = size > 0
-                    ? String(localized: "\(req.urls.count) 项、共 \(size.gbText)")
-                    : String(localized: "\(req.urls.count) 项")
-                Text(String(localized: "将直接删除 \(what)，不进废纸篓，删了不能放回。"))
+                if req.trashItems != nil {
+                    Text("将永久删除此 Mac 启动盘上当前用户废纸篓里的 \(req.urls.count) 项。此操作无法撤销。")
+                } else {
+                    let size = req.sizes.values.reduce(0, +)
+                    let what = size > 0
+                        ? String(localized: "\(req.urls.count) 项、共 \(size.gbText)")
+                        : String(localized: "\(req.urls.count) 项")
+                    Text(String(localized: "将直接删除 \(what)，不进废纸篓，删了不能放回。"))
+                }
             }
             .alert("提示", isPresented: Binding(
                 get: { active && model.notice != nil },
