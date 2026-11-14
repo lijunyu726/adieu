@@ -5,8 +5,10 @@ import Foundation
 @main
 struct AgentSkillTests {
     static func main() throws {
-        let home = URL(filePath: FileManager.default.currentDirectoryPath)
-            .appending(path: "scratch/agent-skills-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let scratch = ProcessInfo.processInfo.environment["ADIEU_TEST_SCRATCH"]
+            ?? URL(filePath: FileManager.default.currentDirectoryPath).appending(path: "scratch").path
+        let home = URL(filePath: scratch, directoryHint: .isDirectory)
+            .appending(path: "agent-skills-\(UUID().uuidString)", directoryHint: .isDirectory)
         let fm = FileManager.default
         try fm.createDirectory(at: home, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: home) }
@@ -116,6 +118,45 @@ struct AgentSkillTests {
         } catch AgentSkillSettings.ChangeError.conflict {
             try check(read(".codex/skills/collision") == "unrelated", "不能覆盖同名文件")
             try check(skill("collision").activeAgents == [.codex, .deepSeekHarness], "冲突时应保留共享安装")
+        }
+
+        try write("---\nname: remove-me\ndescription: Fixture\n---\n", to: ".agents/skills/remove-me/SKILL.md")
+        try select([], "remove-me")
+        try write("---\nname: remove-me\ndescription: Fixture\n---\n", to: "library/remove-me/SKILL.md")
+        let activeLink = home.appending(path: ".claude/skills/remove-me")
+        try fm.createSymbolicLink(at: activeLink, withDestinationURL: home.appending(path: "library/remove-me"))
+        let selected = try skill("remove-me")
+        let protected = try require(selected.installations.first { !$0.isActive }?.entry.path, "需要停用备份")
+        do {
+            _ = try settings.uninstall(selected, protected: [protected])
+            throw TestFailure("确认时必须检查所有路径的保护名单")
+        } catch TrashService.Refusal.protected {
+            try check(skill("remove-me").installations.count == 2, "保护命中时不应删除其他条目")
+        }
+        let priorLink = home.appending(path: "prior-link")
+        try fm.moveItem(at: activeLink, to: priorLink)
+        try fm.createSymbolicLink(at: activeLink, withDestinationURL: home.appending(path: "library/remove-me"))
+        do {
+            _ = try settings.uninstall(selected, protected: [])
+            throw TestFailure("同一路径上的安装被替换后需要重新确认")
+        } catch AgentSkillSettings.ChangeError.changed {
+            try check(skill("remove-me").installations.count == 2, "陈旧确认不能删除条目")
+        }
+
+        let removal = try settings.uninstall(skill("remove-me"), protected: [])
+        try check(removal.done.count == 2 && removal.failed.isEmpty, "应同时移除启用链接与停用备份")
+        try check(scanner.scan().allSatisfy { $0.id != "remove-me" }, "卸载后不应显示已删除的技能")
+        try check(read("library/remove-me/SKILL.md").contains("name: remove-me"), "符号链接的源文件必须保留")
+
+        let sharedSource = ".agents/skills/source/SKILL.md"
+        try write("---\nname: source\ndescription: Fixture\n---\n", to: sharedSource)
+        try fm.createSymbolicLink(at: home.appending(path: ".claude/skills/alias"),
+                                  withDestinationURL: home.appending(path: ".agents/skills/source"))
+        do {
+            _ = try settings.uninstall(skill("source"), protected: [])
+            throw TestFailure("应保护其他技能仍在引用的副本")
+        } catch AgentSkillSettings.ChangeError.linked {
+            try check(read(sharedSource).contains("name: source"), "其他技能引用的文件应保留")
         }
 
         print("Agent skill checks passed")

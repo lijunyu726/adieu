@@ -95,6 +95,18 @@ final class AppModel {
         }
     }
 
+    func uninstallSkill(_ skill: AgentSkill) async {
+        let before = freeNow()
+        guard let result = await agentSkills.uninstall(skill, protected: protectedPaths) else { return }
+        let request = TrashRequest(title: String(localized: "卸载技能 \(skill.id)"),
+                                   source: String(localized: "Agent 技能"),
+                                   urls: skill.installations.map(\.entry))
+        let entry = record(request, files: result.done, into: nil)
+        report(result.failed)
+        if entry != nil { DeleteSound.play() }
+        await verify(entry, freeBefore: before)
+    }
+
     // MARK: 删后核对
 
     /// 删完告诉用户实际腾出多少：删除前后各读一次磁盘可用空间

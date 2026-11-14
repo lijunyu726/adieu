@@ -409,6 +409,7 @@ struct AgentSkill: Identifiable, Sendable {
         let isBundle: Bool
         let declaredName: String?
         let invocation: [SkillAgent: SkillInvocation]
+        var fileIdentity: String? = nil
 
         func commandName(for agent: SkillAgent, folderName: String) -> String {
             agent == .claudeCode ? folderName : (declaredName ?? folderName)

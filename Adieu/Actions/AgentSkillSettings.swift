@@ -47,6 +47,59 @@ struct AgentSkillSettings: Sendable {
         }
     }
 
+    /// 确认后重新核对每一项。先移除链接，再清理实际的技能文件。
+    func uninstall(_ selection: AgentSkill, protected: [String]) throws -> TrashService.Outcome {
+        try Self.lock.withLock {
+            let skills = try scanner.scan()
+            guard let current = skills.first(where: { $0.id == selection.id }) else { throw ChangeError.missing }
+            let expected = selection.installations
+            guard current.installations.count == expected.count else { throw ChangeError.missing }
+
+            var links: [AgentSkill.Installation] = []
+            var files: [AgentSkill.Installation] = []
+            let selectedPaths = Set(expected.map { $0.entry.path })
+            for entry in current.installations {
+                guard let prior = expected.first(where: { $0.entry.path == entry.entry.path }),
+                      prior.fileIdentity == entry.fileIdentity, prior.content.path == entry.content.path,
+                      prior.instruction.path == entry.instruction.path, prior.agents == entry.agents else {
+                    throw ChangeError.changed(entry.entry)
+                }
+                let linked = (try? FileManager.default.destinationOfSymbolicLink(atPath: entry.entry.path)) != nil
+                try TrashService.check(entry.entry, protected: protected, symbolicLinkOnly: linked)
+                if linked {
+                    links.append(entry)
+                } else {
+                    try verifyCanPark(entry, allSkills: skills, excluding: selectedPaths)
+                    files.append(entry)
+                }
+            }
+
+            var result = TrashService.Outcome()
+            func remove(_ entry: AgentSkill.Installation, linked: Bool) {
+                guard AgentSkillScanner.fileIdentity(at: entry.entry) == entry.fileIdentity else {
+                    result.failed.append((entry.entry.path, ChangeError.changed(entry.entry).localizedDescription))
+                    return
+                }
+                let outcome = TrashService.delete([entry.entry], protected: protected, symbolicLinkOnly: linked)
+                result.done += outcome.done
+                if let failure = outcome.failed.first {
+                    result.failed.append((entry.entry.path, failure.reason))
+                } else if !outcome.needsAdmin.isEmpty {
+                    result.failed.append((entry.entry.path, String(localized: "没有权限删除此技能。")))
+                } else if outcome.done.isEmpty {
+                    result.failed.append((entry.entry.path, ChangeError.changed(entry.entry).localizedDescription))
+                }
+            }
+            for link in links { remove(link, linked: true) }
+            if result.failed.isEmpty {
+                for file in files { remove(file, linked: false) }
+            } else {
+                result.failed += files.map { ($0.entry.path, String(localized: "有技能链接未移除，已保留此文件。")) }
+            }
+            return result
+        }
+    }
+
     private struct Move {
         let from: URL
         let to: URL
@@ -146,11 +199,11 @@ struct AgentSkillSettings: Sendable {
         }
     }
 
-    private func verifyCanPark(_ entry: AgentSkill.Installation, allSkills: [AgentSkill]) throws {
+    private func verifyCanPark(_ entry: AgentSkill.Installation, allSkills: [AgentSkill], excluding: Set<String> = []) throws {
         if (try? FileManager.default.destinationOfSymbolicLink(atPath: entry.entry.path)) != nil { return }
         let prefix = entry.entry.resolvingSymlinksInPath().path
         let linked = allSkills.lazy.flatMap(\.installations).first { other in
-            guard other.entry != entry.entry else { return false }
+            guard other.entry != entry.entry, !excluding.contains(other.entry.path) else { return false }
             return other.content.path == prefix || other.content.path.hasPrefix(prefix + "/")
                 || other.instruction.path == prefix || other.instruction.path.hasPrefix(prefix + "/")
         }

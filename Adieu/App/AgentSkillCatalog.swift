@@ -81,6 +81,31 @@ final class AgentSkillCatalog {
         return failure == nil
     }
 
+    func uninstall(_ skill: AgentSkill, protected: [String]) async -> TrashService.Outcome? {
+        guard !saving, !loading else { return nil }
+        saving = true
+        defer { saving = false }
+        if sample {
+            skills.removeAll { $0.id == skill.id }
+            previouslyEnabled.removeValue(forKey: skill.id)
+            return nil
+        }
+
+        let (removal, updated) = await blocking { [scanner] in
+            let result = Result { try AgentSkillSettings(scanner: scanner).uninstall(skill, protected: protected) }
+            return (result, Result { try scanner.scan() })
+        }
+        if case .success(let fresh) = updated {
+            skills = fresh
+            if !fresh.contains(where: { $0.id == skill.id }) {
+                previouslyEnabled.removeValue(forKey: skill.id)
+                defaults.set(previouslyEnabled, forKey: Self.preferenceKey)
+            }
+        }
+        error = removal.failureDescription ?? updated.failureDescription
+        return try? removal.get()
+    }
+
     private func updateSample(_ change: AgentSkillSettings.Change, for skill: AgentSkill) {
         guard let index = skills.firstIndex(where: { $0.id == skill.id }) else { return }
         let agents: Set<SkillAgent>

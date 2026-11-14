@@ -93,6 +93,7 @@ Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay 
 打开「开发工具 → **Agent 技能**」，可以管理 Codex、Claude Code 和 DeepSeek Harness 的本机用户级技能。选中一个技能后，可分别为各个 agent 启用或停用，也可以用「全部停用」一次关闭，再用「恢复启用」恢复之前启用的 agent。
 
 - **仅点名调用**：在 Codex 输入 `$技能名`，在 Claude Code 或 DeepSeek Harness 输入 `/技能名`。修改后可以新开一个 agent 会话加载设置。
+- **卸载技能**：选中技能后点「卸载技能」，核对列出的启用项和停用备份，再确认永久删除。符号链接只移除链接，指向的源文件若也在确认列表中，则按该条目处理。删除成功的条目可在「最近」查看。
 - **同名技能的停用与恢复**：停用时，技能会移到对应配置目录下的 `adieu-disabled-skills`。如果外部工具重新安装了同名技能，再次停用时会分别保留新旧两份。恢复到同一安装位置时，优先使用最近停用的一份，较早的版本仍可在停用目录中找到。
 - **共享技能**：为新的 agent 启用时会复制技能文件。单独停用 Codex 或 DeepSeek Harness 的共享技能时，仍启用的一方会使用自己的目录。其他读取共享目录的客户端也会看到目录变化。指向同一源文件的链接共用该文件的调用策略。
 

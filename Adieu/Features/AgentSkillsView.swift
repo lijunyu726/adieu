@@ -4,6 +4,7 @@ struct AgentSkillsView: View {
     @Environment(AppModel.self) private var model
     @State private var search = ""
     @State private var selection: String?
+    @State private var uninstalling: AgentSkill?
 
     private var catalog: AgentSkillCatalog { model.agentSkills }
 
@@ -43,6 +44,9 @@ struct AgentSkillsView: View {
         }
         .padding(28)
         .task { await catalog.load() }
+        .sheet(item: $uninstalling) { skill in
+            uninstallConfirmation(skill)
+        }
         .alert("技能设置未保存", isPresented: Binding(get: { catalog.error != nil }, set: {
             if !$0 { catalog.error = nil }
         })) {
@@ -91,6 +95,7 @@ struct AgentSkillsView: View {
                     Text(skill.id).font(.title2.bold()).textSelection(.enabled)
                     Spacer()
                     if catalog.saving { ProgressView().controlSize(.small) }
+                    Button("卸载技能", role: .destructive) { uninstalling = skill }
                     if skill.activeAgents.isEmpty {
                         Button("恢复启用") { Task { await catalog.setEnabled(true, skill: skill) } }
                             .buttonStyle(.borderedProminent)
@@ -117,6 +122,42 @@ struct AgentSkillsView: View {
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func uninstallConfirmation(_ skill: AgentSkill) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("卸载技能 \(skill.id)？").font(.title2.bold())
+            Text("将永久删除以下启用项和停用备份，包括其中的符号链接。")
+                .foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(skill.installations.sorted { $0.entry.path < $1.entry.path }, id: \.entry) { installation in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(installation.isActive ? "已启用" : "已停用").font(.caption)
+                            Text(installation.entry.path)
+                                .font(.callout.monospaced())
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(idealHeight: 180, maxHeight: 260)
+
+            HStack {
+                Spacer()
+                Button("取消", role: .cancel) { uninstalling = nil }
+                    .keyboardShortcut(.cancelAction)
+                Button("永久删除", role: .destructive) {
+                    uninstalling = nil
+                    Task { await model.uninstallSkill(skill) }
+                }
+                .disabled(catalog.loading || catalog.saving)
+            }
+        }
+        .padding(24)
+        .frame(width: 560)
     }
 
     private func agentRow(_ agent: SkillAgent, skill: AgentSkill) -> some View {
