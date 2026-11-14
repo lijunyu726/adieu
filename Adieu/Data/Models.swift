@@ -434,3 +434,33 @@ struct AgentSkill: Identifiable, Sendable {
         return modes.count == 1 ? modes.first ?? .unavailable : .unavailable
     }
 }
+
+struct CloudDriveFile: Identifiable, Sendable {
+    enum State: Sendable {
+        case onlineOnly, downloadableCopy, retainedCopy, syncing, unknown
+
+        var title: String {
+            switch self {
+            case .onlineOnly: String(localized: "仅在云端")
+            case .downloadableCopy: String(localized: "已下载，可移除")
+            case .retainedCopy: String(localized: "保留下载或系统暂不可移除")
+            case .syncing: String(localized: "正在同步或有待同步的更改")
+            case .unknown: String(localized: "同步状态未确认")
+            }
+        }
+    }
+
+    var id: String { url.path }
+    let url: URL
+    let relativePath: String
+    let state: State
+    let allocatedBytes: Int
+    let identity: String?
+    var canEvict: Bool { state == .downloadableCopy && allocatedBytes > 0 && identity != nil }
+}
+
+struct CloudDriveScan: Sendable {
+    let files: [CloudDriveFile]
+    let unreadable: Int
+    var allocatedBytes: Int { files.reduce(0) { $0 + $1.allocatedBytes } }
+}

@@ -90,6 +90,7 @@ struct AppScannerTests {
         try signedGroups(root: root)
         let selected = parts.filter(\.defaultOn).map { home.appending(path: String($0.path.dropFirst(2))) }
         try emptyTrash(root: root)
+        try cloudDrive()
         let deleted = TrashService.delete(selected, protected: [])
         precondition(deleted.failed.isEmpty && deleted.needsAdmin.isEmpty && deleted.done.count == selected.count)
         precondition(!fm.fileExists(atPath: nested.path))
@@ -101,6 +102,39 @@ struct AppScannerTests {
     }
 
     /// 按应用包里写的名字找数据：整名相等、不分大小写；短名字、通用词、和别的应用同名的都不用
+    static func cloudDrive() throws {
+        func state(_ download: URLUbiquitousItemDownloadingStatus, uploaded: Bool? = true,
+                   downloading: Bool = false, conflicts: Bool = false, purgeable: Bool? = true) -> CloudDriveFile.State {
+            CloudDriveScanner.classify(ubiquitous: true, download: download, uploaded: uploaded, uploading: false,
+                                       downloading: downloading, conflicts: conflicts, hasError: false, purgeable: purgeable)
+        }
+        precondition(state(.current) == .downloadableCopy)
+        precondition(state(.current, purgeable: false) == .retainedCopy)
+        precondition(state(.current, uploaded: false) == .syncing)
+        precondition(state(.current, conflicts: true) == .syncing)
+        precondition(state(.current, uploaded: nil) == .unknown)
+        precondition(state(.current, purgeable: nil) == .unknown)
+        precondition(state(.notDownloaded, downloading: true) == .syncing)
+        precondition(state(.notDownloaded) == .onlineOnly)
+        precondition(state(.downloaded) == .syncing)
+
+        let fm = FileManager.default
+        let folder = fm.temporaryDirectory.resolvingSymlinksInPath()
+            .appending(path: "adieu-cloud-drive-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let url = folder.appending(path: "local-file")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: false)
+        defer { try? fm.removeItem(at: folder) }
+        try Data("local only".utf8).write(to: url)
+        let scan = try CloudDriveScanner.scan(root: folder)
+        precondition(scan.files.count == 1 && scan.files.first?.state == .unknown)
+        let stale = CloudDriveFile(url: url, relativePath: "local-file", state: .downloadableCopy,
+                                  allocatedBytes: 512, identity: TrashService.fileIdentity(at: url))
+        let result = CloudDriveCleanup.removeDownloads([stale], protected: [], root: folder)
+        precondition(result.removed.isEmpty && result.failed.count == 1)
+        let contents = try Data(contentsOf: url)
+        precondition(contents == Data("local only".utf8))
+    }
+
     static func emptyTrash(root: URL) throws {
         let fm = FileManager.default
         let trash = root.appending(path: "isolated-trash")

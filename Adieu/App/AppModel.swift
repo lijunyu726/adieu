@@ -23,6 +23,42 @@ final class AppModel {
     var apps: [AppItem] = []
     var appsLoading = false
 
+    private(set) var cloudDrive: CloudDriveScan?
+    private(set) var cloudDriveBusy = false
+    private(set) var cloudDriveError: String?
+    private(set) var cloudDriveRemoval: CloudDriveCleanup.Outcome?
+
+    func loadCloudDrive() async {
+        guard !cloudDriveBusy else { return }
+        cloudDriveBusy = true
+        defer { cloudDriveBusy = false }
+        await scanCloudDrive()
+    }
+
+    private func scanCloudDrive() async {
+        cloudDriveError = nil
+        if useSample {
+            cloudDrive = .init(files: [], unreadable: 0)
+            return
+        }
+        do {
+            cloudDrive = try await blocking { Result { try CloudDriveScanner.scan() } }.get()
+        } catch {
+            cloudDrive = nil
+            cloudDriveError = error.localizedDescription
+        }
+    }
+
+    func removeCloudDownloads(_ files: [CloudDriveFile]) async {
+        guard !useSample, !cloudDriveBusy, !files.isEmpty else { return }
+        cloudDriveBusy = true
+        defer { cloudDriveBusy = false }
+        let protected = protectedPaths
+        cloudDriveRemoval = await blocking { CloudDriveCleanup.removeDownloads(files, protected: protected) }
+        refreshDisk()
+        await scanCloudDrive()
+    }
+
     // MARK: 删除与记录
 
     /// 一次待执行的删除
