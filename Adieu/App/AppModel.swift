@@ -27,6 +27,7 @@ final class AppModel {
     private(set) var cloudDriveBusy = false
     private(set) var cloudDriveError: String?
     private(set) var cloudDriveRemoval: CloudDriveCleanup.Outcome?
+    private(set) var cloudDriveOrganization: CloudDriveOrganization.Outcome?
 
     func loadCloudDrive() async {
         guard !cloudDriveBusy else { return }
@@ -54,8 +55,19 @@ final class AppModel {
         cloudDriveBusy = true
         defer { cloudDriveBusy = false }
         let protected = protectedPaths
+        cloudDriveOrganization = nil
         cloudDriveRemoval = await blocking { CloudDriveCleanup.removeDownloads(files, protected: protected) }
         refreshDisk()
+        await scanCloudDrive()
+    }
+
+    func organizeCloudDrive(_ change: CloudDriveOrganization.Change) async {
+        guard !useSample, !cloudDriveBusy else { return }
+        cloudDriveBusy = true
+        defer { cloudDriveBusy = false }
+        let protected = protectedPaths
+        cloudDriveRemoval = nil
+        cloudDriveOrganization = await blocking { CloudDriveOrganization.apply(change, protected: protected) }
         await scanCloudDrive()
     }
 

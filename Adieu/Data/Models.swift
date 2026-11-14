@@ -456,11 +456,20 @@ struct CloudDriveFile: Identifiable, Sendable {
     let state: State
     let allocatedBytes: Int
     let identity: String?
+    var canOrganize: Bool { identity != nil }
     var canEvict: Bool { state == .downloadableCopy && allocatedBytes > 0 && identity != nil }
+}
+
+struct CloudDriveFolder: Identifiable, Sendable {
+    var id: String { url.path }
+    let url: URL
+    let relativePath: String
+    let identity: String
 }
 
 struct CloudDriveScan: Sendable {
     let files: [CloudDriveFile]
     let unreadable: Int
+    var folders: [CloudDriveFolder] = []
     var allocatedBytes: Int { files.reduce(0) { $0 + $1.allocatedBytes } }
 }

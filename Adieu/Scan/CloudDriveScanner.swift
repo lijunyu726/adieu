@@ -8,7 +8,7 @@ enum CloudDriveScanner {
     }
 
     private static let keys: Set<URLResourceKey> = [
-        .isRegularFileKey, .isSymbolicLinkKey, .isUbiquitousItemKey, .totalFileAllocatedSizeKey,
+        .isDirectoryKey, .isPackageKey, .isRegularFileKey, .isSymbolicLinkKey, .isUbiquitousItemKey, .totalFileAllocatedSizeKey,
         .ubiquitousItemIsUploadedKey, .ubiquitousItemIsUploadingKey, .ubiquitousItemIsDownloadingKey,
         .ubiquitousItemDownloadingStatusKey, .ubiquitousItemHasUnresolvedConflictsKey,
         .ubiquitousItemUploadingErrorKey, .ubiquitousItemDownloadingErrorKey, .isPurgeableKey
@@ -34,9 +34,19 @@ enum CloudDriveScanner {
         }) else { throw CocoaError(.fileReadUnknown) }
 
         var files: [CloudDriveFile] = []
+        var folders: [CloudDriveFolder] = []
+        if let identity = TrashService.fileIdentity(at: root) {
+            folders.append(.init(url: root, relativePath: "", identity: identity))
+        }
         for case let url as URL in entries {
             do {
-                if let file = try inspect(url, under: root, refresh: false) { files.append(file) }
+                let values = try url.resourceValues(forKeys: keys)
+                if values.isDirectory == true, values.isPackage == false, values.isSymbolicLink == false,
+                   let path = relativePath(of: url, under: root), let identity = TrashService.fileIdentity(at: url) {
+                    folders.append(.init(url: url, relativePath: path, identity: identity))
+                } else if let file = file(at: url, under: root, values: values) {
+                    files.append(file)
+                }
             } catch {
                 unreadable += 1
             }
@@ -46,21 +56,29 @@ enum CloudDriveScanner {
             if $0.allocatedBytes != $1.allocatedBytes { return $0.allocatedBytes > $1.allocatedBytes }
             return $0.relativePath.localizedStandardCompare($1.relativePath) == .orderedAscending
         }
-        return .init(files: files, unreadable: unreadable)
+        folders.sort { $0.relativePath.localizedStandardCompare($1.relativePath) == .orderedAscending }
+        return .init(files: files, unreadable: unreadable, folders: folders)
     }
 
-    static func inspect(_ url: URL, under root: URL, refresh: Bool = true) throws -> CloudDriveFile? {
-        var canonical = url.standardizedFileURL
+    static func inspect(_ url: URL, under root: URL) throws -> CloudDriveFile? {
+        var fresh = URL(filePath: url.path)
+        fresh.removeAllCachedResourceValues()
+        return file(at: fresh, under: root, values: try fresh.resourceValues(forKeys: keys))
+    }
+
+    static func relativePath(of url: URL, under root: URL) -> String? {
         let prefix = root.standardizedFileURL.path + "/"
-        guard canonical.path.hasPrefix(prefix) else { return nil }
-        if refresh { canonical.removeAllCachedResourceValues() }
-        let values = try canonical.resourceValues(forKeys: keys)
-        guard values.isRegularFile == true, values.isSymbolicLink == false else { return nil }
+        let path = url.standardizedFileURL.path
+        return path.hasPrefix(prefix) ? String(path.dropFirst(prefix.count)) : nil
+    }
+
+    private static func file(at url: URL, under root: URL, values: URLResourceValues) -> CloudDriveFile? {
+        guard values.isRegularFile == true, values.isSymbolicLink == false,
+              let path = relativePath(of: url, under: root) else { return nil }
         let state = state(values)
         let bytes = state == .onlineOnly ? 0 : max(0, values.totalFileAllocatedSize ?? 0)
-        return .init(url: canonical, relativePath: String(canonical.path.dropFirst(prefix.count)),
-                     state: state, allocatedBytes: bytes,
-                     identity: bytes > 0 && state == .downloadableCopy ? TrashService.fileIdentity(at: canonical) : nil)
+        return .init(url: url, relativePath: path, state: state, allocatedBytes: bytes,
+                     identity: values.isUbiquitousItem == true ? TrashService.fileIdentity(at: url) : nil)
     }
 
     static func state(_ values: URLResourceValues) -> CloudDriveFile.State {

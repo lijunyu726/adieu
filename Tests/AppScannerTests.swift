@@ -91,6 +91,7 @@ struct AppScannerTests {
         let selected = parts.filter(\.defaultOn).map { home.appending(path: String($0.path.dropFirst(2))) }
         try emptyTrash(root: root)
         try cloudDrive()
+        try organizeCloudDrive(root: root)
         let deleted = TrashService.delete(selected, protected: [])
         precondition(deleted.failed.isEmpty && deleted.needsAdmin.isEmpty && deleted.done.count == selected.count)
         precondition(!fm.fileExists(atPath: nested.path))
@@ -133,6 +134,34 @@ struct AppScannerTests {
         precondition(result.removed.isEmpty && result.failed.count == 1)
         let contents = try Data(contentsOf: url)
         precondition(contents == Data("local only".utf8))
+    }
+
+    static func organizeCloudDrive(root: URL) throws {
+        let fm = FileManager.default
+        let folder = root.appending(path: "cloud-organization")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        let scan = try CloudDriveScanner.scan(root: folder)
+        precondition(scan.folders.count == 1)
+        let destination = scan.folders[0]
+
+        func create(_ name: String, protected: [String] = []) -> CloudDriveOrganization.Outcome {
+            CloudDriveOrganization.apply(.createFolder(name: name, in: destination), protected: protected, root: folder)
+        }
+        let child = folder.appending(path: "Projects")
+        precondition(create("Projects").completed == 1)
+        precondition(fm.fileExists(atPath: child.path))
+        precondition(create("Projects").failed.count == 1)
+        precondition(create("../outside").failed.count == 1)
+        precondition(create("Protected", protected: [folder.appending(path: "Protected").path]).failed.count == 1)
+        precondition(!fm.fileExists(atPath: folder.appending(path: "Protected").path))
+        let refreshed = try CloudDriveScanner.scan(root: folder)
+        precondition(refreshed.folders.map(\.relativePath) == ["", "Projects"])
+
+        let backup = root.appending(path: "old-cloud-organization")
+        try fm.moveItem(at: folder, to: backup)
+        try fm.createSymbolicLink(at: folder, withDestinationURL: backup)
+        precondition(create("Unexpected").failed.count == 1)
+        precondition(!fm.fileExists(atPath: backup.appending(path: "Unexpected").path))
     }
 
     static func emptyTrash(root: URL) throws {
