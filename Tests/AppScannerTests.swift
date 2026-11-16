@@ -89,6 +89,9 @@ struct AppScannerTests {
         try leftovers(home: home, index: index)
         try signedGroups(root: root)
         let selected = parts.filter(\.defaultOn).map { home.appending(path: String($0.path.dropFirst(2))) }
+        try emptyTrash(root: root)
+        try cloudDrive()
+        try organizeCloudDrive(root: root)
         let deleted = TrashService.delete(selected, protected: [])
         precondition(deleted.failed.isEmpty && deleted.needsAdmin.isEmpty && deleted.done.count == selected.count)
         precondition(!fm.fileExists(atPath: nested.path))
@@ -100,6 +103,104 @@ struct AppScannerTests {
     }
 
     /// 按应用包里写的名字找数据：整名相等、不分大小写；短名字、通用词、和别的应用同名的都不用
+    static func cloudDrive() throws {
+        func state(_ download: URLUbiquitousItemDownloadingStatus, uploaded: Bool? = true,
+                   downloading: Bool = false, conflicts: Bool = false, purgeable: Bool? = true) -> CloudDriveFile.State {
+            CloudDriveScanner.classify(ubiquitous: true, download: download, uploaded: uploaded, uploading: false,
+                                       downloading: downloading, conflicts: conflicts, hasError: false, purgeable: purgeable)
+        }
+        precondition(state(.current) == .downloadableCopy)
+        precondition(state(.current, purgeable: false) == .retainedCopy)
+        precondition(state(.current, uploaded: false) == .syncing)
+        precondition(state(.current, conflicts: true) == .syncing)
+        precondition(state(.current, uploaded: nil) == .unknown)
+        precondition(state(.current, purgeable: nil) == .unknown)
+        precondition(state(.notDownloaded, downloading: true) == .syncing)
+        precondition(state(.notDownloaded) == .onlineOnly)
+        precondition(state(.downloaded) == .syncing)
+
+        let fm = FileManager.default
+        let folder = fm.temporaryDirectory.resolvingSymlinksInPath()
+            .appending(path: "adieu-cloud-drive-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let url = folder.appending(path: "local-file")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: false)
+        defer { try? fm.removeItem(at: folder) }
+        try Data("local only".utf8).write(to: url)
+        let scan = try CloudDriveScanner.scan(root: folder)
+        precondition(scan.files.count == 1 && scan.files.first?.state == .unknown)
+        let stale = CloudDriveFile(url: url, relativePath: "local-file", state: .downloadableCopy,
+                                  allocatedBytes: 512, identity: TrashService.fileIdentity(at: url))
+        let result = CloudDriveCleanup.removeDownloads([stale], protected: [], root: folder)
+        precondition(result.removed.isEmpty && result.failed.count == 1)
+        let contents = try Data(contentsOf: url)
+        precondition(contents == Data("local only".utf8))
+    }
+
+    static func organizeCloudDrive(root: URL) throws {
+        let fm = FileManager.default
+        let folder = root.appending(path: "cloud-organization")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        let scan = try CloudDriveScanner.scan(root: folder)
+        precondition(scan.folders.count == 1)
+        let destination = scan.folders[0]
+
+        func create(_ name: String, protected: [String] = []) -> CloudDriveOrganization.Outcome {
+            CloudDriveOrganization.apply(.createFolder(name: name, in: destination), protected: protected, root: folder)
+        }
+        let child = folder.appending(path: "Projects")
+        precondition(create("Projects").completed == 1)
+        precondition(fm.fileExists(atPath: child.path))
+        precondition(create("Projects").failed.count == 1)
+        precondition(create("../outside").failed.count == 1)
+        precondition(create("Protected", protected: [folder.appending(path: "Protected").path]).failed.count == 1)
+        precondition(!fm.fileExists(atPath: folder.appending(path: "Protected").path))
+        let refreshed = try CloudDriveScanner.scan(root: folder)
+        precondition(refreshed.folders.map(\.relativePath) == ["", "Projects"])
+
+        let backup = root.appending(path: "old-cloud-organization")
+        try fm.moveItem(at: folder, to: backup)
+        try fm.createSymbolicLink(at: folder, withDestinationURL: backup)
+        precondition(create("Unexpected").failed.count == 1)
+        precondition(!fm.fileExists(atPath: backup.appending(path: "Unexpected").path))
+    }
+
+    static func emptyTrash(root: URL) throws {
+        let fm = FileManager.default
+        let trash = root.appending(path: "isolated-trash")
+        let outside = root.appending(path: "outside")
+        let replaced = trash.appending(path: "replace.txt")
+        let added = trash.appending(path: "new.txt")
+        let protected = trash.appending(path: "protected.txt")
+        let remove = trash.appending(path: "folder")
+        let link = trash.appending(path: "link")
+        try fm.createDirectory(at: remove, withIntermediateDirectories: true)
+        for file in [outside, replaced, protected, remove.appending(path: "inside.txt")] {
+            try Data("fixture".utf8).write(to: file)
+        }
+        try fm.createSymbolicLink(at: link, withDestinationURL: outside)
+
+        let selected = try TrashService.trashContents(in: trash)
+        precondition(selected.count == 4)
+        try fm.moveItem(at: replaced, to: root.appending(path: "original.txt"))
+        try Data("replacement".utf8).write(to: replaced)
+        try Data("added after confirmation".utf8).write(to: added)
+
+        let outcome = TrashService.emptyTrash(selected, protected: [protected.path], in: trash)
+        precondition(Set(outcome.done.map(\.name)) == ["folder", "link"])
+        precondition(Set(outcome.failed.map(\.name)) == ["protected.txt", "replace.txt"])
+        let outsideContents = try String(contentsOf: outside, encoding: .utf8)
+        precondition(outsideContents == "fixture" && fm.fileExists(atPath: added.path))
+        precondition(fm.fileExists(atPath: protected.path) && fm.fileExists(atPath: replaced.path))
+        precondition(!fm.fileExists(atPath: link.path) && !fm.fileExists(atPath: remove.path))
+        precondition(fm.fileExists(atPath: trash.path))
+
+        let renamedTrash = root.appending(path: "renamed-trash")
+        try fm.moveItem(at: trash, to: renamedTrash)
+        try fm.createSymbolicLink(at: trash, withDestinationURL: renamedTrash)
+        precondition((try? TrashService.trashContents(in: trash)) == nil)
+        precondition(TrashService.emptyTrash(selected, protected: [], in: trash).done.isEmpty)
+    }
+
     static func namedData(root: URL) throws {
         let base = root.appending(path: "named")
         let home = base.appending(path: "home")

@@ -23,6 +23,54 @@ final class AppModel {
     var apps: [AppItem] = []
     var appsLoading = false
 
+    private(set) var cloudDrive: CloudDriveScan?
+    private(set) var cloudDriveBusy = false
+    private(set) var cloudDriveError: String?
+    private(set) var cloudDriveRemoval: CloudDriveCleanup.Outcome?
+    private(set) var cloudDriveOrganization: CloudDriveOrganization.Outcome?
+
+    func loadCloudDrive() async {
+        guard !cloudDriveBusy else { return }
+        cloudDriveBusy = true
+        defer { cloudDriveBusy = false }
+        await scanCloudDrive()
+    }
+
+    private func scanCloudDrive() async {
+        cloudDriveError = nil
+        if useSample {
+            cloudDrive = .init(files: [], unreadable: 0)
+            return
+        }
+        do {
+            cloudDrive = try await blocking { Result { try CloudDriveScanner.scan() } }.get()
+        } catch {
+            cloudDrive = nil
+            cloudDriveError = error.localizedDescription
+        }
+    }
+
+    func removeCloudDownloads(_ files: [CloudDriveFile]) async {
+        guard !useSample, !cloudDriveBusy, !files.isEmpty else { return }
+        cloudDriveBusy = true
+        defer { cloudDriveBusy = false }
+        let protected = protectedPaths
+        cloudDriveOrganization = nil
+        cloudDriveRemoval = await blocking { CloudDriveCleanup.removeDownloads(files, protected: protected) }
+        refreshDisk()
+        await scanCloudDrive()
+    }
+
+    func organizeCloudDrive(_ change: CloudDriveOrganization.Change) async {
+        guard !useSample, !cloudDriveBusy else { return }
+        cloudDriveBusy = true
+        defer { cloudDriveBusy = false }
+        let protected = protectedPaths
+        cloudDriveRemoval = nil
+        cloudDriveOrganization = await blocking { CloudDriveOrganization.apply(change, protected: protected) }
+        await scanCloudDrive()
+    }
+
     // MARK: 删除与记录
 
     /// 一次待执行的删除
@@ -37,6 +85,7 @@ final class AppModel {
         var keys: [String] = []
         var worktree: WorktreeItem? = nil
         var worktreeMode: WorktreeRemovalMode = .safe
+        var trashItems: [TrashService.TrashItem]? = nil
         var onDone: (@MainActor (HistoryEntry?) -> Void)? = nil
     }
 
@@ -44,6 +93,7 @@ final class AppModel {
     var protectedPaths: [String] = UserDefaults.standard.stringArray(forKey: "protectedPaths") ?? TrashService.defaultProtected {
         didSet { UserDefaults.standard.set(protectedPaths, forKey: "protectedPaths") }
     }
+    private(set) var cleaningTrash = false
     /// 等待用户确认的删除
     var pendingTrash: TrashRequest?
     /// 需要告诉用户的结果（部分失败、恢复失败等）
@@ -52,9 +102,11 @@ final class AppModel {
     var removedKeys: Set<String> = [] { didSet { rebuildFileCategories() } }
 
     let worktrees: WorktreeCatalog
+    let agentSkills: AgentSkillCatalog
 
     init() {
         worktrees = WorktreeCatalog(sample: useSample ? Sample.worktreeProjects : nil)
+        agentSkills = AgentSkillCatalog(sample: useSample ? Sample.agentSkills : nil)
         disk = useSample ? .sample : (DiskInfo.current() ?? .sample)
         history = useSample ? Sample.history : HistoryStore.load()
     }
@@ -66,6 +118,26 @@ final class AppModel {
     /// 不管设置怎样都先确认：键盘快捷键和“逐个看”里攒下来的一批，都不能一按就删掉
     func confirmTrash(_ request: TrashRequest) {
         pendingTrash = request
+    }
+
+    func prepareEmptyTrash() async {
+        guard !useSample, !cleaningTrash, pendingTrash == nil else { return }
+        cleaningTrash = true
+        defer { cleaningTrash = false }
+        do {
+            let items = try await blocking { Result { try TrashService.trashContents() } }.get()
+            guard pendingTrash == nil else { return }
+            if items.isEmpty {
+                notice = String(localized: "当前用户的废纸篓是空的。")
+                return
+            }
+            confirmTrash(.init(title: String(localized: "清空废纸篓"), source: String(localized: "废纸篓"),
+                               urls: items.map(\.url), trashItems: items))
+        } catch let error as CocoaError where error.code == .fileReadNoPermission {
+            notice = String(localized: "无法读取废纸篓。请检查 Adieu 的完全磁盘访问权限。")
+        } catch {
+            notice = error.localizedDescription
+        }
     }
 
     /// 设置里开了“删除前总是再确认一次”就先弹确认，否则直接执行
@@ -82,6 +154,10 @@ final class AppModel {
     /// 有权限不够的（如 App Store 装的应用）会接着弹系统密码窗口
     func perform(_ request: TrashRequest) {
         pendingTrash = nil
+        if request.trashItems != nil {
+            guard !cleaningTrash else { return }
+            cleaningTrash = true
+        }
         Task {
             let before = freeNow()
             let (entry, admin) = await firstPass(request)
@@ -89,8 +165,21 @@ final class AppModel {
             if !admin.isEmpty { result = await adminPass(request, admin, entry) }
             if result != nil { DeleteSound.play() }
             request.onDone?(result)
+            if request.trashItems != nil { cleaningTrash = false }
             await verify(result, freeBefore: before)
         }
+    }
+
+    func uninstallSkill(_ skill: AgentSkill) async {
+        let before = freeNow()
+        guard let result = await agentSkills.uninstall(skill, protected: protectedPaths) else { return }
+        let request = TrashRequest(title: String(localized: "卸载技能 \(skill.id)"),
+                                   source: String(localized: "Agent 技能"),
+                                   urls: skill.installations.map(\.entry))
+        let entry = record(request, files: result.done, into: nil)
+        report(result.failed)
+        if entry != nil { DeleteSound.play() }
+        await verify(entry, freeBefore: before)
     }
 
     // MARK: 删后核对
@@ -194,7 +283,17 @@ final class AppModel {
             removedKeys.formUnion(request.keys)
             return (nil, [])
         }
-        let result = await delete(request.urls, sizes: request.sizes, worktree: request.worktree, worktreeMode: request.worktreeMode)
+        let result: TrashService.Outcome
+        if let items = request.trashItems {
+            let ready = items.filter { !deleting.contains($0.url.path) }
+            let paths = ready.map { $0.url.path }
+            deleting.formUnion(paths)
+            let protected = protectedPaths
+            result = await blocking { TrashService.emptyTrash(ready, protected: protected) }
+            deleting.subtract(paths)
+        } else {
+            result = await delete(request.urls, sizes: request.sizes, worktree: request.worktree, worktreeMode: request.worktreeMode)
+        }
         let entry = record(request, files: result.done, into: nil)
         report(result.failed)
         return (entry, result.needsAdmin)

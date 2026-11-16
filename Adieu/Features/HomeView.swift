@@ -103,6 +103,13 @@ struct HomeView: View {
                     model.section = s.target
                 }
             }
+            Divider()
+            Button {
+                Task { await model.prepareEmptyTrash() }
+            } label: {
+                Label("清空废纸篓…", systemImage: "trash")
+            }
+            .disabled(model.cleaningTrash || model.pendingTrash != nil || model.useSample)
             Spacer()
             diaryCard
         }

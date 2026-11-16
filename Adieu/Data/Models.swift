@@ -368,3 +368,108 @@ struct WorktreeSnapshot: Codable, Sendable {
     let projects: [WorktreeProject]
     let updatedAt: [String: Date]
 }
+
+// MARK: - Agent 技能
+
+enum SkillAgent: String, CaseIterable, Identifiable, Sendable {
+    case codex, claudeCode, deepSeekHarness
+
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .codex: "Codex"
+        case .claudeCode: "Claude Code"
+        case .deepSeekHarness: "DeepSeek Harness"
+        }
+    }
+
+    func invocation(_ name: String) -> String { (self == .codex ? "$" : "/") + name }
+}
+
+enum SkillInvocation: Hashable, Sendable {
+    case automatic, explicit, unavailable
+
+    var title: String {
+        switch self {
+        case .automatic: String(localized: "允许自动调用")
+        case .explicit: String(localized: "仅点名调用")
+        case .unavailable: String(localized: "调用方式未知")
+        }
+    }
+}
+
+struct AgentSkill: Identifiable, Sendable {
+    struct Installation: Sendable {
+        let entry: URL
+        let activePath: URL
+        let content: URL
+        let instruction: URL
+        let agents: Set<SkillAgent>
+        let isActive: Bool
+        let isBundle: Bool
+        let declaredName: String?
+        let invocation: [SkillAgent: SkillInvocation]
+        var fileIdentity: String? = nil
+
+        func commandName(for agent: SkillAgent, folderName: String) -> String {
+            agent == .claudeCode ? folderName : (declaredName ?? folderName)
+        }
+    }
+
+    let id: String
+    let installations: [Installation]
+    var activeAgents: Set<SkillAgent> {
+        installations.filter(\.isActive).reduce(into: []) { $0.formUnion($1.agents) }
+    }
+    var installedAgents: Set<SkillAgent> {
+        installations.reduce(into: []) { $0.formUnion($1.agents) }
+    }
+
+    func activeInstallations(for agent: SkillAgent) -> [Installation] {
+        installations.filter { $0.isActive && $0.agents.contains(agent) }
+    }
+
+    func mode(for agent: SkillAgent) -> SkillInvocation {
+        let modes = Set(activeInstallations(for: agent).map { $0.invocation[agent] ?? .unavailable })
+        return modes.count == 1 ? modes.first ?? .unavailable : .unavailable
+    }
+}
+
+struct CloudDriveFile: Identifiable, Sendable {
+    enum State: Sendable {
+        case onlineOnly, downloadableCopy, retainedCopy, syncing, unknown
+
+        var title: String {
+            switch self {
+            case .onlineOnly: String(localized: "仅在云端")
+            case .downloadableCopy: String(localized: "已下载，可移除")
+            case .retainedCopy: String(localized: "保留下载或系统暂不可移除")
+            case .syncing: String(localized: "正在同步或有待同步的更改")
+            case .unknown: String(localized: "同步状态未确认")
+            }
+        }
+    }
+
+    var id: String { url.path }
+    let url: URL
+    let relativePath: String
+    let state: State
+    let allocatedBytes: Int
+    let identity: String?
+    var canOrganize: Bool { identity != nil }
+    var canEvict: Bool { state == .downloadableCopy && allocatedBytes > 0 && identity != nil }
+}
+
+struct CloudDriveFolder: Identifiable, Sendable {
+    var id: String { url.path }
+    let url: URL
+    let relativePath: String
+    let identity: String
+}
+
+struct CloudDriveScan: Sendable {
+    let files: [CloudDriveFile]
+    let unreadable: Int
+    var folders: [CloudDriveFolder] = []
+    var allocatedBytes: Int { files.reduce(0) { $0 + $1.allocatedBytes } }
+}

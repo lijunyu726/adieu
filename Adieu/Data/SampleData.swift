@@ -344,3 +344,32 @@ extension Double {
 extension Optional where Wrapped == Double {
     var gbText: String { self.map(\.gbText) ?? "—" }
 }
+
+extension Sample {
+    static let agentSkills: [AgentSkill] = [
+        .init(id: "code-review", installations: [
+            skillInstallation("code-review", agent: .codex, active: true, mode: .automatic),
+            skillInstallation("code-review", agent: .claudeCode, active: true, mode: .explicit),
+            skillInstallation("code-review", agent: .deepSeekHarness, active: true, mode: .automatic)
+        ]),
+        .init(id: "release-notes", installations: [
+            skillInstallation("release-notes", agent: .codex, active: true, mode: .explicit)
+        ]),
+        .init(id: "screenshot", installations: [
+            skillInstallation("screenshot", agent: .deepSeekHarness, active: false, mode: .explicit)
+        ])
+    ]
+
+    static func skillInstallation(_ name: String, agent: SkillAgent, active: Bool, mode: SkillInvocation) -> AgentSkill.Installation {
+        let root: String
+        switch agent {
+        case .codex: root = ".codex"
+        case .claudeCode: root = ".claude"
+        case .deepSeekHarness: root = ".dsh"
+        }
+        let original = URL(filePath: "/Users/demo/\(root)/skills/\(name)")
+        let entry = URL(filePath: "/Users/demo/\(root)/\(active ? "skills" : "adieu-disabled-skills")/\(name)")
+        return .init(entry: entry, activePath: original, content: entry, instruction: entry.appending(path: "SKILL.md"),
+                     agents: [agent], isActive: active, isBundle: true, declaredName: name, invocation: [agent: mode])
+    }
+}

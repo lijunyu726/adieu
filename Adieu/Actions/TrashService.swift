@@ -47,15 +47,30 @@ enum TrashService {
     /// /Library/LaunchAgents、/Library/LaunchDaemons 里的单个 plist（清理已失效的后台程序），
     /// /Library/Input Methods 里的单个输入法应用包，
     /// 以及应用留下的签名副本（Chrome 的 code_sign_clone.XXXXXX，只认那一层）
-    static func check(_ url: URL, protected: [String]) throws {
+    static func check(_ url: URL, protected: [String], symbolicLinkOnly: Bool = false) throws {
         let fm = FileManager.default
-        let path = url.standardizedFileURL.resolvingSymlinksInPath().path
-        guard fm.fileExists(atPath: path) else { throw Refusal.missing }
+        let path: String
+        if symbolicLinkOnly {
+            guard (try? fm.destinationOfSymbolicLink(atPath: url.path)) != nil else {
+                throw Refusal.notAllowed(String(localized: "链接已变化，请刷新后重试。"))
+            }
+            path = url.deletingLastPathComponent().standardizedFileURL.resolvingSymlinksInPath()
+                .appending(path: url.lastPathComponent).path
+        } else {
+            path = url.standardizedFileURL.resolvingSymlinksInPath().path
+            guard fm.fileExists(atPath: path) else { throw Refusal.missing }
+        }
         let home = fm.homeDirectoryForCurrentUser.standardizedFileURL.resolvingSymlinksInPath().path
 
         for raw in protected {
             let p = URL(filePath: (raw as NSString).expandingTildeInPath).standardizedFileURL.resolvingSymlinksInPath().path
-            if path == p || path.hasPrefix(p + "/") || p.hasPrefix(path + "/") { throw Refusal.protected(raw) }
+            if isProtected(path, protected: [p]) { throw Refusal.protected(raw) }
+            if symbolicLinkOnly {
+                let original = URL(filePath: (raw as NSString).expandingTildeInPath).standardizedFileURL.path
+                if isProtected(path, protected: [original]) || isProtected(url.standardizedFileURL.path, protected: [original]) {
+                    throw Refusal.protected(raw)
+                }
+            }
         }
 
         let parts = path.split(separator: "/").map(String.init)
@@ -76,6 +91,67 @@ enum TrashService {
         throw Refusal.notAllowed("不在 Adieu 允许清理的范围内（只处理主目录、应用程序、输入法和外置硬盘）")
     }
 
+    static func fileIdentity(at url: URL) -> String? {
+        var info = stat()
+        guard lstat(url.path, &info) == 0 else { return nil }
+        return "\(info.st_dev):\(info.st_ino):\(info.st_birthtimespec.tv_sec):\(info.st_birthtimespec.tv_nsec)"
+    }
+
+    static var personalTrash: URL {
+        FileManager.default.homeDirectoryForCurrentUser.appending(path: ".Trash", directoryHint: .isDirectory)
+    }
+
+    struct TrashItem: Sendable {
+        let url: URL
+        let identity: String
+    }
+
+    static func trashContents(in directory: URL = personalTrash) throws -> [TrashItem] {
+        guard isTrashDirectory(directory) else {
+            throw Refusal.notAllowed(String(localized: "废纸篓的位置已变化，请重试。"))
+        }
+        let entries: [URL]
+        do {
+            entries = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
+            return []
+        }
+        return entries.compactMap { url in
+            fileIdentity(at: url).map { TrashItem(url: url, identity: $0) }
+        }
+    }
+
+    static func emptyTrash(_ items: [TrashItem], protected: [String], in directory: URL = personalTrash) -> Outcome {
+        var result = Outcome()
+        for item in items {
+            let url = item.url
+            let name = url.lastPathComponent
+            guard isTrashDirectory(directory),
+                  url.deletingLastPathComponent().standardizedFileURL.path == directory.standardizedFileURL.path else {
+                result.failed.append((name, String(localized: "废纸篓的位置已变化，请重试。")))
+                continue
+            }
+            guard let identity = fileIdentity(at: url) else { continue }
+            guard identity == item.identity else {
+                result.failed.append((name, String(localized: "项目已变化，请重新确认。")))
+                continue
+            }
+            let linked = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+            let deletion = delete([url], protected: protected, symbolicLinkOnly: linked)
+            result.done += deletion.done
+            result.failed += deletion.failed
+            result.failed += deletion.needsAdmin.map { ($0.lastPathComponent, String(localized: "没有权限删除此项目。")) }
+        }
+        return result
+    }
+
+    private static func isTrashDirectory(_ url: URL) -> Bool {
+        // 主目录可以经过系统路径别名，但废纸篓本身必须是实际目录。
+        let expected = url.deletingLastPathComponent().resolvingSymlinksInPath().appending(path: url.lastPathComponent)
+        return expected.path == url.resolvingSymlinksInPath().path
+            && (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) == nil
+    }
+
     struct Outcome {
         var done: [TrashedFile] = []
         var failed: [(name: String, reason: String)] = []
@@ -84,21 +160,25 @@ enum TrashService {
     }
 
     /// 直接删除，不经过废纸篓。已经不在的直接跳过，权限不够的交给 deleteAsAdmin
-    static func delete(_ urls: [URL], sizes: [String: Double] = [:], protected: [String], worktree: WorktreeItem? = nil, worktreeMode: WorktreeRemovalMode = .safe) -> Outcome {
+    static func delete(_ urls: [URL], sizes: [String: Double] = [:], protected: [String], worktree: WorktreeItem? = nil, worktreeMode: WorktreeRemovalMode = .safe, symbolicLinkOnly: Bool = false) -> Outcome {
         var out = Outcome()
         for url in urls {
             let name = url.lastPathComponent
             do {
-                try check(url, protected: protected)
-                let size = sizes[url.path] ?? AppScanner.allocatedSize(url)
-                let folder = isFolder(url)
+                try check(url, protected: protected, symbolicLinkOnly: symbolicLinkOnly)
+                let size = symbolicLinkOnly ? nil : (sizes[url.path] ?? AppScanner.allocatedSize(url))
+                let folder = !symbolicLinkOnly && isFolder(url)
                 // 要管理员密码的应用也先走到这里，图标在这一步就存好
-                IconStore.remember(url.path)
+                if !symbolicLinkOnly { IconStore.remember(url.path) }
                 if let worktree {
                     guard urls.count == 1, url.path == worktree.path else {
                         throw Refusal.notAllowed(String(localized: "工作区路径发生变化，已保留。"))
                     }
                     try WorktreeCleanup.remove(worktree, mode: worktreeMode, protected: protected)
+                } else if symbolicLinkOnly {
+                    guard unlink(url.path) == 0 else {
+                        throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+                    }
                 } else {
                     try FileManager.default.removeItem(at: url)
                 }
@@ -109,7 +189,7 @@ enum TrashService {
                 out.failed.append((name, r.localizedDescription))
             } catch {
                 let ns = error as NSError
-                if worktree == nil && (ns.code == NSFileWriteNoPermissionError || ns.code == NSFileReadNoPermissionError
+                if !symbolicLinkOnly && worktree == nil && (ns.code == NSFileWriteNoPermissionError || ns.code == NSFileReadNoPermissionError
                     || (ns.underlyingErrors.first as NSError?)?.code == Int(EACCES) || (ns.underlyingErrors.first as NSError?)?.code == Int(EPERM)) {
                     out.needsAdmin.append(url)
                 } else {

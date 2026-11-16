@@ -90,6 +90,17 @@ Adieu only contacts GitHub when checking for updates. Scanning and cleanup stay 
 
 开发工具里的 **Git worktree** 按项目显示分支、路径、占用与状态。已合并且工作区干净的显示蓝色“安全移除”；未提交、未合并、锁定、游离 HEAD、Git 操作未结束、子模块等显示红色“强制移除”，分别确认后执行展示的 Git 命令。主工作区和主分支不提供移除；包含其他工作区、状态无法确认或 Git 版本未经验证的也保留。**移除会直接删除整个目录（含 Git 忽略的文件），强制移除还会丢失未提交改动，游离 HEAD 的独有提交也可能丢失。** 已有分支保留。移除要求系统自带的 Git（Apple Git）不低于 2.50，已实测 2.50.1 和 2.54.0；更低的版本只展示。项目列表、选中项和结果缓存在本机；超过 5 分钟后台更新，也可点“重新统计”。
 
+打开「开发工具 → **Agent 技能**」，可以管理 Codex、Claude Code 和 DeepSeek Harness 的本机用户级技能。选中一个技能后，可分别为各个 agent 启用或停用，也可以用「全部停用」一次关闭，再用「恢复启用」恢复之前启用的 agent。
+
+- **仅点名调用**：在 Codex 输入 `$技能名`，在 Claude Code 或 DeepSeek Harness 输入 `/技能名`。修改后可以新开一个 agent 会话加载设置。
+- **卸载技能**：选中技能后点「卸载技能」，核对列出的启用项和停用备份，再确认永久删除。符号链接只移除链接，指向的源文件若也在确认列表中，则按该条目处理。删除成功的条目可在「最近」查看。
+- **同名技能的停用与恢复**：停用时，技能会移到对应配置目录下的 `adieu-disabled-skills`。如果外部工具重新安装了同名技能，再次停用时会分别保留新旧两份。恢复到同一安装位置时，优先使用最近停用的一份，较早的版本仍可在停用目录中找到。
+- **共享技能**：为新的 agent 启用时会复制技能文件。单独停用 Codex 或 DeepSeek Harness 的共享技能时，仍启用的一方会使用自己的目录。其他读取共享目录的客户端也会看到目录变化。指向同一源文件的链接共用该文件的调用策略。
+
+Adieu 扫描 `~/.agents/skills`、`~/.codex/skills`、`~/.claude/skills` 和 `~/.dsh/skills`，并读取 Adieu 进程环境中的 `CODEX_HOME`、`CLAUDE_CONFIG_DIR`、`DSH_HOME`、`DSH_AGENTS_HOME` 覆盖路径。项目、插件、同步和内置技能由对应客户端管理。客户端自身的配置可以覆盖本机的发现和调用规则。
+
+在「文件 → **iCloud Drive**」查看已扫描文件的本机占用，按占用从大到小排列。可显示仅在云端的文件。勾选已同步且 macOS 标为可回收的文件，再确认「移除下载」，云端文件仍可重新下载。正在同步、有待同步更改、系统要求保留或状态不明确的项目会跳过。扫描范围为当前用户的 iCloud Drive 普通文件。 此页面还可以按文件名或路径搜索、新建文件夹、重命名单个文件，以及把选中的文件批量移动到现有文件夹。云端占位文件也可以整理。更改会通过 iCloud 同步到其他设备，遇到同名项目会保留两边并报告该项。
+
 文件页（安装包与压缩包、图片与视频、大文件、久未打开）：鼠标指着就在右边预览，整行点一下勾选、按住拖动连选；顶上一句建议一键勾上可以放心删的，按组全选；空格放大看，回车勾选或取消当前这个，⌘A 全选（再按一次全不选），esc 全部取消，⌘⌫ 删除已勾选（照样先确认），这些快捷键都以键帽的样子写在预览栏和底栏上，不用记。“逐个看”里 → 只是标成待删，看完再一起确认。
 
 概览页右边的“今日建议”和各文件页顶上的建议是同一套规则，点“去 X 勾选”跳过去时已经替你勾好，删不删自己定。存储日记每次扫描记一次，讲清这几天空间去了哪：哪个应用、哪个文件夹多了多少，点一下就去那一页。
@@ -107,6 +118,8 @@ Adieu 只在这个仓库的 Releases 发布，别处下载的都不是官方版�
 
 > [!WARNING]
 > Adieu 的所有删除都是**直接删除，不进废纸篓**，删了不能放回。卸载应用、删文件前默认会确认一次；菜单栏面板的“删除”和清掉失效的后台程序点了就做。“最近”里能看到每次删了什么。
+
+在「概览」点击「清空废纸篓…」，确认后可以永久删除启动盘上当前用户废纸篓中的项目。「最近」会记录成功清理的条目。
 
 <details>
 <summary><b>权限</b></summary>
@@ -159,11 +172,13 @@ open -n scratch/DerivedData/Build/Products/Debug/Adieu.app --args \
   -didOnboard YES -AdieuSection apps -AdieuSample YES
 ```
 
-`-AdieuWorktrees YES` 在开发工具页直接显示 worktree（可与 `-AdieuSection devTools -AdieuSample YES` 组合）。
+`-AdieuWorktrees YES` 在开发工具页直接显示 worktree，`-AdieuAgentSkills YES` 直接显示 Agent 技能（可与 `-AdieuSection devTools -AdieuSample YES` 组合）。
 
 `AdieuSection` 可选值见 `Adieu/App/RootView.swift` 的 `AppSection`；`-AdieuSheet goal`（goal、history、diary）直接打开对应面板。`-AdieuLaunchHidden YES` 模拟开机自启：不弹主窗口，只在后台扫描、跑自动规则。截图用：`-AdieuFileMode grid|list|cards`（文件页的查看方式）、`-AdieuUninstall YES`（直接打开第一个应用的卸载确认）、`-AdieuSettingsTab rules`（safety、rules、general、permissions、about）、`-AdieuSheet menuBar` / `onboarding`（菜单栏面板、欢迎页放在窗口里显示）。
 
 应用组件、共享组、脚本目录与残留归属验证：`scripts/test-app-scanner.sh`。只创建临时应用和数据，不卸载已安装的软件。
+
+Agent 技能的临时目录验证可运行 `scripts/test-agent-skills.sh`。
 
 Worktree 的临时仓库验证：`scripts/test-worktrees.sh`；删除后文件分类、侧边栏、建议与扫描竞态验证：`scripts/test-worktree-model.sh`。全部测试目录和产物在 `scratch/`，不清理真实项目。
 
