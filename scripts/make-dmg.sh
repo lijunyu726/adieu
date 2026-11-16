@@ -18,6 +18,7 @@ APP=scratch/DerivedData/Build/Products/Release/Adieu.app
 SIGN_ID="Adieu Self Signing"
 if security find-identity -p codesigning | grep -q "\"$SIGN_ID\""; then
   codesign -f -s "$SIGN_ID" --preserve-metadata=identifier,entitlements "$APP/Contents/PlugIns/AdieuWidget.appex"
+  codesign -f -s "$SIGN_ID" --preserve-metadata=identifier,entitlements "$APP/Contents/MacOS/adieu-mcp"
   codesign -f -s "$SIGN_ID" --preserve-metadata=identifier,entitlements "$APP"
   codesign --verify --deep --strict "$APP"
 else

@@ -17,6 +17,7 @@ struct HomeView: View {
                     if !model.useSample && !model.hasFullDiskAccess { accessBanner }
                     overview
                     categoryRows
+                    hotspotRows
                 }
                 .padding(32)
             }
@@ -83,6 +84,40 @@ struct HomeView: View {
                                 case .cleanClones: model.cleanClones()
                                 }
                             })
+            }
+        }
+    }
+
+    /// 常见大户：Adieu 不代删，告诉你多大、该在哪里处理（借鉴 storage-analyzer）
+    @ViewBuilder private var hotspotRows: some View {
+        let list = model.space?.hotspots ?? []
+        if !list.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("这些大户在别处处理").font(.headline)
+                Text("它们由系统或别的应用管着，直接删文件夹会出问题。下面写了正确的处理办法。")
+                    .font(.callout).foregroundStyle(.secondary)
+                ForEach(list) { h in
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
+                                Text(h.label).fontWeight(.medium)
+                                Chip(text: h.grade.label, tint: h.grade.color)
+                            }
+                            Text(h.note).font(.callout).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if let logical = h.logical, logical > h.size * 1.2 {
+                                Text("文件看着有 \(logical.gbText)，实际只占 \(h.size.gbText)（稀疏文件，没写的部分不占空间）。")
+                                    .font(.caption).foregroundStyle(.tertiary)
+                            }
+                            Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([URL(filePath: h.path)]) }
+                                .buttonStyle(.link).font(.callout)
+                        }
+                        Spacer()
+                        Text(h.size.gbText).fontWeight(.semibold).monospacedDigit()
+                    }
+                    .padding(12)
+                    .background(Color.primary.opacity(0.03), in: .rect(cornerRadius: 10))
+                }
             }
         }
     }
@@ -197,7 +232,11 @@ private struct CategoryRow: View {
                     Text(Copy.text(category.hint)).foregroundStyle(.secondary)
                     ForEach(category.parts) { p in
                         HStack(alignment: p.note.isEmpty ? .center : .firstTextBaseline, spacing: 12) {
-                            Text(Copy.text(p.label)).frame(width: 130, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(Copy.text(p.label))
+                                if let grade = p.grade { Chip(text: grade.label, tint: grade.color) }
+                            }
+                            .frame(width: 130, alignment: .leading)
                             if p.note.isEmpty, let size = p.size {
                                 ProportionBar(fraction: size / category.size, color: category.color.opacity(0.7), height: 5)
                             } else {

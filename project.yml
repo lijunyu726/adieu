@@ -27,7 +27,7 @@ targets:
   Adieu:
     type: application
     platform: macOS
-    sources: [Adieu, Shared]
+    sources: [Adieu, Shared, AgentShared]
     info:
       path: Adieu/Info.plist
       properties:
@@ -52,6 +52,23 @@ targets:
     dependencies:
       - target: AdieuWidget
         embed: true
+      # MCP 转发程序放进 Contents/MacOS，和主程序一起签名
+      - target: adieu-mcp
+        embed: true
+        copy:
+          destination: executables
+  adieu-mcp:
+    type: tool
+    platform: macOS
+    sources: [AdieuMCP, AgentShared]
+    settings:
+      base:
+        PRODUCT_NAME: adieu-mcp
+        PRODUCT_BUNDLE_IDENTIFIER: com.ljy.adieu.mcp
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: NO
+        SKIP_INSTALL: YES
   AdieuWidget:
     type: app-extension
     platform: macOS

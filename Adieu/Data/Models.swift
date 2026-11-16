@@ -123,6 +123,8 @@ struct SpaceCategory: Identifiable, Hashable, Sendable {
         var note: String = ""
         /// 这一项旁边的小按钮，如“清掉 262 份”
         var action: PartAction? = nil
+        /// 三级分级；没有就不标
+        var grade: Safety? = nil
         var id: String { label }
     }
     enum PartAction: Hashable, Sendable {
@@ -146,12 +148,26 @@ struct SpaceCategory: Identifiable, Hashable, Sendable {
 
 // MARK: - 清理建议
 
-enum Safety: Sendable {
+/// 三级分级（借鉴 storage-analyzer）：可以直接清 / 要你看一眼 / 别手删（有正确的处理办法，但不是删文件）
+enum Safety: String, Sendable {
     case safe      // 可再生、可重新下载
     case review    // 可能有价值，需要人看
+    case keep      // 系统或应用在管，手删会出问题；照说明里的办法处理
 
-    var label: String { self == .safe ? String(localized: "稳妥") : String(localized: "看一眼") }
-    var color: Color { self == .safe ? .green : .orange }
+    var label: String {
+        switch self {
+        case .safe: String(localized: "稳妥")
+        case .review: String(localized: "看一眼")
+        case .keep: String(localized: "别手删")
+        }
+    }
+    var color: Color {
+        switch self {
+        case .safe: .green
+        case .review: .orange
+        case .keep: .red
+        }
+    }
 }
 
 /// 计划里的一项怎么执行
@@ -477,7 +493,11 @@ struct CloudDriveScan: Sendable {
     let unreadable: Int
     let filesByFolder: [String: [CloudDriveFile]]
     let foldersByParent: [String: [CloudDriveFolder]]
+    /// 每个文件夹（含各层子文件夹）在本机占用的字节数；"" 是整个 iCloud Drive
+    let folderBytes: [String: Int]
     private let foldersByPath: [String: CloudDriveFolder]
+
+    var allocatedBytes: Int { folderBytes[""] ?? 0 }
 
     init(files: [CloudDriveFile], unreadable: Int, folders: [CloudDriveFolder] = []) {
         self.files = files
@@ -486,6 +506,16 @@ struct CloudDriveScan: Sendable {
         filesByFolder = Dictionary(grouping: files, by: \.parentPath)
         foldersByParent = Dictionary(grouping: folders.filter { !$0.relativePath.isEmpty }, by: \.parentPath)
         foldersByPath = Dictionary(uniqueKeysWithValues: folders.map { ($0.relativePath, $0) })
+        var bytes: [String: Int] = [:]
+        for file in files where file.allocatedBytes > 0 {
+            var path = file.parentPath
+            while true {
+                bytes[path, default: 0] += file.allocatedBytes
+                if path.isEmpty { break }
+                path = Self.parent(of: path)
+            }
+        }
+        folderBytes = bytes
     }
 
     func folder(at path: String) -> CloudDriveFolder? { foldersByPath[path] }

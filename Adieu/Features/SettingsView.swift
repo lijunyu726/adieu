@@ -136,6 +136,7 @@ private struct GeneralSettings: View {
                     new.preview()
                 }
             }
+            AgentAccessSection()
         }
         .formStyle(.grouped)
         .onAppear { refreshLoginItem() }
@@ -303,5 +304,50 @@ private struct AboutView: View {
             Link("使用手册 ↗", destination: .adieuManual).padding(.top, 6)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// 允许 Claude Code、Codex、Cursor 等通过 MCP 调用 Adieu
+private struct AgentAccessSection: View {
+    @Environment(AppModel.self) private var model
+    @AppStorage(AgentTools.settingKey) private var enabled = false
+    @State private var copied: String?
+
+    private var helper: String { Bundle.main.bundleURL.appending(path: "Contents/MacOS/adieu-mcp").path }
+
+    private var commands: [(String, String)] {
+        let quoted = helper.contains(" ") ? "\"\(helper)\"" : helper
+        return [("Claude Code", "claude mcp add adieu -- \(quoted)"),
+                ("Codex", "codex mcp add adieu -- \(quoted)"),
+                (String(localized: "Cursor、Claude 桌面版等（配置文件）"), "\"adieu\": { \"command\": \"\(helper)\" }")]
+    }
+
+    var body: some View {
+        Section {
+            Toggle("允许 agent 连接", isOn: $enabled)
+                .onChange(of: enabled) { _, _ in model.agent.apply() }
+            if enabled {
+                ForEach(commands, id: \.0) { title, command in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title).font(.caption).foregroundStyle(.secondary)
+                        HStack {
+                            Text(command).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                                .lineLimit(2).truncationMode(.middle)
+                            Spacer()
+                            Button(copied == title ? String(localized: "已复制") : String(localized: "复制")) {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(command, forType: .string)
+                                copied = title
+                            }
+                            .controlSize(.small)
+                        }
+                    }
+                }
+            }
+        } header: {
+            Text("Agent（MCP）")
+        } footer: {
+            Text("打开后，Claude Code、Codex、Cursor 等可以通过 MCP 让 Adieu 扫描、整理和清理。查看直接可以；移动、改名等改动要 agent 先给你看预览再执行；删除时 Adieu 会弹出清单，必须你亲手点“删除”。只有你这个用户账号能连。")
+        }
     }
 }

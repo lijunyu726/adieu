@@ -102,6 +102,11 @@ enum LeftoverScanner {
                 let url = lib.appending(path: place).appending(path: name).standardizedFileURL
                 guard url.resolvingSymlinksInPath().path == url.path else { continue }
                 var key = name
+                // UUID 命名的容器：按里面记的标识符算，认不出主人的不列
+                if place == "Containers", ContainerOwner.isUUID(name) {
+                    guard let id = ContainerOwner.bundleID(of: url) else { continue }
+                    key = id
+                }
                 for ext in [".plist", ".savedState", ".binarycookies"] where key.hasSuffix(ext) { key = String(key.dropLast(ext.count)) }
                 key = stripTeam(key)
                 if key.hasPrefix("group.") { key = String(key.dropFirst(6)) }

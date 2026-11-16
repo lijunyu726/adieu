@@ -104,12 +104,14 @@ final class AppModel {
     let worktrees: WorktreeCatalog
     let agentSkills: AgentSkillCatalog
     let mover = MoverModel()
+    let agent = AgentTools()
 
     init() {
         worktrees = WorktreeCatalog(sample: useSample ? Sample.worktreeProjects : nil)
         agentSkills = AgentSkillCatalog(sample: useSample ? Sample.agentSkills : nil)
         disk = useSample ? .sample : (DiskInfo.current() ?? .sample)
         history = useSample ? Sample.history : HistoryStore.load()
+        agent.model = self
     }
 
     func refreshDisk() {
@@ -470,14 +472,16 @@ final class AppModel {
         devLoading = false
     }
 
-    func removeWorktree(_ item: WorktreeItem, mode: WorktreeRemovalMode) {
+    func removeWorktree(_ item: WorktreeItem, mode: WorktreeRemovalMode, completion: (@MainActor (HistoryEntry?) -> Void)? = nil) {
         guard worktrees.beginRemoval(item, mode: mode) else {
             notice = String(localized: "工作区状态已经变化，请重新统计后再试。")
+            completion?(nil)
             return
         }
         perform(.init(title: mode.title, source: "开发工具",
                       urls: [URL(filePath: item.path)], sizes: item.size.map { [item.path: $0] } ?? [:],
                       worktree: item, worktreeMode: mode, onDone: { [weak self] entry in
+            completion?(entry)
             guard let self else { return }
             self.worktrees.finishRemoval(item, succeeded: self.useSample || entry != nil)
             Task { await self.worktrees.refresh(item.projectPath, force: true) }
@@ -639,12 +643,16 @@ final class AppModel {
     /// “macOS 系统与其他”的细分。大小来自 APFS 各卷和几个固定目录；加起来以外的部分记作“其他”
     private func systemParts(_ space: SpaceScanner.Result, total: Double) -> [SpaceCategory.Part] {
         var parts: [SpaceCategory.Part] = []
+        // 系统这一块都是“别手删”：系统自己管，各项说明里写了它什么时候会变小
         func add(_ label: String, _ size: Double?, _ note: String, _ action: SpaceCategory.PartAction? = nil) {
             guard let size, size >= 0.05 else { return }
-            parts.append(.init(label: label, size: size, note: note, action: action))
+            parts.append(.init(label: label, size: size, note: note, action: action, grade: .keep))
         }
         add("macOS 本身", space.systemVolume, "系统卷，只读且有签名保护，不会自己变，也不能删。")
-        add("启动与恢复", (space.preboot ?? 0) + (space.recovery ?? 0), "开机和恢复要用的文件，系统更新时会临时变大，装完自己收回，不要手动删。")
+        add("启动与恢复", (space.preboot ?? 0) + (space.recovery ?? 0),
+            space.pendingUpdate ? "开机和恢复要用的文件。现在有一个已下载、还没安装的系统更新，这里多存了一份新系统；到「系统设置 → 通用 → 软件更新」装完，系统会收回多出来的那份和更新快照。"
+                                : "开机和恢复要用的文件，系统更新时会临时变大，装完自己收回，不要手动删。")
+        add("待装的系统更新", space.updateDownload, "已经下载好的系统更新包。装完或更新被取消后系统会删掉，不要手动删。")
         add("交换文件", space.vmVolume ?? space.swap, "内存不够时把内存写到磁盘，重启后会变小，不能手动删。")
         add("睡眠镜像", space.sleepImage, "合盖休眠时保存内存内容，系统自己维护，不能删。")
         add("系统素材", space.assets, "字体、语音、Apple 智能模型等按需下载的资源，系统自己管理，不要手动删。")
@@ -656,11 +664,15 @@ final class AppModel {
             let note = String(localized: "共 \(c.count) 份。") + String(localized: "\(name) 启动时复制的自己，被强制退出就会留下。和本体共用存储，看着有 \(c.logical.gbText)，实际约 \(c.real.gbText)。")
                 + (c.removable.isEmpty ? String(localized: "现在的都在用，不要删。") : String(localized: "没在用的可以删。"))
             parts.append(.init(label: String(localized: "\(name) 签名副本"), size: c.real, note: note,
-                               action: c.removable.isEmpty ? nil : .cleanClones(count: c.removable.count)))
+                               action: c.removable.isEmpty ? nil : .cleanClones(count: c.removable.count),
+                               grade: c.removable.isEmpty ? .keep : .safe))
         }
         parts.sort { ($0.size ?? 0) > ($1.size ?? 0) }
         parts.append(.init(label: String(localized: "本地快照 \(space.snapshots) 个"), size: nil,
-                           note: space.snapshots > 0 ? "系统更新或时间机器做的，删掉的文件要等快照到期才腾出空间；空间紧张时系统会自动删。" : "目前没有。"))
+                           note: space.snapshots == 0 ? "目前没有。"
+                               : space.pendingUpdate ? "其中有系统更新留的快照，装完更新就会删掉。其余是时间机器做的，删掉的文件要等快照到期才腾出空间；空间紧张时系统会自动删。"
+                               : "系统更新或时间机器做的，删掉的文件要等快照到期才腾出空间；空间紧张时系统会自动删。",
+                           grade: space.snapshots > 0 ? .keep : nil))
         let known = parts.compactMap(\.size).reduce(0, +)
         parts.append(.init(label: "其他", size: max(0, total - known), note: "其他用户的文件、系统目录和数据库等 Adieu 看不到的部分。"))
         return parts

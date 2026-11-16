@@ -120,6 +120,9 @@ struct RootView: View {
                 .trashConfirmation()
         }
         .trashConfirmation(active: model.sheet == nil)
+        .sheet(item: Binding(get: { model.agent.request }, set: { if $0 == nil { model.agent.answer(false) } })) { request in
+            AgentConfirmView(request: request)
+        }
     }
 
     @ViewBuilder

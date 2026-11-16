@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 
 output = Path('scratch/AgentSkillTests')
-sources = sorted(str(path) for folder in ['Adieu', 'Shared'] for path in Path(folder).rglob('*.swift'))
+sources = sorted(str(path) for folder in ['Adieu', 'Shared', 'AgentShared'] for path in Path(folder).rglob('*.swift'))
 flags = ['swiftc', '-swift-version', '6', '-parse-as-library', '-module-cache-path', str(output / 'ModuleCache')]
 subprocess.run([*flags, '-enable-testing', '-module-name', 'ReviewAdieu',
                 '-emit-library', '-emit-module', '-emit-module-path', str(output / 'ReviewAdieu.swiftmodule'),

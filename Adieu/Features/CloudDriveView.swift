@@ -20,9 +20,12 @@ struct CloudDriveView: View {
         let path = folder?.relativePath ?? ""
         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
         let searching = !query.isEmpty
-        let folders = searching
+        let matched = searching
             ? (scan?.folders ?? []).filter { $0.relativePath.localizedCaseInsensitiveContains(query) }
             : scan?.foldersByParent[path] ?? []
+        let folders = sort == .size
+            ? matched.sorted { (scan?.folderBytes[$0.relativePath] ?? 0) > (scan?.folderBytes[$1.relativePath] ?? 0) }
+            : matched
         let scope = searching ? scan?.files ?? [] : scan?.filesByFolder[path] ?? []
         let filtered = scope.filter {
             (showOnlineOnly || $0.state != .onlineOnly) &&
@@ -45,6 +48,15 @@ struct CloudDriveView: View {
             }
 
             if let scan {
+                HStack {
+                    Text("iCloud Drive 在这台 Mac 上共占用 \(size(scan.allocatedBytes))").font(.headline)
+                    Spacer()
+                    Button("到搬家页整理…") {
+                        model.mover.show(folder?.url ?? CloudDriveScanner.root)
+                        model.section = .mover
+                    }
+                    .help("在搬家页里打开这个文件夹，可以拖动、批量改名，或搬到外接硬盘")
+                }
                 HStack(spacing: 12) {
                     TextField("搜索整个 iCloud Drive", text: $search)
                         .textFieldStyle(.roundedBorder)
@@ -163,7 +175,9 @@ struct CloudDriveView: View {
             if !folders.isEmpty {
                 Section("文件夹") {
                     ForEach(folders) { folder in
-                        CloudDriveFolderRow(folder: folder, showPath: searching) { openFolder(folder.relativePath) }
+                        CloudDriveFolderRow(folder: folder, showPath: searching, bytes: model.cloudDrive?.folderBytes[folder.relativePath] ?? 0) {
+                            openFolder(folder.relativePath)
+                        }
                     }
                 }
             }
@@ -295,6 +309,8 @@ private struct CloudDrivePathBar: View {
 private struct CloudDriveFolderRow: View {
     let folder: CloudDriveFolder
     let showPath: Bool
+    /// 整个文件夹在本机的占用；移动窗口里不显示
+    var bytes: Int? = nil
     let open: () -> Void
 
     var body: some View {
@@ -312,6 +328,10 @@ private struct CloudDriveFolderRow: View {
                     Image(systemName: "folder.fill").foregroundStyle(.blue)
                 }
                 Spacer()
+                if let bytes {
+                    Text(bytes > 0 ? ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file) : "0 B")
+                        .monospacedDigit().foregroundStyle(.secondary)
+                }
                 Image(systemName: "chevron.right").font(.caption)
                     .foregroundStyle(.secondary).accessibilityHidden(true)
             }

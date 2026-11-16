@@ -1,6 +1,3698 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "来自连接到 Adieu 的 agent（%@）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来自连接到 Adieu 的 agent（%@）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "來自連接到 Adieu 的 agent（%@）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From an agent connected to Adieu (%@)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adieu に接続したエージェントから（%@）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adieu에 연결된 에이전트에서(%@)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De un agente conectado a Adieu (%@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "D’un agent connecté à Adieu (%@)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von einem mit Adieu verbundenen Agenten (%@)"
+          }
+        }
+      }
+    },
+    "没能打开 agent 通道：%@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能打开 agent 通道：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法開啟 agent 通道：%@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open the agent connection: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェント用の接続を開けませんでした：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트 연결을 열지 못했어요: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la conexión para agentes: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d’ouvrir la connexion des agents : %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Agent-Verbindung ließ sich nicht öffnen: %@"
+          }
+        }
+      }
+    },
+    "agent 要替换 %lld 个同名项目": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要替换 %lld 个同名项目"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要取代 %lld 個同名項目"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to replace %lld items with the same name"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが同じ名前の項目を %lld 個置き換えようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 같은 이름의 항목 %lld개를 대치하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere reemplazar %lld elementos con el mismo nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut remplacer %lld éléments portant le même nom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte %lld gleichnamige Objekte ersetzen"
+          }
+        }
+      }
+    },
+    "原有的会被直接删除，不进废纸篓，撤销也找不回来。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原有的会被直接删除，不进废纸篓，撤销也找不回来。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原有的會被直接刪除，不進垃圾桶，還原也找不回來。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The existing ones will be deleted right away, not moved to the Trash, and Undo can’t bring them back."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "元の項目はゴミ箱を経由せずにすぐ削除され、取り消しても戻りません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기존 항목은 휴지통을 거치지 않고 바로 삭제되며, 실행 취소로도 되돌릴 수 없어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los existentes se eliminarán directamente, sin pasar por la Papelera, y deshacer no los recuperará."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les éléments existants seront supprimés directement, sans passer par la Corbeille, et l’annulation ne les récupérera pas."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die vorhandenen werden direkt gelöscht, nicht in den Papierkorb gelegt, und Widerrufen holt sie nicht zurück."
+          }
+        }
+      }
+    },
+    "agent 要撤销一次复制或新建，删掉新的那份": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要撤销一次复制或新建，删掉新的那份"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要撤銷一次拷貝或新增，刪掉新的那份"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to undo a copy or new folder and delete the new one"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントがコピーまたは新規作成を取り消し、新しい方を削除しようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 복사나 새로 만들기를 실행 취소하고 새로 생긴 쪽을 삭제하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere deshacer una copia o creación y eliminar lo nuevo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut annuler une copie ou une création et supprimer le nouvel élément"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte ein Kopieren oder Erstellen widerrufen und das Neue löschen"
+          }
+        }
+      }
+    },
+    "agent 要卸载 %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要卸载 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要解除安裝 %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to uninstall %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが %@ をアンインストールしようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 %@을(를) 제거하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere desinstalar %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut désinstaller %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte %@ deinstallieren"
+          }
+        }
+      }
+    },
+    "个人数据保留。其余直接删除，不进废纸篓。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "个人数据保留。其余直接删除，不进废纸篓。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留個人資料。其餘直接刪除，不進垃圾桶。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personal data is kept. Everything else is deleted right away, not moved to the Trash."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人データは残します。それ以外はゴミ箱を経由せずにすぐ削除します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 데이터는 남겨요. 나머지는 휴지통을 거치지 않고 바로 삭제해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos personales se conservan. Lo demás se elimina directamente, sin pasar por la Papelera."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les données personnelles sont conservées. Le reste est supprimé directement, sans passer par la Corbeille."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persönliche Daten bleiben erhalten. Alles andere wird direkt gelöscht, nicht in den Papierkorb gelegt."
+          }
+        }
+      }
+    },
+    "包括个人数据（聊天记录、文档、账号等可能在里面），直接删除，不进废纸篓，删了找不回来。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "包括个人数据（聊天记录、文档、账号等可能在里面），直接删除，不进废纸篓，删了找不回来。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "包括個人資料（可能有聊天記錄、文件、帳號等），直接刪除，不進垃圾桶，刪了找不回來。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Includes personal data (may contain chats, documents, accounts and more). It’s deleted right away, not moved to the Trash, and can’t be recovered."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "個人データ（チャット履歴、書類、アカウントなどを含む可能性があります）も含め、ゴミ箱を経由せずにすぐ削除します。削除すると元に戻せません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인 데이터(채팅 기록, 문서, 계정 등이 있을 수 있음)도 포함해 휴지통을 거치지 않고 바로 삭제해요. 삭제하면 되돌릴 수 없어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye datos personales (puede haber chats, documentos, cuentas…). Se elimina directamente, sin pasar por la Papelera, y no se puede recuperar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Y compris les données personnelles (discussions, documents, comptes possibles). Tout est supprimé directement, sans passer par la Corbeille, et ne peut pas être récupéré."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einschließlich persönlicher Daten (evtl. Chats, Dokumente, Konten usw.). Wird direkt gelöscht, nicht in den Papierkorb gelegt, und lässt sich nicht wiederherstellen."
+          }
+        }
+      }
+    },
+    "agent 要清理 %@ 的数据": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要清理 %@ 的数据"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要清理 %@ 的資料"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to clear %@’s data"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが %@ のデータを消去しようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 %@의 데이터를 정리하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere limpiar los datos de %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut effacer les données de %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte die Daten von %@ bereinigen"
+          }
+        }
+      }
+    },
+    "应用本身保留，这些直接删除，不进废纸篓。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用本身保留，这些直接删除，不进废纸篓。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "應用程式本身保留，這些直接刪除，不進垃圾桶。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app itself is kept. These are deleted right away, not moved to the Trash."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリ本体は残します。これらはゴミ箱を経由せずにすぐ削除します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 자체는 남겨요. 이 항목들은 휴지통을 거치지 않고 바로 삭제해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app se conserva. Esto se elimina directamente, sin pasar por la Papelera."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’app elle-même est conservée. Ces éléments sont supprimés directement, sans passer par la Corbeille."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die App selbst bleibt erhalten. Diese Objekte werden direkt gelöscht, nicht in den Papierkorb gelegt."
+          }
+        }
+      }
+    },
+    "agent 要删除 %lld 项": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要删除 %lld 项"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要刪除 %lld 項"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to delete %lld items"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが %lld 項目を削除しようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 %lld개 항목을 삭제하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere eliminar %lld elementos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut supprimer %lld éléments"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte %lld Objekte löschen"
+          }
+        }
+      }
+    },
+    "直接删除，不进废纸篓，删了不能放回。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接删除，不进废纸篓，删了不能放回。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接刪除，不進垃圾桶，刪了不能放回。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted right away, not moved to the Trash. You can’t put it back."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ゴミ箱を経由せずにすぐ削除します。元に戻せません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 거치지 않고 바로 삭제해요. 되돌릴 수 없어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se elimina directamente, sin pasar por la Papelera. No podrás devolverlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimé directement, sans passer par la Corbeille. Impossible de le remettre."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird direkt gelöscht, nicht in den Papierkorb gelegt. Du kannst es nicht zurücklegen."
+          }
+        }
+      }
+    },
+    "删除 %lld 项": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除 %lld 项"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪除 %lld 項"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld items"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 項目を削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목 삭제"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar %lld elementos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %lld éléments"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Objekte löschen"
+          }
+        }
+      }
+    },
+    "agent 要清空废纸篓": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要清空废纸篓"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要清空垃圾桶"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to empty the Trash"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントがゴミ箱を空にしようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 휴지통을 비우려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere vaciar la Papelera"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut vider la Corbeille"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte den Papierkorb entleeren"
+          }
+        }
+      }
+    },
+    "废纸篓里的 %lld 项会被永久删除，此操作无法撤销。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "废纸篓里的 %lld 项会被永久删除，此操作无法撤销。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垃圾桶裡的 %lld 項會被永久刪除，此操作無法還原。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The %lld items in the Trash will be permanently deleted. This can’t be undone."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ゴミ箱の %lld 項目が完全に削除されます。この操作は取り消せません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통의 항목 %lld개가 영구 삭제돼요. 실행 취소할 수 없어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los %lld elementos de la Papelera se eliminarán para siempre. No se puede deshacer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les %lld éléments de la Corbeille seront supprimés définitivement. Cette action est irréversible."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die %lld Objekte im Papierkorb werden endgültig gelöscht. Das lässt sich nicht widerrufen."
+          }
+        }
+      }
+    },
+    "agent 要移除 %lld 个 iCloud 文件的本机下载": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要移除 %lld 个 iCloud 文件的本机下载"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要移除 %lld 個 iCloud 檔案的本機下載"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to remove the local downloads of %lld iCloud files"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが iCloud ファイル %lld 個のダウンロード済みコピーを削除しようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 iCloud 파일 %lld개의 로컬 다운로드를 제거하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere quitar la descarga local de %lld archivos de iCloud"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut supprimer la copie locale de %lld fichiers iCloud"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte die lokalen Downloads von %lld iCloud-Dateien entfernen"
+          }
+        }
+      }
+    },
+    "文件仍在 iCloud 里，需要时可以重新下载。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件仍在 iCloud 里，需要时可以重新下载。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檔案仍在 iCloud 裡，需要時可以重新下載。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The files stay in iCloud, and you can download them again when you need them."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルは iCloud に残るので、必要なときにまたダウンロードできます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일은 iCloud에 그대로 있어서 필요할 때 다시 다운로드할 수 있어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos siguen en iCloud y puedes volver a descargarlos cuando los necesites."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les fichiers restent dans iCloud et vous pouvez les retélécharger au besoin."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Dateien bleiben in iCloud und lassen sich bei Bedarf erneut laden."
+          }
+        }
+      }
+    },
+    "agent 要移除工作区": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要移除工作区"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要移除工作區"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to remove a worktree"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントが作業ツリーを削除しようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 작업 트리를 제거하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere quitar un árbol de trabajo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut supprimer un arbre de travail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte ein Arbeitsverzeichnis entfernen"
+          }
+        }
+      }
+    },
+    "强制移除：工作区里没提交的改动会丢掉。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强制移除：工作区里没提交的改动会丢掉。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "強制移除：工作區裡沒提交的改動會遺失。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forced removal: uncommitted changes in the worktree will be lost."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "強制削除：作業ツリーの未コミットの変更は失われます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "강제 제거: 작업 트리에서 커밋하지 않은 변경 사항은 사라져요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminación forzada: se perderán los cambios sin confirmar del árbol de trabajo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suppression forcée : les modifications non validées de l’arbre de travail seront perdues."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erzwungenes Entfernen: nicht committete Änderungen im Arbeitsverzeichnis gehen verloren."
+          }
+        }
+      }
+    },
+    "用 git worktree remove 移除。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 git worktree remove 移除。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 git worktree remove 移除。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed with git worktree remove."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "git worktree remove で削除します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "git worktree remove로 제거해요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se quita con git worktree remove."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimé avec git worktree remove."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird mit git worktree remove entfernt."
+          }
+        }
+      }
+    },
+    "agent 要卸载技能 %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要卸载技能 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "agent 要解除安裝技能 %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An agent wants to uninstall the skill %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントがスキル %@ をアンインストールしようとしています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트가 스킬 %@을(를) 제거하려고 해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agente quiere desinstalar la habilidad %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un agent veut désinstaller la compétence %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Agent möchte den Skill %@ deinstallieren"
+          }
+        }
+      }
+    },
+    "直接删除，不进废纸篓。链接过来的技能只删链接，不动源文件。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接删除，不进废纸篓。链接过来的技能只删链接，不动源文件。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接刪除，不進垃圾桶。連結過來的技能只刪連結，不動原始檔案。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted right away, not moved to the Trash. For a linked skill, only the link is deleted; the source files are left alone."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ゴミ箱を経由せずにすぐ削除します。リンクされたスキルはリンクだけを削除し、元のファイルはそのままです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 거치지 않고 바로 삭제해요. 링크된 스킬은 링크만 지우고 원본 파일은 건드리지 않아요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se elimina directamente, sin pasar por la Papelera. En las habilidades enlazadas solo se borra el enlace; los archivos originales no se tocan."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimé directement, sans passer par la Corbeille. Pour une compétence liée, seul le lien est supprimé ; les fichiers d’origine ne sont pas touchés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird direkt gelöscht, nicht in den Papierkorb gelegt. Bei verlinkten Skills wird nur der Link gelöscht; die Originaldateien bleiben unberührt."
+          }
+        }
+      }
+    },
+    "iCloud Drive 在这台 Mac 上共占用 %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive 在这台 Mac 上共占用 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive 在這部 Mac 上共佔用 %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive uses %@ on this Mac"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive がこの Mac で使用している容量：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive가 이 Mac에서 차지하는 용량: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive ocupa %@ en este Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive occupe %@ sur ce Mac"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive belegt %@ auf diesem Mac"
+          }
+        }
+      }
+    },
+    "到搬家页整理…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "到搬家页整理…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "到搬移頁整理⋯"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organize in Move Files…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「ファイル移動」で整理…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일 이동에서 정리…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organizar en Mover archivos…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organiser dans Déplacer…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In „Umziehen“ ordnen…"
+          }
+        }
+      }
+    },
+    "在搬家页里打开这个文件夹，可以拖动、批量改名，或搬到外接硬盘": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在搬家页里打开这个文件夹，可以拖动、批量改名，或搬到外接硬盘"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在搬移頁裡打開這個資料夾，可以拖移、批次重新命名，或搬到外接硬碟"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open this folder in Move Files to drag items around, rename in bulk, or move them to an external drive"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「ファイル移動」でこのフォルダを開くと、ドラッグ、一括名前変更、外付けドライブへの移動ができます"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일 이동에서 이 폴더를 열면 드래그하거나, 한꺼번에 이름을 바꾸거나, 외장 드라이브로 옮길 수 있어요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre esta carpeta en Mover archivos para arrastrar, renombrar en bloque o pasarla a un disco externo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez ce dossier dans Déplacer pour glisser des éléments, les renommer en lot ou les déplacer vers un disque externe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne diesen Ordner in „Umziehen“, um Objekte zu ziehen, gesammelt umzubenennen oder auf ein externes Laufwerk zu bewegen"
+          }
+        }
+      }
+    },
+    "iCloud Drive": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive"
+          }
+        }
+      }
+    },
+    "名字像，要你确认": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字像，要你确认"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名稱相似，需要你確認"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Similar name, please confirm"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前が似ているため確認が必要です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이름이 비슷해서 확인이 필요해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre parecido; confírmalo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom similaire, à confirmer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ähnlicher Name, bitte bestätigen"
+          }
+        }
+      }
+    },
+    "只能搬主目录、iCloud Drive 和外接硬盘上的东西。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只能搬主目录、iCloud Drive 和外接硬盘上的东西。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只能搬個人專屬目錄、iCloud Drive 和外接硬碟上的東西。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only items in your home folder, iCloud Drive and on external drives can be moved."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移動できるのはホームフォルダ、iCloud Drive、外付けドライブ上の項目だけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더, iCloud Drive, 외장 드라이브의 항목만 옮길 수 있습니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se pueden mover elementos de tu carpeta de inicio, de iCloud Drive y de discos externos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seuls les éléments de votre dossier de départ, d’iCloud Drive et des disques externes peuvent être déplacés."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Objekte im Benutzerordner, in iCloud Drive und auf externen Laufwerken können bewegt werden."
+          }
+        }
+      }
+    },
+    "只能放到主目录、iCloud Drive 和外接硬盘上。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只能放到主目录、iCloud Drive 和外接硬盘上。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只能放到個人專屬目錄、iCloud Drive 和外接硬碟上。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items can only go to your home folder, iCloud Drive or external drives."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移動先にできるのはホームフォルダ、iCloud Drive、外付けドライブだけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더, iCloud Drive, 외장 드라이브로만 옮길 수 있습니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se puede poner en tu carpeta de inicio, en iCloud Drive o en discos externos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destination possible uniquement dans le dossier de départ, iCloud Drive ou sur des disques externes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel kann nur der Benutzerordner, iCloud Drive oder ein externes Laufwerk sein."
+          }
+        }
+      }
+    },
+    "（另有 %lld 处同样的问题）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（另有 %lld 处同样的问题）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（另有 %lld 處同樣的問題）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (%lld more with the same problem)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（ほかに同じ問題が %lld 件）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (같은 문제가 %lld개 더 있음)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (%lld más con el mismo problema)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (%lld autres avec le même problème)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " (%lld weitere mit demselben Problem)"
+          }
+        }
+      }
+    },
+    "“%@”还没下载到这台 Mac，先在访达里下载。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”还没下载到这台 Mac，先在访达里下载。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」還沒下載到這部 Mac，請先在 Finder 裡下載。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” hasn’t been downloaded to this Mac yet. Download it in Finder first."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」はまだこの Mac にダウンロードされていません。先に Finder でダウンロードしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”은(는) 아직 이 Mac에 다운로드되지 않았어요. 먼저 Finder에서 다운로드하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«%@» aún no se ha descargado en este Mac. Descárgalo primero en el Finder."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %@ » n’est pas encore téléchargé sur ce Mac. Téléchargez-le d’abord dans le Finder."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ ist noch nicht auf diesen Mac geladen. Lade es zuerst im Finder."
+          }
+        }
+      }
+    },
+    "核对 %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "核对 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "核對 %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifying %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ を確認中"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 확인 중"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificando %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification de %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird geprüft"
+          }
+        }
+      }
+    },
+    "没有权限删除“%@”。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有权限删除“%@”。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有權限刪除「%@」。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No permission to delete “%@”."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」を削除する権限がありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”을(를) 삭제할 권한이 없어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No tienes permiso para eliminar «%@»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous n’avez pas l’autorisation de supprimer « %@ »."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Berechtigung, „%@“ zu löschen."
+          }
+        }
+      }
+    },
+    "这些大户在别处处理": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些大户在别处处理"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這些大戶要在別處處理"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handle these big ones elsewhere"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これらの大きな項目はほかの場所で処理します"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 큰 항목들은 다른 곳에서 처리해요"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos grandes se gestionan en otro sitio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ces gros éléments se gèrent ailleurs"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese großen Brocken woanders bereinigen"
+          }
+        }
+      }
+    },
+    "它们由系统或别的应用管着，直接删文件夹会出问题。下面写了正确的处理办法。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它们由系统或别的应用管着，直接删文件夹会出问题。下面写了正确的处理办法。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它們由系統或別的應用程式管理，直接刪資料夾會出問題。下面寫了正確的處理方法。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The system or other apps manage these, so deleting the folders directly causes problems. The right way to handle each is below."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これらはシステムや別のアプリが管理しているため、フォルダを直接削除すると問題が起きます。正しい対処方法を下に書いています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템이나 다른 앱이 관리하는 항목이라 폴더를 바로 지우면 문제가 생겨요. 올바른 처리 방법을 아래에 적었어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los gestiona el sistema u otras apps, así que borrar las carpetas directamente da problemas. Abajo tienes la forma correcta de hacerlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils sont gérés par le système ou d’autres apps : supprimer directement les dossiers pose problème. La bonne méthode est indiquée ci-dessous."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese werden vom System oder anderen Apps verwaltet; die Ordner direkt zu löschen, macht Probleme. Wie es richtig geht, steht unten."
+          }
+        }
+      }
+    },
+    "文件看着有 %@，实际只占 %@（稀疏文件，没写的部分不占空间）。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件看着有 %@，实际只占 %@（稀疏文件，没写的部分不占空间）。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檔案看起來有 %@，實際只佔 %@（稀疏檔案，沒寫入的部分不佔空間）。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file looks like %@ but only takes up %@ (a sparse file; unwritten parts use no space)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルは %@ に見えますが、実際の使用量は %@ だけです（スパースファイルで、書き込まれていない部分は容量を使いません）。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일 크기는 %@로 보이지만 실제로는 %@만 차지해요(희소 파일이라 쓰지 않은 부분은 공간을 차지하지 않아요)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El archivo aparenta %@, pero solo ocupa %@ (archivo disperso: las partes sin escribir no ocupan espacio)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier semble faire %@, mais n’occupe que %@ (fichier creux : les parties non écrites ne prennent pas de place)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Datei wirkt wie %@, belegt aber nur %@ (Sparse-Datei: Ungeschriebenes belegt keinen Platz)."
+          }
+        }
+      }
+    },
+    "别手删": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "别手删"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別手動刪"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don’t delete by hand"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "手動で削除しない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "직접 삭제 금지"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No borrar a mano"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne pas supprimer à la main"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht von Hand löschen"
+          }
+        }
+      }
+    },
+    "macOS 没有允许 Adieu 打开这里。到「系统设置 → 隐私与安全性 → 文件与文件夹」里打开 Adieu 的“可移除宗卷”或对应文件夹，或者给 Adieu 完全磁盘访问权限。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 没有允许 Adieu 打开这里。到「系统设置 → 隐私与安全性 → 文件与文件夹」里打开 Adieu 的“可移除宗卷”或对应文件夹，或者给 Adieu 完全磁盘访问权限。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS 沒有允許 Adieu 打開這裡。到「系統設定 → 隱私權與安全性 → 檔案與資料夾」裡開啟 Adieu 的「可卸除式卷宗」或對應的資料夾，或者給 Adieu 完整磁碟取用權限。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS hasn’t allowed Adieu to open this. In System Settings → Privacy & Security → Files and Folders, turn on Removable Volumes or the matching folder for Adieu, or give Adieu Full Disk Access."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS が Adieu にここを開くことを許可していません。「システム設定 → プライバシーとセキュリティ → ファイルとフォルダ」で Adieu の「リムーバブルボリューム」または該当するフォルダをオンにするか、Adieu にフルディスクアクセスを与えてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS가 Adieu에 이곳을 여는 것을 허용하지 않았어요. ‘시스템 설정 → 개인정보 보호 및 보안 → 파일 및 폴더’에서 Adieu의 ‘이동식 볼륨’이나 해당 폴더를 켜거나, Adieu에 전체 디스크 접근 권한을 주세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS no ha permitido que Adieu abra esta ubicación. En Ajustes del Sistema → Privacidad y seguridad → Archivos y carpetas, activa «Volúmenes extraíbles» o la carpeta correspondiente para Adieu, o dale a Adieu Acceso total al disco."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS n’a pas autorisé Adieu à ouvrir cet emplacement. Dans Réglages Système → Confidentialité et sécurité → Fichiers et dossiers, activez « Volumes amovibles » ou le dossier concerné pour Adieu, ou accordez à Adieu l’accès complet au disque."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS erlaubt Adieu nicht, dies zu öffnen. Schalte unter Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner für Adieu „Wechselmedien“ oder den passenden Ordner ein, oder gib Adieu Festplattenvollzugriff."
+          }
+        }
+      }
+    },
+    "那里已有同名的，跳过了：%@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "那里已有同名的，跳过了：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "那裡已有同名項目，已略過：%@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something with the same name is already there, so it was skipped: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同じ名前の項目がすでにあるため、スキップしました：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "같은 이름의 항목이 이미 있어서 건너뛰었어요: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay algo con el mismo nombre ahí, así que se omitió: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un élément du même nom existe déjà, il a donc été ignoré : %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dort gibt es schon etwas mit demselben Namen, deshalb übersprungen: %@"
+          }
+        }
+      }
+    },
+    "只在云端，还没下载到这台 Mac": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在云端，还没下载到这台 Mac"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只在雲端，還沒下載到這部 Mac"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only in the cloud, not yet downloaded to this Mac"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クラウドのみ。まだこの Mac にダウンロードされていません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클라우드에만 있고 아직 이 Mac에 다운로드되지 않음"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo en la nube, aún sin descargar en este Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uniquement dans le nuage, pas encore téléchargé sur ce Mac"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur in der Cloud, noch nicht auf diesen Mac geladen"
+          }
+        }
+      }
+    },
+    "替换那里原有的 %lld 项？": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换那里原有的 %lld 项？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取代那裡原有的 %lld 項？"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace the %lld existing items there?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "そこにある %lld 項目を置き換えますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그곳에 있는 기존 항목 %lld개를 대치할까요?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Reemplazar los %lld elementos que ya hay ahí?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer les %lld éléments déjà présents ?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die %lld vorhandenen Objekte dort ersetzen?"
+          }
+        }
+      }
+    },
+    "涉及 iCloud Drive：移进移出会同步到你的其他设备，从 iCloud Drive 移走的，其他设备上也就没有了。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涉及 iCloud Drive：移进移出会同步到你的其他设备，从 iCloud Drive 移走的，其他设备上也就没有了。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涉及 iCloud Drive：移進移出會同步到你的其他裝置，從 iCloud Drive 移走的，其他裝置上也就沒有了。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Involves iCloud Drive: moves in and out sync to your other devices. Anything moved out of iCloud Drive will also be gone from your other devices."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive が関係します：出し入れはほかのデバイスに同期されます。iCloud Drive から移動したものは、ほかのデバイスからも消えます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive와 관련 있어요. 넣고 빼는 내용이 다른 기기에도 동기화되며, iCloud Drive에서 옮긴 항목은 다른 기기에서도 사라져요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afecta a iCloud Drive: lo que entra y sale se sincroniza con tus otros dispositivos, y lo que saques de iCloud Drive también desaparecerá de ellos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concerne iCloud Drive : les entrées et sorties se synchronisent avec vos autres appareils, et ce qui quitte iCloud Drive disparaît aussi de ces appareils."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betrifft iCloud Drive: Was hinein- oder herausbewegt wird, synchronisiert sich mit deinen anderen Geräten. Was du aus iCloud Drive herausbewegst, verschwindet auch dort."
+          }
+        }
+      }
+    },
+    "涉及 iCloud Drive：复制进去的会上传并同步到你的其他设备。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涉及 iCloud Drive：复制进去的会上传并同步到你的其他设备。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涉及 iCloud Drive：拷貝進去的會上傳並同步到你的其他裝置。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Involves iCloud Drive: anything copied in will be uploaded and synced to your other devices."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive が関係します：コピーしたものはアップロードされ、ほかのデバイスに同期されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive와 관련 있어요. 복사해 넣은 항목은 업로드되어 다른 기기에 동기화돼요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afecta a iCloud Drive: lo que copies se subirá y se sincronizará con tus otros dispositivos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concerne iCloud Drive : ce qui y est copié sera envoyé et synchronisé avec vos autres appareils."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betrifft iCloud Drive: Was hineinkopiert wird, wird hochgeladen und mit deinen anderen Geräten synchronisiert."
+          }
+        }
+      }
+    },
+    "再逐字节核对内容（更慢，适合重要文件）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再逐字节核对内容（更慢，适合重要文件）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再逐位元組核對內容（較慢，適合重要檔案）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also compare contents byte by byte (slower, good for important files)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内容もバイト単位で確認する（時間がかかります。大切なファイル向け）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내용도 바이트 단위로 확인(느리지만 중요한 파일에 적합)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar también el contenido byte a byte (más lento, ideal para archivos importantes)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparer aussi le contenu octet par octet (plus lent, idéal pour les fichiers importants)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inhalt zusätzlich Byte für Byte prüfen (langsamer, gut für wichtige Dateien)"
+          }
+        }
+      }
+    },
+    "还有 %lld 项。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还有 %lld 项。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還有 %lld 項。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "And %lld more."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ほか %lld 項目。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목이 더 있어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Y %lld más."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Et %lld de plus."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Und %lld weitere."
+          }
+        }
+      }
+    },
+    "这 %lld 项不搬：": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这 %lld 项不搬："
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這 %lld 項不搬："
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These %lld items won’t be moved:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次の %lld 項目は移動しません："
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 %lld개 항목은 옮기지 않아요:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estos %lld elementos no se moverán:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ces %lld éléments ne seront pas déplacés :"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese %lld Objekte werden nicht bewegt:"
+          }
+        }
+      }
+    },
+    "那里已经有 %@。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "那里已经有 %@。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "那裡已經有 %@。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is already there."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "そこにはすでに %@ があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그곳에 이미 %@이(가) 있어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya hay %@ ahí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ existe déjà à cet endroit."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist dort schon vorhanden."
+          }
+        }
+      }
+    },
+    "同名的": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同名的"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同名的"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same name"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同じ名前"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "같은 이름"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mismo nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Même nom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gleicher Name"
+          }
+        }
+      }
+    },
+    "两份都留，新的加编号": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "两份都留，新的加编号"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兩份都留，新的加編號"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep both, number the new one"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "両方残し、新しい方に番号を付ける"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "둘 다 남기고 새 항목에 번호 붙이기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar ambos y numerar el nuevo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder les deux et numéroter le nouveau"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beide behalten, das neue nummerieren"
+          }
+        }
+      }
+    },
+    "跳过": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳过"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "略過"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スキップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "건너뛰기"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen"
+          }
+        }
+      }
+    },
+    "替换": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取代"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "置き換える"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대치"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetzen"
+          }
+        }
+      }
+    },
+    "给 %lld 项改名": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "给 %lld 项改名"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "為 %lld 項重新命名"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename %lld items"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 項目の名前を変更"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목 이름 변경"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renombrar %lld elementos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renommer %lld éléments"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Objekte umbenennen"
+          }
+        }
+      }
+    },
+    "前缀，比如 2026-11-": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前缀，比如 2026-11-"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前綴，例如 2026-11-"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prefix, e.g. 2026-11-"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接頭辞（例：2026-11-）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "접두어(예: 2026-11-)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prefijo, p. ej., 2026-11-"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Préfixe, p. ex. 2026-11-"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Präfix, z. B. 2026-11-"
+          }
+        }
+      }
+    },
+    "后缀（放在扩展名前面）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后缀（放在扩展名前面）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "後綴（放在副檔名前面）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suffix (before the extension)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接尾辞（拡張子の前）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "접미어(확장자 앞)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sufijo (antes de la extensión)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suffixe (avant l’extension)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suffix (vor der Endung)"
+          }
+        }
+      }
+    },
+    "改名": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改名"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新命名"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前を変更"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이름 변경"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renombrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renommer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbenennen"
+          }
+        }
+      }
+    },
+    "Cursor、Claude 桌面版等（配置文件）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor、Claude 桌面版等（配置文件）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor、Claude 桌面版等（設定檔）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor, Claude desktop app, etc. (config file)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor、Claude デスクトップ版など（設定ファイル）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor, Claude 데스크톱 앱 등(설정 파일)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor, la app de escritorio de Claude, etc. (archivo de configuración)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor, l’app de bureau Claude, etc. (fichier de configuration)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor, Claude-Desktop-App usw. (Konfigurationsdatei)"
+          }
+        }
+      }
+    },
+    "允许 agent 连接": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许 agent 连接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允許 agent 連接"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow agents to connect"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェントの接続を許可"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트 연결 허용"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir que se conecten agentes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autoriser la connexion des agents"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindung von Agenten erlauben"
+          }
+        }
+      }
+    },
+    "已复制": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拷貝"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コピーしました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복사됨"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copié"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiert"
+          }
+        }
+      }
+    },
+    "Agent（MCP）": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent（MCP）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent（MCP）"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agents (MCP)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エージェント（MCP）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에이전트(MCP)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agentes (MCP)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agents (MCP)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten (MCP)"
+          }
+        }
+      }
+    },
+    "打开后，Claude Code、Codex、Cursor 等可以通过 MCP 让 Adieu 扫描、整理和清理。查看直接可以；移动、改名等改动要 agent 先给你看预览再执行；删除时 Adieu 会弹出清单，必须你亲手点“删除”。只有你这个用户账号能连。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开后，Claude Code、Codex、Cursor 等可以通过 MCP 让 Adieu 扫描、整理和清理。查看直接可以；移动、改名等改动要 agent 先给你看预览再执行；删除时 Adieu 会弹出清单，必须你亲手点“删除”。只有你这个用户账号能连。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟後，Claude Code、Codex、Cursor 等可以透過 MCP 讓 Adieu 掃描、整理和清理。查看可以直接進行；移動、重新命名等改動要 agent 先給你看預覽再執行；刪除時 Adieu 會跳出清單，必須由你親手點「刪除」。只有你這個使用者帳號能連接。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When on, Claude Code, Codex, Cursor and others can have Adieu scan, organize and clean up via MCP. Viewing works right away; changes like moving or renaming need the agent to show you a preview first; for deletions Adieu shows a list, and you must click Delete yourself. Only your user account can connect."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オンにすると、Claude Code、Codex、Cursor などが MCP 経由で Adieu にスキャン、整理、クリーンアップをさせられます。閲覧はそのままできます。移動や名前変更などの変更は、エージェントが先にプレビューを見せてから実行します。削除のときは Adieu が一覧を表示し、あなた自身が「削除」をクリックする必要があります。接続できるのはあなたのユーザアカウントだけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜면 Claude Code, Codex, Cursor 등이 MCP로 Adieu에게 스캔, 정리, 청소를 맡길 수 있어요. 보기는 바로 할 수 있고, 이동이나 이름 변경 같은 변경은 에이전트가 먼저 미리보기를 보여 준 뒤 실행해요. 삭제할 때는 Adieu가 목록을 띄우고, 반드시 직접 ‘삭제’를 눌러야 해요. 지금 사용자 계정만 연결할 수 있어요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al activarlo, Claude Code, Codex, Cursor y otros pueden hacer que Adieu analice, organice y limpie mediante MCP. Consultar funciona directamente; los cambios como mover o renombrar requieren que el agente te muestre antes una vista previa; para eliminar, Adieu muestra una lista y tienes que pulsar Eliminar tú mismo. Solo tu cuenta de usuario puede conectarse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une fois activé, Claude Code, Codex, Cursor et d’autres peuvent demander à Adieu d’analyser, de ranger et de nettoyer via MCP. La consultation fonctionne directement ; les modifications comme déplacer ou renommer exigent que l’agent vous montre d’abord un aperçu ; pour supprimer, Adieu affiche une liste et vous devez cliquer vous-même sur Supprimer. Seul votre compte utilisateur peut se connecter."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn aktiviert, können Claude Code, Codex, Cursor und andere Adieu über MCP scannen, ordnen und aufräumen lassen. Ansehen geht sofort; Änderungen wie Bewegen oder Umbenennen zeigt dir der Agent erst als Vorschau; beim Löschen zeigt Adieu eine Liste, und du musst selbst auf Löschen klicken. Nur dein Benutzeraccount kann sich verbinden."
+          }
+        }
+      }
+    },
+    "iPhone / iPad 备份": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone / iPad 备份"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone / iPad 備份"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone / iPad backups"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone / iPad のバックアップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone / iPad 백업"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copias de seguridad de iPhone / iPad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sauvegardes iPhone / iPad"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone-/iPad-Backups"
+          }
+        }
+      }
+    },
+    "在访达侧边栏点设备 →「管理备份…」，删掉不要的旧备份。不要直接删这个文件夹，备份之间共用文件。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达侧边栏点设备 →「管理备份…」，删掉不要的旧备份。不要直接删这个文件夹，备份之间共用文件。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Finder 側邊欄點選裝置 →「管理備份⋯」，刪掉不要的舊備份。不要直接刪這個資料夾，備份之間共用檔案。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click the device in the Finder sidebar → “Manage Backups…” and delete old backups you don’t need. Don’t delete this folder directly; backups share files."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder のサイドバーでデバイスをクリック →「バックアップを管理…」で、不要な古いバックアップを削除します。バックアップ同士でファイルを共有しているので、このフォルダを直接削除しないでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder 사이드바에서 기기를 클릭 → ‘백업 관리…’에서 필요 없는 이전 백업을 삭제하세요. 백업끼리 파일을 공유하니 이 폴더를 직접 지우지 마세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la barra lateral del Finder, haz clic en el dispositivo → «Gestionar copias de seguridad…» y elimina las copias antiguas que no necesites. No borres esta carpeta directamente: las copias comparten archivos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans la barre latérale du Finder, cliquez sur l’appareil → « Gérer les sauvegardes… » et supprimez les anciennes sauvegardes inutiles. Ne supprimez pas ce dossier directement : les sauvegardes partagent des fichiers."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klicke in der Finder-Seitenleiste auf das Gerät → „Backups verwalten …“ und lösche alte Backups, die du nicht brauchst. Lösche diesen Ordner nicht direkt; die Backups teilen sich Dateien."
+          }
+        }
+      }
+    },
+    "照片图库只在「照片」里管理：打开「照片」→ 设置 → iCloud，选“优化 Mac 储存空间”，原图留在 iCloud；删照片也在「照片」里删。手动动图库会损坏它。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片图库只在「照片」里管理：打开「照片」→ 设置 → iCloud，选“优化 Mac 储存空间”，原图留在 iCloud；删照片也在「照片」里删。手动动图库会损坏它。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片圖庫只在「照片」裡管理：打開「照片」→ 設定 → iCloud，選「最佳化 Mac 儲存空間」，原圖留在 iCloud；刪照片也在「照片」裡刪。手動動圖庫會損壞它。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage the photo library only in Photos: open Photos → Settings → iCloud and choose “Optimize Mac Storage” to keep originals in iCloud. Delete photos in Photos too. Touching the library by hand will damage it."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真ライブラリは「写真」の中だけで管理します：「写真」を開き → 設定 → iCloud で「Mac のストレージを最適化」を選ぶと、オリジナルは iCloud に残ります。写真の削除も「写真」で行います。ライブラリを手動でいじると壊れます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사진 보관함은 ‘사진’ 앱에서만 관리하세요. ‘사진’을 열고 → 설정 → iCloud에서 ‘Mac 저장 공간 최적화’를 선택하면 원본은 iCloud에 남아요. 사진 삭제도 ‘사진’에서 하세요. 보관함을 직접 건드리면 손상돼요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fototeca solo se gestiona en Fotos: abre Fotos → Ajustes → iCloud y elige «Optimizar almacenamiento del Mac» para dejar los originales en iCloud. Las fotos también se borran en Fotos. Tocar la fototeca a mano la daña."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La photothèque se gère uniquement dans Photos : ouvrez Photos → Réglages → iCloud et choisissez « Optimiser le stockage du Mac » pour garder les originaux dans iCloud. Supprimez aussi les photos dans Photos. Modifier la photothèque à la main l’endommage."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Fotomediathek nur in Fotos verwalten: Öffne Fotos → Einstellungen → iCloud und wähle „Mac-Speicher optimieren“, dann bleiben die Originale in iCloud. Fotos auch in Fotos löschen. Manuelle Eingriffe beschädigen die Mediathek."
+          }
+        }
+      }
+    },
+    "Docker 虚拟磁盘": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker 虚拟磁盘"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker 虛擬磁碟"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker virtual disk"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker の仮想ディスク"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker 가상 디스크"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disco virtual de Docker"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disque virtuel Docker"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Virtuelle Docker-Festplatte"
+          }
+        }
+      }
+    },
+    "Docker 的镜像和数据都在里面。用「开发工具」页或 docker image prune、docker builder prune 清；清完没缩小，到 Docker Desktop → 设置 → Resources 调小磁盘上限。不要直接删这个文件，也不要用 docker system prune --volumes（会删数据库卷）。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker 的镜像和数据都在里面。用「开发工具」页或 docker image prune、docker builder prune 清；清完没缩小，到 Docker Desktop → 设置 → Resources 调小磁盘上限。不要直接删这个文件，也不要用 docker system prune --volumes（会删数据库卷）。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker 的映像和資料都在裡面。用「開發工具」頁或 docker image prune、docker builder prune 清理；清完沒縮小的話，到 Docker Desktop → Settings → Resources 調小磁碟上限。不要直接刪這個檔案，也不要用 docker system prune --volumes（會刪資料庫卷）。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker’s images and data live here. Clean up with the Developer tools page or docker image prune and docker builder prune; if it doesn’t shrink afterwards, lower the disk limit in Docker Desktop → Settings → Resources. Don’t delete this file directly, and don’t use docker system prune --volumes (it deletes database volumes)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker のイメージとデータはすべてこの中にあります。「開発ツール」ページか docker image prune、docker builder prune で整理してください。整理しても小さくならない場合は、Docker Desktop → Settings → Resources でディスクの上限を下げます。このファイルを直接削除したり、docker system prune --volumes を使ったりしないでください（データベースのボリュームが消えます）。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docker 이미지와 데이터가 모두 이 안에 있어요. ‘개발 도구’ 페이지나 docker image prune, docker builder prune으로 정리하세요. 정리해도 줄지 않으면 Docker Desktop → Settings → Resources에서 디스크 한도를 낮추세요. 이 파일을 직접 지우지 말고, docker system prune --volumes도 쓰지 마세요(데이터베이스 볼륨이 삭제돼요)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquí están las imágenes y los datos de Docker. Límpialo desde la página Herramientas para desarrolladores o con docker image prune y docker builder prune; si después no se reduce, baja el límite de disco en Docker Desktop → Settings → Resources. No borres este archivo directamente ni uses docker system prune --volumes (elimina los volúmenes de bases de datos)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les images et les données de Docker se trouvent ici. Nettoyez via la page Outils de développement ou avec docker image prune et docker builder prune ; si la taille ne diminue pas ensuite, baissez la limite de disque dans Docker Desktop → Settings → Resources. Ne supprimez pas ce fichier directement et n’utilisez pas docker system prune --volumes (cela supprime les volumes de bases de données)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier liegen die Images und Daten von Docker. Bereinige über die Seite „Entwicklerwerkzeuge“ oder mit docker image prune und docker builder prune; wird sie danach nicht kleiner, senke das Festplattenlimit unter Docker Desktop → Settings → Resources. Lösche diese Datei nicht direkt und nutze nicht docker system prune --volumes (löscht Datenbank-Volumes)."
+          }
+        }
+      }
+    },
+    "邮件": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "邮件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "郵件"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メール"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail"
+          }
+        }
+      }
+    },
+    "大多是邮件和附件的本地副本。在「邮件」里删掉带大附件的旧邮件，或者在账户设置里不下载附件。不要手删这个文件夹。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大多是邮件和附件的本地副本。在「邮件」里删掉带大附件的旧邮件，或者在账户设置里不下载附件。不要手删这个文件夹。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大多是郵件和附件的本機副本。在「郵件」裡刪掉帶大附件的舊郵件，或在帳號設定裡不下載附件。不要手動刪這個資料夾。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostly local copies of emails and attachments. Delete old emails with large attachments in Mail, or turn off attachment downloads in the account settings. Don’t delete this folder by hand."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ほとんどはメールと添付ファイルのローカルコピーです。「メール」で大きな添付ファイル付きの古いメールを削除するか、アカウント設定で添付ファイルをダウンロードしないようにします。このフォルダを手動で削除しないでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대부분 이메일과 첨부 파일의 로컬 사본이에요. ‘Mail’에서 큰 첨부 파일이 있는 오래된 이메일을 지우거나, 계정 설정에서 첨부 파일을 다운로드하지 않도록 하세요. 이 폴더를 직접 지우지 마세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son sobre todo copias locales de correos y adjuntos. Borra en Mail los correos antiguos con adjuntos grandes, o desactiva la descarga de adjuntos en los ajustes de la cuenta. No borres esta carpeta a mano."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surtout des copies locales des e-mails et pièces jointes. Supprimez dans Mail les anciens e-mails avec de grosses pièces jointes, ou désactivez le téléchargement des pièces jointes dans les réglages du compte. Ne supprimez pas ce dossier à la main."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Größtenteils lokale Kopien von E-Mails und Anhängen. Lösche in Mail alte E-Mails mit großen Anhängen oder schalte in den Accounteinstellungen das Laden von Anhängen aus. Lösche diesen Ordner nicht von Hand."
+          }
+        }
+      }
+    },
+    "信息的附件": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信息的附件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "訊息的附件"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages attachments"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メッセージの添付ファイル"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메시지 첨부 파일"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adjuntos de Mensajes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pièces jointes de Messages"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anhänge in Nachrichten"
+          }
+        }
+      }
+    },
+    "在「信息」→ 设置 → 通用里把“保留信息”改成 30 天或 1 年，或在「系统设置 → 通用 → 储存空间 → 信息」里删大附件。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「信息」→ 设置 → 通用里把“保留信息”改成 30 天或 1 年，或在「系统设置 → 通用 → 储存空间 → 信息」里删大附件。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在「訊息」→ 設定 → 一般裡把「保留訊息」改成 30 天或 1 年，或在「系統設定 → 一般 → 儲存空間 → 訊息」裡刪掉大附件。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Messages → Settings → General, set “Keep messages” to 30 Days or 1 Year, or delete large attachments in System Settings → General → Storage → Messages."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「メッセージ」→ 設定 → 一般 で「メッセージを残す」を 30 日または 1 年に変更するか、「システム設定 → 一般 → ストレージ → メッセージ」で大きな添付ファイルを削除します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘메시지’ → 설정 → 일반에서 ‘메시지 보관’을 30일 또는 1년으로 바꾸거나, ‘시스템 설정 → 일반 → 저장 공간 → 메시지’에서 큰 첨부 파일을 지우세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Mensajes → Ajustes → General, cambia «Conservar mensajes» a 30 días o 1 año, o borra los adjuntos grandes en Ajustes del Sistema → General → Almacenamiento → Mensajes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans Messages → Réglages → Général, réglez « Conserver les messages » sur 30 jours ou 1 an, ou supprimez les grosses pièces jointes dans Réglages Système → Général → Stockage → Messages."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stelle in Nachrichten → Einstellungen → Allgemein „Nachrichten behalten“ auf 30 Tage oder 1 Jahr, oder lösche große Anhänge unter Systemeinstellungen → Allgemein → Speicher → Nachrichten."
+          }
+        }
+      }
+    },
+    "乐器和音效素材。不用了就卸载 GarageBand，或在 GarageBand →“声音资源库”里删掉下载的内容。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "乐器和音效素材。不用了就卸载 GarageBand，或在 GarageBand →“声音资源库”里删掉下载的内容。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "樂器和音效素材。不用了就解除安裝 GarageBand，或在 GarageBand →「聲音資料庫」裡刪掉下載的內容。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrument and sound effect content. If you don’t use it, uninstall GarageBand, or delete downloaded content in GarageBand → “Sound Library”."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "楽器と効果音の素材です。使わないなら GarageBand をアンインストールするか、GarageBand →「サウンドライブラリ」でダウンロードしたコンテンツを削除します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "악기와 효과음 소재예요. 쓰지 않으면 GarageBand를 제거하거나, GarageBand → ‘사운드 라이브러리’에서 다운로드한 콘텐츠를 지우세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrumentos y efectos de sonido. Si no los usas, desinstala GarageBand o elimina el contenido descargado en GarageBand → «Biblioteca de sonidos»."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instruments et effets sonores. Si vous ne vous en servez plus, désinstallez GarageBand ou supprimez le contenu téléchargé dans GarageBand → « Bibliothèque de sons »."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrumente und Soundeffekte. Wenn du sie nicht brauchst, deinstalliere GarageBand oder lösche geladene Inhalte unter GarageBand → „Soundbibliothek“."
+          }
+        }
+      }
+    },
+    "乐器和音效素材。在 Logic Pro →“声音资源库”→“管理声音资源库”里删，或移到外接硬盘。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "乐器和音效素材。在 Logic Pro →“声音资源库”→“管理声音资源库”里删，或移到外接硬盘。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "樂器和音效素材。在 Logic Pro →「聲音資料庫」→「管理聲音資料庫」裡刪除，或移到外接硬碟。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrument and sound effect content. Delete it in Logic Pro → “Sound Library” → “Manage Sound Library”, or move it to an external drive."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "楽器と効果音の素材です。Logic Pro →「サウンドライブラリ」→「サウンドライブラリを管理」で削除するか、外付けドライブに移動します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "악기와 효과음 소재예요. Logic Pro → ‘사운드 라이브러리’ → ‘사운드 라이브러리 관리’에서 지우거나 외장 드라이브로 옮기세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrumentos y efectos de sonido. Elimínalos en Logic Pro → «Biblioteca de sonidos» → «Gestionar biblioteca de sonidos», o pásalos a un disco externo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instruments et effets sonores. Supprimez-les dans Logic Pro → « Bibliothèque de sons » → « Gérer la bibliothèque de sons », ou déplacez-les sur un disque externe."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrumente und Soundeffekte. Lösche sie unter Logic Pro → „Soundbibliothek“ → „Soundbibliothek verwalten“ oder bewege sie auf ein externes Laufwerk."
+          }
+        }
+      }
+    },
     "没办成": {
       "localizations": {
         "zh-Hans": {

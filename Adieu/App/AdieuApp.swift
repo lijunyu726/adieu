@@ -80,6 +80,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         HangLog.start()
+        // 设置里打开了“允许 agent 连接”就开本机通道，adieu-mcp 连得上
+        model.agent.apply()
         if UserDefaults.standard.bool(forKey: "AdieuUpdatePreview") {
             UpdatePrompt.preview()
         }
@@ -112,6 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         HistoryStore.flush()
         WorktreeCacheStore.flush()
+        model.agent.stop()
     }
 
     /// 登录项启动时，系统发来的“打开应用”事件里带着 keyAELaunchedAsLogInItem

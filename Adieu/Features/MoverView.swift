@@ -8,7 +8,7 @@ struct MoverView: View {
     var body: some View {
         let mover = model.mover
         VStack(alignment: .leading, spacing: 14) {
-            PageHeader(.mover, subtitle: "在这台 Mac 和外接硬盘之间搬文件。跨盘移动先复制、核对无误再删原件。") {
+            PageHeader(.mover, subtitle: "在这台 Mac、iCloud Drive 和外接硬盘之间搬文件。跨盘移动先复制、核对无误再删原件。") {
                 RecentMoves()
                 Button("刷新") { mover.refreshPlaces(); mover.left.reload(); mover.right.reload() }
                     .disabled(mover.busy)
@@ -81,6 +81,8 @@ private struct PaneView: View {
     @Bindable var pane: MoverPane
     @State private var naming: Naming?
     @State private var name = ""
+    @State private var batch: [FolderItem] = []
+    @State private var dropping = false
 
     private enum Naming: Equatable { case folder, rename(FolderItem) }
 
@@ -90,12 +92,11 @@ private struct PaneView: View {
             Menu {
                 ForEach(mover.places) { place in
                     Button { mover.choose(place, for: pane) } label: {
-                        Label(place.name, systemImage: place.kind == .home ? "laptopcomputer" : "externaldrive")
+                        Label(place.name, systemImage: place.symbol)
                     }
                 }
             } label: {
-                Label(pane.place?.name ?? String(localized: "选择位置"),
-                      systemImage: pane.place?.kind == .volume ? "externaldrive" : "laptopcomputer")
+                Label(pane.place?.name ?? String(localized: "选择位置"), systemImage: pane.place?.symbol ?? "laptopcomputer")
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
@@ -121,9 +122,14 @@ private struct PaneView: View {
                 Button("新建文件夹") { name = String(localized: "未命名文件夹"); naming = .folder }
                     .disabled(pane.folder == nil || pane.place?.readOnly == true || mover.busy)
                 Button("重命名") {
-                    if let item = pane.chosen.first { name = item.name; naming = .rename(item) }
+                    if pane.chosen.count > 1 {
+                        batch = pane.chosen
+                    } else if let item = pane.chosen.first {
+                        name = item.url.lastPathComponent
+                        naming = .rename(item)
+                    }
                 }
-                .disabled(pane.chosen.count != 1 || pane.place?.readOnly == true || mover.busy)
+                .disabled(pane.chosen.isEmpty || pane.place?.readOnly == true || mover.busy)
                 Spacer()
                 if !pane.chosen.isEmpty {
                     Text("已选 \(pane.chosen.count) 项").font(.caption).foregroundStyle(.secondary)
@@ -133,6 +139,26 @@ private struct PaneView: View {
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .card()
+        .overlay {
+            if dropping {
+                RoundedRectangle(cornerRadius: 12).strokeBorder(Color.accentColor, lineWidth: 2)
+            }
+        }
+        // 拖进来：从另一栏拖的，那一栏选中的一起搬；也接受访达拖来的
+        .dropDestination(for: URL.self) { urls, _ in
+            guard let folder = pane.folder, pane.place?.readOnly != true else { return false }
+            let source = mover.other(than: pane)
+            let chosen = source.chosen.map(\.url)
+            let items = urls.count == 1 && chosen.contains(urls[0]) ? chosen : urls
+            mover.prepare(.move, items: items, to: folder)
+            return true
+        } isTargeted: { dropping = $0 }
+        .sheet(isPresented: Binding(get: { !batch.isEmpty }, set: { if !$0 { batch = [] } })) {
+            BatchRename(items: batch) { prefix, suffix in
+                mover.batchRename(batch, in: pane, prefix: prefix, suffix: suffix)
+                batch = []
+            } cancel: { batch = [] }
+        }
         .alert(naming == .folder ? String(localized: "新建文件夹") : String(localized: "重命名"),
                isPresented: Binding(get: { naming != nil }, set: { if !$0 { naming = nil } })) {
             TextField("名称", text: $name)
@@ -185,6 +211,7 @@ private struct PaneView: View {
             List(pane.shown, selection: $pane.selection) { item in
                 HStack(spacing: 8) {
                     FileIcon(path: item.url.path, folder: item.isFolder, size: 20)
+                        .opacity(item.isDataless ? 0.5 : 1)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(item.name).lineLimit(1).truncationMode(.middle)
                         if let detail = item.detail {
@@ -192,12 +219,17 @@ private struct PaneView: View {
                         }
                     }
                     Spacer()
+                    if item.isDataless {
+                        Image(systemName: "icloud.and.arrow.down").font(.caption).foregroundStyle(.secondary)
+                            .help(Text("只在云端，还没下载到这台 Mac"))
+                    }
                     if item.isLink { Image(systemName: "arrow.turn.up.right").font(.caption).foregroundStyle(.secondary) }
                     if let size = item.size {
                         Text(FileMover.Refusal.bytes(size)).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                     }
                 }
                 .tag(item.id)
+                .draggable(item.url)
             }
             .contextMenu(forSelectionType: FolderItem.ID.self) { ids in
                 if ids.count == 1, let item = pane.shown.first(where: { ids.contains($0.id) }) {
@@ -215,10 +247,13 @@ private struct PaneView: View {
     }
 }
 
-/// 确认窗口：要搬什么、去哪、跨不跨盘、重名怎么处理
+/// 确认窗口：要搬什么、去哪、跨不跨盘、哪些不搬、重名怎么处理
 private struct MoveConfirm: View {
     @Environment(AppModel.self) private var model
-    let plan: FileMover.Plan
+    @State private var plan: FileMover.Plan
+    @State private var confirmingReplace = false
+
+    init(plan: FileMover.Plan) { _plan = State(initialValue: plan) }
 
     var body: some View {
         let mover = model.mover
@@ -237,24 +272,104 @@ private struct MoveConfirm: View {
                       : String(localized: "共 \(plan.files) 个文件、\(FileMover.Refusal.bytes(plan.bytes))。复制完会核对文件数和大小。"),
                       systemImage: "externaldrive")
                     .fixedSize(horizontal: false, vertical: true)
+                Toggle("再逐字节核对内容（更慢，适合重要文件）", isOn: $plan.verifyContents)
             } else {
                 Label("在同一块盘里移动，只改位置，瞬间完成。", systemImage: "bolt")
             }
-            if !plan.conflicts.isEmpty {
-                Label("那里已经有 \(plan.conflicts.joined(separator: "、"))。两份都保留，新来的名字后面加编号。",
-                      systemImage: "doc.on.doc")
-                    .foregroundStyle(.orange)
+            if plan.touchesCloud {
+                Label(plan.mode == .move
+                      ? String(localized: "涉及 iCloud Drive：移进移出会同步到你的其他设备，从 iCloud Drive 移走的，其他设备上也就没有了。")
+                      : String(localized: "涉及 iCloud Drive：复制进去的会上传并同步到你的其他设备。"),
+                      systemImage: "icloud")
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            if !plan.skipped.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("这 \(plan.skipped.count) 项不搬：", systemImage: "minus.circle")
+                    ForEach(plan.skipped.prefix(5), id: \.self) { skip in
+                        Text("\(skip.name)：\(skip.reason)").font(.callout).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if plan.skipped.count > 5 {
+                        Text("还有 \(plan.skipped.count - 5) 项。").font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                .foregroundStyle(.orange)
+            }
+            if !plan.conflicts.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("那里已经有 \(plan.conflicts.joined(separator: "、"))。", systemImage: "doc.on.doc")
+                        .fixedSize(horizontal: false, vertical: true)
+                    Picker("同名的", selection: $plan.conflict) {
+                        Text("两份都留，新的加编号").tag(FileMover.Conflict.keepBoth)
+                        Text("跳过").tag(FileMover.Conflict.skip)
+                        Text("替换").tag(FileMover.Conflict.replace)
+                    }
+                    .pickerStyle(.radioGroup)
+                }
             }
             HStack {
                 Spacer()
                 Button("取消") { mover.pending = nil }.keyboardShortcut(.cancelAction)
-                Button(plan.mode == .move ? "移动" : "复制") { Task { await mover.run(plan) } }
-                    .keyboardShortcut(.defaultAction)
+                Button(plan.mode == .move ? "移动" : "复制") {
+                    if plan.conflict == .replace && !plan.conflicts.isEmpty {
+                        confirmingReplace = true
+                    } else {
+                        let p = plan
+                        Task { await mover.run(p) }
+                    }
+                }
+                .keyboardShortcut(.defaultAction)
             }
         }
         .padding(24)
-        .frame(width: 460)
+        .frame(width: 480)
+        .alert("替换那里原有的 \(plan.conflicts.count) 项？", isPresented: $confirmingReplace) {
+            Button("取消", role: .cancel) {}
+            Button("替换", role: .destructive) {
+                let p = plan
+                Task { await mover.run(p) }
+            }
+        } message: {
+            Text("原有的会被直接删除，不进废纸篓，撤销也找不回来。")
+        }
+    }
+}
+
+/// 多选后改名：统一加前缀、后缀（后缀放在扩展名前面）
+private struct BatchRename: View {
+    let items: [FolderItem]
+    let apply: (String, String) -> Void
+    let cancel: () -> Void
+    @State private var prefix = ""
+    @State private var suffix = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("给 \(items.count) 项改名").font(.title3.bold())
+            TextField("前缀，比如 2026-11-", text: $prefix).textFieldStyle(.roundedBorder)
+            TextField("后缀（放在扩展名前面）", text: $suffix).textFieldStyle(.roundedBorder)
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(items.prefix(5)) { item in
+                    Text(FileMover.batchName(item.url.lastPathComponent, prefix: prefix, suffix: suffix, isFolder: item.isFolder))
+                        .lineLimit(1).truncationMode(.middle)
+                }
+                if items.count > 5 { Text("…").foregroundStyle(.secondary) }
+            }
+            .font(.callout)
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
+            HStack {
+                Spacer()
+                Button("取消", action: cancel).keyboardShortcut(.cancelAction)
+                Button("改名") { apply(prefix, suffix) }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(prefix.isEmpty && suffix.isEmpty)
+            }
+        }
+        .padding(24)
+        .frame(width: 420)
     }
 }
 

@@ -15,6 +15,7 @@ struct FileMoverTests {
         let base = URL(filePath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "scratch/mover-test-" + UUID().uuidString)
         try fm.createDirectory(at: base, withIntermediateDirectories: true)
+        MoveLog.override = base.appending(path: "moves.json")
         let apfs = try attach(base, name: "AdieuMoveTest", fs: "APFS")
         let fat = try attach(base, name: "ADIEUFAT", fs: "MS-DOS FAT32")
         defer {
@@ -83,6 +84,41 @@ struct FileMoverTests {
         try write(src.appending(path: "bad/a?b.txt"), "q")
         try expectRefusal { try FileMover.plan([src.appending(path: "bad")], to: fat, mode: .copy, places: places, protected: []) }
         try check(!FileMover.validName("x.", fsType: "msdos") && FileMover.validName("x.", fsType: "apfs"), "FAT 不认结尾的点")
+
+        // 6b. 一批里只有部分放不进：放不进的列出来，其余照搬
+        try write(src.appending(path: "good.txt"), "g")
+        plan = try FileMover.plan([src.appending(path: "bad"), src.appending(path: "good.txt")], to: fat, mode: .copy, places: places, protected: [])
+        try check(plan.items.map(\.lastPathComponent) == ["good.txt"] && plan.skipped.map(\.name) == ["bad"], "只跳过放不进的：\(plan.skipped)")
+
+        // 6c. 同名：跳过、替换（同盘移动和跨盘复制各一次），逐字节核对
+        try write(here.appending(path: "dup.txt"), "old")
+        try write(src.appending(path: "dup.txt"), "new!")
+        plan = try FileMover.plan([src.appending(path: "dup.txt")], to: here, mode: .move, places: places, protected: [])
+        plan.conflict = .skip
+        out = FileMover.run(plan, protected: [], progress: noop, cancelled: { false })
+        try check(out.skipped == ["dup.txt"] && FileMover.exists(src.appending(path: "dup.txt")), "跳过同名")
+        plan.conflict = .replace
+        out = FileMover.run(plan, protected: [], progress: noop, cancelled: { false })
+        try check(out.failed.isEmpty && (try String(contentsOf: here.appending(path: "dup.txt"), encoding: .utf8)) == "new!"
+                  && !FileMover.exists(src.appending(path: "dup.txt")), "同盘替换：\(out.failed)")
+        try check(try fm.contentsOfDirectory(atPath: here.path).allSatisfy { !$0.hasPrefix(".adieu-moving") }, "替换后不留临时文件")
+        try write(apfs.appending(path: "dup.txt"), "older")
+        plan = try FileMover.plan([here.appending(path: "dup.txt")], to: apfs, mode: .copy, places: places, protected: [])
+        plan.conflict = .replace
+        plan.verifyContents = true
+        out = FileMover.run(plan, protected: [], progress: noop, cancelled: { false })
+        try check(out.failed.isEmpty && (try String(contentsOf: apfs.appending(path: "dup.txt"), encoding: .utf8)) == "new!", "跨盘替换并逐字节核对")
+        try check(try FileMover.sameContents(moved, here.appending(path: "项目 v1.2")), "内容一致")
+        try write(here.appending(path: "x1.txt"), "aaaa")
+        try write(here.appending(path: "x2.txt"), "aaab")
+        try check(!(try FileMover.sameContents(here.appending(path: "x1.txt"), here.appending(path: "x2.txt"))), "同样大小内容不同能认出来")
+
+        // 6d. 批量改名的名字；iCloud Drive 的保护名单只放开包住整个 iCloud Drive 的那条
+        try check(FileMover.batchName("a.tar.gz", prefix: "1-", suffix: "-b", isFolder: false) == "1-a.tar-b.gz", "后缀放在扩展名前")
+        try check(FileMover.batchName("v1.2", prefix: "", suffix: " 旧", isFolder: true) == "v1.2 旧", "文件夹不拆扩展名")
+        let cloudInside = FileMover.cloudRoot + "/重要"
+        try check(FileMover.cloudProtected(["~/Library/Mobile Documents", "~/.ssh", cloudInside]) == ["~/.ssh", cloudInside], "iCloud 保护名单")
+        try check(FileMover.inCloud(cloudInside + "/a") && !FileMover.inCloud(FileMover.cloudRoot), "认出 iCloud 里面")
 
         // 7. 改名：只改大小写也行，重名拒绝
         try write(here.appending(path: "abc.txt"), "c")

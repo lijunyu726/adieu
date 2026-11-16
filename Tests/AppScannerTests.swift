@@ -99,6 +99,18 @@ struct AppScannerTests {
             precondition(fm.fileExists(atPath: home.appending(path: String(part.path.dropFirst(2))).path), "Shared data must remain after deleting the default selection")
         }
         precondition(fm.fileExists(atPath: keep.path), "A symlink must never pull its unrelated target into deletion")
+        // UUID 命名的容器按里面记的标识符认主
+        let lib = URL(filePath: NSTemporaryDirectory()).appending(path: "adieu-container-" + UUID().uuidString)
+        let uuid = UUID().uuidString
+        let box = lib.appending(path: "Containers/\(uuid)")
+        try FileManager.default.createDirectory(at: box, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: lib.appending(path: "Containers/com.plain.App"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: lib) }
+        let meta = try PropertyListSerialization.data(fromPropertyList: ["MCMMetadataIdentifier": "tv.danmaku.bilianime"], format: .binary, options: 0)
+        try meta.write(to: box.appending(path: ".com.apple.containermanagerd.metadata.plist"))
+        precondition(ContainerOwner.isUUID(uuid) && !ContainerOwner.isUUID("com.plain.App"))
+        precondition(ContainerOwner.bundleID(of: box) == "tv.danmaku.bilianime")
+        precondition(ContainerOwner.uuidContainers(library: lib) == ["tv.danmaku.bilianime": uuid], "UUID container owner")
         print("App scanner tests passed: embedded IDs, scripts, shared ownership, symlink boundaries, stable deduplication, leftovers, signed app groups and deletion of the default selection.")
     }
 
@@ -170,6 +182,13 @@ struct AppScannerTests {
         precondition(browser.filesByFolder["Projects/Empty"] == nil)
         precondition(browser.nearestFolder(to: "Projects/Removed/Deep")?.relativePath == "Projects")
         precondition(browser.nearestFolder(to: "Missing")?.relativePath == "")
+        // 文件夹的本机占用含各层子文件夹，根是全部之和
+        let sized = CloudDriveScan(files: [
+            .init(url: folder.appending(path: "a"), relativePath: "a", state: .downloadableCopy, allocatedBytes: 1, identity: "1"),
+            .init(url: folder.appending(path: "Projects/b"), relativePath: "Projects/b", state: .downloadableCopy, allocatedBytes: 10, identity: "2"),
+            .init(url: folder.appending(path: "Projects/Deep/c"), relativePath: "Projects/Deep/c", state: .retainedCopy, allocatedBytes: 100, identity: "3"),
+        ], unreadable: 0)
+        precondition(sized.folderBytes["Projects/Deep"] == 100 && sized.folderBytes["Projects"] == 110 && sized.allocatedBytes == 111)
 
         let backup = root.appending(path: "old-cloud-organization")
         try fm.moveItem(at: folder, to: backup)

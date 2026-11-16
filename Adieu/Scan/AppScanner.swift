@@ -152,7 +152,9 @@ enum AppScanner {
 
     /// 以 Bundle ID 命名、只属于这个应用的位置（相对 ~/Library）
     private static func dataLocations(for id: String) -> [(String, String, String)] {
-        [("container", String(localized: "沙盒数据"), "Containers/\(id)"),
+        // iPhone/iPad 应用的容器常以 UUID 命名，按容器里记的标识符认回来
+        let container = ContainerOwner.uuidContainers()[id].map { "Containers/\($0)" } ?? "Containers/\(id)"
+        return [("container", String(localized: "沙盒数据"), container),
          ("support", String(localized: "应用支持文件"), "Application Support/\(id)"),
          ("caches", String(localized: "缓存"), "Caches/\(id)"),
          ("http", String(localized: "网络缓存"), "HTTPStorages/\(id)"),

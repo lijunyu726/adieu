@@ -1,9 +1,9 @@
 import AppKit
 import Foundation
 
-/// 搬家页左右两栏能选的位置：这台 Mac（主目录）和插着的外接硬盘
+/// 搬家页左右两栏能选的位置：这台 Mac（主目录）、iCloud Drive 和插着的外接硬盘
 struct Place: Identifiable, Hashable, Sendable {
-    enum Kind: Sendable { case home, volume }
+    enum Kind: Sendable { case home, cloud, volume }
 
     let root: URL
     let name: String
@@ -19,6 +19,14 @@ struct Place: Identifiable, Hashable, Sendable {
     let ejectable: Bool
 
     var id: String { root.path }
+
+    var symbol: String {
+        switch kind {
+        case .home: "laptopcomputer"
+        case .cloud: "icloud"
+        case .volume: "externaldrive"
+        }
+    }
 
     /// 格式带来的限制，界面上写在位置名下面
     var limitNote: String? {
@@ -38,6 +46,8 @@ enum Places {
         var result: [Place] = []
         let home = fm.homeDirectoryForCurrentUser
         if let mac = info(home, kind: .home, name: String(localized: "这台 Mac")) { result.append(mac) }
+        let cloud = CloudDriveScanner.root
+        if fm.fileExists(atPath: cloud.path), let drive = info(cloud, kind: .cloud, name: "iCloud Drive") { result.append(drive) }
         let keys: [URLResourceKey] = [.volumeNameKey, .volumeIsInternalKey, .volumeIsRootFileSystemKey]
         let volumes = fm.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) ?? []
         for url in volumes where url.path.hasPrefix("/Volumes/") {
@@ -63,7 +73,7 @@ enum Places {
         let type = statfs(url.path, &fs) == 0
             ? withUnsafeBytes(of: fs.f_fstypename) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) } : ""
         // 系统盘的可用空间按“重要用途”算，跟访达显示的一致（含可清除空间）
-        let free = kind == .home ? values.volumeAvailableCapacityForImportantUsage ?? values.volumeAvailableCapacity.map(Int64.init)
+        let free = kind != .volume ? values.volumeAvailableCapacityForImportantUsage ?? values.volumeAvailableCapacity.map(Int64.init)
                                  : values.volumeAvailableCapacity.map(Int64.init)
         return Place(root: url.standardizedFileURL, name: name, kind: kind,
                      total: values.volumeTotalCapacity.map(Int64.init), free: free,
@@ -82,6 +92,8 @@ struct FolderItem: Identifiable, Hashable, Sendable {
     /// 文件的大小（字节）；文件夹不算，太慢
     let size: Int64?
     let modified: Date?
+    /// 只在云端、还没下载到这台 Mac
+    var isDataless = false
     /// 搜索结果里显示相对路径
     var detail: String? = nil
 
@@ -117,8 +129,11 @@ enum FolderListing {
         let folder = v.isDirectory == true && v.isPackage != true && v.isSymbolicLink != true
         // 文件夹用访达里的名字（“Desktop”显示成“桌面”）；文件不用，免得隐藏了扩展名
         let name = folder ? FileManager.default.displayName(atPath: url.path) : url.lastPathComponent
+        var info = stat()
+        let dataless = lstat(url.path, &info) == 0 && info.st_flags & FileMover.datalessFlag != 0
         return FolderItem(url: url, name: name, isFolder: folder, isLink: v.isSymbolicLink == true,
-                          size: folder ? nil : v.fileSize.map(Int64.init), modified: v.contentModificationDate)
+                          size: folder ? nil : v.fileSize.map(Int64.init), modified: v.contentModificationDate,
+                          isDataless: dataless)
     }
 
     private static func order(_ a: FolderItem, _ b: FolderItem) -> Bool {

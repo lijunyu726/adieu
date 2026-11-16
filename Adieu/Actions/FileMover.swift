@@ -44,20 +44,43 @@ enum FileMover {
         static func bytes(_ n: Int64) -> String { ByteCountFormatter.string(fromByteCount: n, countStyle: .file) }
     }
 
+    /// 目标里已有同名项目时怎么办
+    enum Conflict: String, Codable, Sendable, CaseIterable {
+        /// 两份都留，新来的加编号
+        case keepBoth
+        /// 这一项不搬
+        case skip
+        /// 删掉那里原有的，换成新的（界面上要单独确认）
+        case replace
+    }
+
+    struct Skip: Hashable, Sendable {
+        let name: String
+        let reason: String
+    }
+
     /// 预检的结果，确认窗口照着它显示
     struct Plan: Sendable {
         let mode: Mode
+        /// 要搬的（预检时放不进目标盘的已经去掉，列在 skipped 里）
         let items: [URL]
         let destination: URL
-        /// 有项目要跨盘（复制一律算）
+        /// 有项目要真正复制（复制，或跨盘移动）
         let crossVolume: Bool
         /// 要复制的总字节和文件数（同盘移动不算）
         let bytes: Int64
         let files: Int
-        /// 目标里已经有同名的：会保留两份，新的自动加编号
+        /// 目标里已经有同名的
         let conflicts: [String]
+        /// 预检时就知道放不进去、不搬的
+        let skipped: [Skip]
         /// 预检时每项的身份，执行前再核对一次，变了就不动
         let identities: [String: String]
+        /// 原件或目标在 iCloud Drive 里：改动会同步到你的其他设备
+        let touchesCloud: Bool
+        var conflict = Conflict.keepBoth
+        /// 复制后逐字节核对内容（更慢）；默认只核对文件数和大小
+        var verifyContents = false
     }
 
     struct Progress: Sendable {
@@ -69,6 +92,8 @@ enum FileMover {
     struct Outcome: Sendable {
         var done: [MoveRecord.Pair] = []
         var failed: [MoveRecord.Failure] = []
+        /// 因为同名选了“跳过”而没搬的
+        var skipped: [String] = []
         var cancelled = false
     }
 
@@ -85,12 +110,32 @@ enum FileMover {
         return u.deletingLastPathComponent().resolvingSymlinksInPath().appending(path: u.lastPathComponent).path
     }
 
-    /// 能搬、能改名的：主目录里文件夹里面的东西（资源库除外），外接硬盘上的东西。
+    static var cloudRoot: String { CloudDriveScanner.root.standardizedFileURL.path }
+
+    /// 在 iCloud Drive 里面（不含根本身）
+    static func inCloud(_ path: String) -> Bool { path.hasPrefix(cloudRoot + "/") }
+    static func inCloud(_ url: URL) -> Bool { inCloud(real(url)) }
+
+    /// 保护名单默认含 ~/Library/Mobile Documents（防的是误删）。搬家页明确选了 iCloud Drive 时，
+    /// 包住整个 iCloud Drive 的那几条不算数，iCloud Drive 里面单独保护的照样生效
+    static func cloudProtected(_ protected: [String]) -> [String] {
+        let root = cloudRoot
+        return protected.filter { raw in
+            let p = URL(filePath: (raw as NSString).expandingTildeInPath).standardizedFileURL.path
+            return !(root == p || root.hasPrefix(p + "/"))
+        }
+    }
+
+    /// 能搬、能改名的：主目录里文件夹里面的东西（资源库除外）、iCloud Drive 里的东西、外接硬盘上的东西。
     /// 和 TrashService.check 的范围一致，所以跨盘移动最后删原件时不会被拦
     static func checkSource(_ url: URL, protected: [String]) throws {
         let path = real(url)
         var info = stat()
         guard lstat(path, &info) == 0 else { throw Refusal.changed(url.lastPathComponent) }
+        if inCloud(path) {
+            if TrashService.isProtected(path, protected: cloudProtected(protected)) { throw TrashService.Refusal.protected(path) }
+            return
+        }
         if TrashService.isProtected(path, protected: protected) {
             throw TrashService.Refusal.protected(path)
         }
@@ -102,15 +147,19 @@ enum FileMover {
                                                : String(localized: "资源库里的东西是应用自己用的，不能搬。"))
         }
         if parts.first == "Volumes", parts.count >= 3 { return }
-        throw Refusal.source(String(localized: "只能搬主目录和外接硬盘上的东西。"))
+        throw Refusal.source(String(localized: "只能搬主目录、iCloud Drive 和外接硬盘上的东西。"))
     }
 
-    /// 能放东西进去的文件夹：主目录里的文件夹（资源库除外），外接硬盘上任何文件夹
+    /// 能放东西进去的文件夹：主目录里的文件夹（资源库除外）、iCloud Drive、外接硬盘上任何文件夹
     static func checkDestination(_ folder: URL, protected: [String]) throws {
         let path = folder.standardizedFileURL.resolvingSymlinksInPath().path
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
             throw Refusal.changed(folder.lastPathComponent)
+        }
+        if path == cloudRoot || inCloud(path) {
+            if TrashService.isProtected(path, protected: cloudProtected(protected)) { throw TrashService.Refusal.protected(path) }
+            return
         }
         if TrashService.isProtected(path, protected: protected) { throw TrashService.Refusal.protected(path) }
         let parts = path.split(separator: "/").map(String.init)
@@ -121,7 +170,7 @@ enum FileMover {
                                                   : String(localized: "资源库是应用自己用的，不能往里放东西。"))
         }
         if parts.first == "Volumes", parts.count >= 2 { return }
-        throw Refusal.destination(String(localized: "只能放到主目录和外接硬盘上。"))
+        throw Refusal.destination(String(localized: "只能放到主目录、iCloud Drive 和外接硬盘上。"))
     }
 
     /// fsType 为目标盘的文件系统：FAT32、exFAT 不认 \ * ? " < > | 这些字符，也不认结尾的空格和点
@@ -136,6 +185,9 @@ enum FileMover {
         return true
     }
 
+    /// 只在云端、还没下载到这台 Mac 的文件（iCloud、OneDrive 等的占位文件）
+    static let datalessFlag: UInt32 = 0x4000_0000
+
     // MARK: 预检
 
     static func plan(_ items: [URL], to destination: URL, mode: Mode, places: [Place], protected: [String]) throws -> Plan {
@@ -143,25 +195,32 @@ enum FileMover {
         let target = Places.containing(destination, in: places)
         if target?.readOnly == true { throw Refusal.readOnly }
         let fsType = target?.fsType ?? "apfs"
-        let destPath = destination.standardizedFileURL.path
+        let destPath = destination.standardizedFileURL.resolvingSymlinksInPath().path
+        let destCloud = destPath == cloudRoot || inCloud(destPath)
         let destDevice = device(destination)
-        var bytes: Int64 = 0, files = 0, cross = false
-        var conflicts: [String] = [], problems: [String] = [], identities: [String: String] = [:]
+        var bytes: Int64 = 0, files = 0, cross = false, cloud = destCloud
+        var kept: [URL] = [], conflicts: [String] = [], skipped: [Skip] = [], identities: [String: String] = [:]
         for item in items {
             try checkSource(item, protected: protected)
             let path = item.standardizedFileURL.path
-            if destPath == path || destPath.hasPrefix(path + "/") { throw Refusal.intoItself(item.lastPathComponent) }
-            if item.deletingLastPathComponent().standardizedFileURL.path == destPath { throw Refusal.sameFolder }
-            identities[path] = TrashService.fileIdentity(at: item)
-            if exists(destination.appending(path: item.lastPathComponent)) { conflicts.append(item.lastPathComponent) }
-            guard mode == .copy || device(item) != destDevice else { continue }
-            cross = true
-            // 跨盘：数一遍要复制多少，顺便查目标盘放不放得下
+            let name = item.lastPathComponent
+            if destPath == real(item) || destPath.hasPrefix(real(item) + "/") { throw Refusal.intoItself(name) }
+            if item.deletingLastPathComponent().standardizedFileURL.resolvingSymlinksInPath().path == destPath { throw Refusal.sameFolder }
+            let sourceCloud = inCloud(item)
+            cloud = cloud || sourceCloud
+            let copying = mode == .copy || device(item) != destDevice
+            // 要读内容（复制），或者要把文件从 iCloud 里拿出来，占位文件就不行
+            let needsData = copying || (sourceCloud && !destCloud)
+            var problems: [String] = []
+            var itemBytes: Int64 = 0, itemFiles = 0
             walk(item) { url, info in
-                let kind = info.st_mode & S_IFMT
-                if kind == S_IFREG {
-                    files += 1
-                    bytes += Int64(info.st_size)
+                if needsData && info.st_flags & datalessFlag != 0 {
+                    problems.append(String(localized: "“\(url.lastPathComponent)”还没下载到这台 Mac，先在访达里下载。"))
+                }
+                guard copying else { return }
+                if info.st_mode & S_IFMT == S_IFREG {
+                    itemFiles += 1
+                    itemBytes += Int64(info.st_size)
                     if fsType == "msdos" && info.st_size > 0xFFFF_FFFF {
                         problems.append(String(localized: "“\(url.lastPathComponent)”超过 4 GB，FAT32 格式的盘放不下。"))
                     }
@@ -170,13 +229,26 @@ enum FileMover {
                     problems.append(String(localized: "“\(url.lastPathComponent)”的名字在这块盘上不能用（含 \\ * ? \" < > | 或以空格、点结尾）。"))
                 }
             }
+            if let first = problems.first {
+                let more = problems.count > 1 ? String(localized: "（另有 \(problems.count - 1) 处同样的问题）") : ""
+                skipped.append(Skip(name: name, reason: first + more))
+                continue
+            }
+            kept.append(item)
+            identities[path] = TrashService.fileIdentity(at: item)
+            if exists(destination.appending(path: name)) { conflicts.append(name) }
+            if copying {
+                cross = true
+                bytes += itemBytes
+                files += itemFiles
+            }
         }
-        if !problems.isEmpty { throw Refusal.problems(Array(problems.prefix(20))) }
+        if kept.isEmpty { throw Refusal.problems(skipped.prefix(20).map { $0.reason }) }
         // 留点余量免得把盘写满：大盘留 200 MB，小 U 盘按容量的 2% 留
         let margin = min(200_000_000, (target?.total ?? 0) / 50)
         if cross, let free = target?.free, free < bytes + margin { throw Refusal.noSpace(need: bytes, free: free) }
-        return Plan(mode: mode, items: items, destination: destination, crossVolume: cross, bytes: bytes, files: files,
-                    conflicts: conflicts, identities: identities)
+        return Plan(mode: mode, items: kept, destination: destination, crossVolume: cross, bytes: bytes, files: files,
+                    conflicts: conflicts, skipped: skipped, identities: identities, touchesCloud: cloud)
     }
 
     // MARK: 执行
@@ -194,26 +266,43 @@ enum FileMover {
                 out.failed.append(.init(path: item.path, reason: Refusal.changed(name).localizedDescription))
                 continue
             }
-            let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: item.path)) != nil
+            let clash = exists(plan.destination.appending(path: name))
+            if clash && plan.conflict == .skip {
+                out.skipped.append(name)
+                continue
+            }
+            let replacing = clash && plan.conflict == .replace
             do {
                 if plan.mode == .move && device(item) == destDevice {
                     // 同一块盘：直接改登记，瞬间完成
-                    let target = try renameIntoPlace(item, in: plan.destination, name: name)
+                    let target: URL
+                    if replacing {
+                        // 先挪到临时名字，旧的删掉了再改成正式名字；删不掉就挪回来
+                        let temp = plan.destination.appending(path: ".adieu-moving-\(UUID().uuidString.prefix(8))-\(name)")
+                        try coordinatedRename(item, to: temp, flags: UInt32(RENAME_EXCL))
+                        do {
+                            try removeExisting(plan.destination.appending(path: name), protected: protected)
+                            target = plan.destination.appending(path: name)
+                            try coordinatedRename(temp, to: target, flags: UInt32(RENAME_EXCL))
+                        } catch {
+                            try? coordinatedRename(temp, to: item, flags: UInt32(RENAME_EXCL))
+                            throw error
+                        }
+                    } else {
+                        target = try renameIntoPlace(item, in: plan.destination, name: name)
+                    }
                     out.done.append(.init(from: item.path, to: target.path, identity: TrashService.fileIdentity(at: target)))
                     continue
                 }
-                let target = try copyIntoPlace(item, in: plan.destination, name: name, copier: copier, protected: protected)
+                let target = try copyIntoPlace(item, in: plan.destination, name: name, copier: copier,
+                                               replacing: replacing, verifyContents: plan.verifyContents, protected: protected)
                 let pair = MoveRecord.Pair(from: item.path, to: target.path, identity: TrashService.fileIdentity(at: target))
                 if plan.mode == .move {
                     // 核对过了才删原件
-                    let deletion = TrashService.delete([item], protected: protected, symbolicLinkOnly: isLink)
-                    if let failure = deletion.failed.first {
-                        out.failed.append(.init(path: item.path, reason: String(localized: "已复制到 \(target.path)，但原件没删掉：\(failure.reason)")))
-                        out.done.append(.init(from: item.path, to: target.path, identity: pair.identity, copied: true))
-                        continue
-                    }
-                    if !deletion.needsAdmin.isEmpty {
-                        out.failed.append(.init(path: item.path, reason: String(localized: "已复制到 \(target.path)，但没有权限删原件。")))
+                    do {
+                        try removeOriginal(item, protected: protected)
+                    } catch {
+                        out.failed.append(.init(path: item.path, reason: String(localized: "已复制到 \(target.path)，但原件没删掉：\(error.localizedDescription)")))
                         out.done.append(.init(from: item.path, to: target.path, identity: pair.identity, copied: true))
                         continue
                     }
@@ -233,37 +322,139 @@ enum FileMover {
     private static func renameIntoPlace(_ item: URL, in folder: URL, name: String) throws -> URL {
         for _ in 0..<3 {
             let target = folder.appending(path: uniqueName(name, in: folder, isFolder: isFolder(item)))
-            if renamex_np(item.path, target.path, UInt32(RENAME_EXCL)) == 0 { return target }
-            if errno != EEXIST { throw posixError(item) }
+            do {
+                try coordinatedRename(item, to: target, flags: UInt32(RENAME_EXCL))
+                return target
+            } catch let error as NSError where error.domain == NSPOSIXErrorDomain && error.code == Int(EEXIST) {
+                continue
+            }
         }
         throw Refusal.conflict(name)
     }
 
+    /// 改名或同盘移动。涉及 iCloud Drive 时通过文件协调告诉 iCloud（PR #7 的做法），否则直接改
+    static func coordinatedRename(_ source: URL, to target: URL, flags: UInt32) throws {
+        func move() throws {
+            guard renamex_np(source.path, target.path, flags) == 0 else { throw posixError(source) }
+        }
+        guard inCloud(source) || inCloud(target) else { return try move() }
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        var coordinationError: NSError?
+        var operationError: (any Error)?
+        coordinator.coordinate(writingItemAt: source, options: .forMoving, writingItemAt: target, options: [],
+                               error: &coordinationError) { from, to in
+            do {
+                guard from.path == source.path, to.path == target.path else { throw Refusal.changed(source.lastPathComponent) }
+                coordinator.item(at: from, willMoveTo: to)
+                try move()
+                coordinator.item(at: from, didMoveTo: to)
+            } catch {
+                operationError = error
+            }
+        }
+        if let coordinationError { throw coordinationError }
+        if let operationError { throw operationError }
+    }
+
+    /// 删掉一项（跨盘移动后的原件、复制失败的临时文件、要被替换的旧文件）。都走 TrashService，
+    /// iCloud Drive 里的用放宽过的保护名单，并通过文件协调删除
+    static func remove(_ url: URL, protected: [String]) throws {
+        let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+        func remove() throws {
+            let result = TrashService.delete([url], protected: inCloud(url) ? cloudProtected(protected) : protected,
+                                             symbolicLinkOnly: isLink)
+            if let failure = result.failed.first { throw Refusal.source(failure.reason) }
+            if !result.needsAdmin.isEmpty { throw Refusal.source(String(localized: "没有权限删除“\(url.lastPathComponent)”。")) }
+        }
+        guard inCloud(url) else { return try remove() }
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        var coordinationError: NSError?
+        var operationError: (any Error)?
+        coordinator.coordinate(writingItemAt: url, options: .forDeleting, error: &coordinationError) { _ in
+            do { try remove() } catch { operationError = error }
+        }
+        if let coordinationError { throw coordinationError }
+        if let operationError { throw operationError }
+    }
+
+    private static func removeOriginal(_ item: URL, protected: [String]) throws { try remove(item, protected: protected) }
+    private static func removeExisting(_ item: URL, protected: [String]) throws { try remove(item, protected: protected) }
+
     /// 复制到临时名字 → 核对 → 改成正式名字。出任何问题都把临时的删掉，原件不动
-    private static func copyIntoPlace(_ item: URL, in folder: URL, name: String, copier: Copier, protected: [String]) throws -> URL {
+    private static func copyIntoPlace(_ item: URL, in folder: URL, name: String, copier: Copier, replacing: Bool,
+                                      verifyContents: Bool, protected: [String]) throws -> URL {
         let temp = folder.appending(path: ".adieu-moving-\(UUID().uuidString.prefix(8))-\(name)")
         Pending.add(temp)
         do {
             // 同一块 APFS 盘上复制：先试克隆，瞬间完成、不占额外空间
             if device(item) == device(folder), clonefile(item.path, temp.path, UInt32(CLONE_NOFOLLOW)) == 0 {
                 copier.advance(by: summary(item).bytes, current: name)
+            } else if inCloud(item) {
+                try coordinatedRead(item) { try copier.copy($0, to: temp) }
             } else {
                 try copier.copy(item, to: temp)
             }
-            let (a, b) = (summary(item), summary(temp))
-            guard a == b else { throw Refusal.verify(name) }
-            let target = try renameIntoPlace(temp, in: folder, name: name)
+            guard summary(item) == summary(temp) else { throw Refusal.verify(name) }
+            if verifyContents {
+                copier.note(String(localized: "核对 \(name)"))
+                guard try sameContents(item, temp, cancelled: copier.isCancelled) else { throw Refusal.verify(name) }
+            }
+            let target: URL
+            if replacing {
+                try removeExisting(folder.appending(path: name), protected: protected)
+                target = folder.appending(path: name)
+                try coordinatedRename(temp, to: target, flags: UInt32(RENAME_EXCL))
+            } else {
+                target = try renameIntoPlace(temp, in: folder, name: name)
+            }
             Pending.remove(temp)
             return target
         } catch {
-            let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: temp.path)) != nil
             if exists(temp) {
-                let cleanup = TrashService.delete([temp], protected: protected, symbolicLinkOnly: isLink)
-                if cleanup.failed.isEmpty && cleanup.needsAdmin.isEmpty { Pending.remove(temp) }
+                if (try? remove(temp, protected: protected)) != nil { Pending.remove(temp) }
             } else {
                 Pending.remove(temp)
             }
             throw error
+        }
+    }
+
+    private static func coordinatedRead(_ url: URL, _ work: (URL) throws -> Void) throws {
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        var coordinationError: NSError?
+        var operationError: (any Error)?
+        coordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &coordinationError) { u in
+            do { try work(u) } catch { operationError = error }
+        }
+        if let coordinationError { throw coordinationError }
+        if let operationError { throw operationError }
+    }
+
+    /// 两边的每个普通文件逐字节比较（两份结构已经核对过一致）
+    static func sameContents(_ a: URL, _ b: URL, cancelled: () -> Bool = { false }) throws -> Bool {
+        var info = stat()
+        guard lstat(a.path, &info) == 0 else { return false }
+        switch info.st_mode & S_IFMT {
+        case S_IFDIR:
+            for child in try FileManager.default.contentsOfDirectory(atPath: a.path) {
+                guard try sameContents(a.appending(path: child), b.appending(path: child), cancelled: cancelled) else { return false }
+            }
+            return true
+        case S_IFREG:
+            guard let x = FileHandle(forReadingAtPath: a.path), let y = FileHandle(forReadingAtPath: b.path) else { return false }
+            defer { try? x.close(); try? y.close() }
+            while true {
+                if cancelled() { throw Refusal.cancelled }
+                let p = try x.read(upToCount: 4 << 20) ?? Data()
+                let q = try y.read(upToCount: 4 << 20) ?? Data()
+                guard p == q else { return false }
+                if p.isEmpty { return true }
+            }
+        case S_IFLNK:
+            return (try? FileManager.default.destinationOfSymbolicLink(atPath: a.path))
+                == (try? FileManager.default.destinationOfSymbolicLink(atPath: b.path))
+        default:
+            return true
         }
     }
 
@@ -276,11 +467,16 @@ enum FileMover {
         guard target.path != item.path else { throw Refusal.sameFolder }
         // 只改大小写时目标“已存在”的就是它自己
         let caseOnly = TrashService.fileIdentity(at: target) == TrashService.fileIdentity(at: item)
-        guard renamex_np(item.path, target.path, caseOnly ? 0 : UInt32(RENAME_EXCL)) == 0 else {
-            if errno == EEXIST { throw Refusal.conflict(name) }
-            throw posixError(item)
-        }
+        if !caseOnly && exists(target) { throw Refusal.conflict(name) }
+        try coordinatedRename(item, to: target, flags: caseOnly ? 0 : UInt32(RENAME_EXCL))
         return .init(from: item.path, to: target.path, identity: TrashService.fileIdentity(at: target))
+    }
+
+    /// 批量改名的新名字：加前缀、加后缀（放在扩展名前面）
+    static func batchName(_ name: String, prefix: String, suffix: String, isFolder: Bool) -> String {
+        let ext = isFolder ? "" : (name as NSString).pathExtension
+        let base = ext.isEmpty ? name : (name as NSString).deletingPathExtension
+        return prefix + base + suffix + (ext.isEmpty ? "" : "." + ext)
     }
 
     static func createFolder(named name: String, in folder: URL, fsType: String, protected: [String]) throws -> MoveRecord.Pair {
@@ -367,6 +563,13 @@ private final class Copier {
         self.progress = .init(total: total)
         report = progress
         self.cancelled = cancelled
+    }
+
+    var isCancelled: () -> Bool { cancelled }
+
+    func note(_ text: String) {
+        progress.current = text
+        report(progress)
     }
 
     func advance(by bytes: Int64, current: String) {
@@ -484,7 +687,9 @@ struct MoveRecord: Identifiable, Codable, Sendable {
 }
 
 enum MoveLog {
-    private static var file: URL { HistoryStore.folder.appending(path: "moves.json") }
+    /// 测试指向临时文件，免得写进用户真实的“最近”
+    nonisolated(unsafe) static var override: URL?
+    private static var file: URL { override ?? HistoryStore.folder.appending(path: "moves.json") }
 
     static func load() -> [MoveRecord] {
         guard let data = try? Data(contentsOf: file) else { return [] }
@@ -493,7 +698,7 @@ enum MoveLog {
 
     /// 只留最近 50 次
     static func save(_ records: [MoveRecord]) {
-        try? FileManager.default.createDirectory(at: HistoryStore.folder, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
         if let data = try? JSONEncoder().encode(Array(records.prefix(50))) { try? data.write(to: file, options: .atomic) }
     }
 }
