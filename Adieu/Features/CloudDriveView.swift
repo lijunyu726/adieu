@@ -2,67 +2,82 @@ import SwiftUI
 
 struct CloudDriveView: View {
     @Environment(AppModel.self) private var model
+    @State private var folderPath = ""
     @State private var selected: Set<CloudDriveFile.ID> = []
     @State private var confirming = false
     @State private var showOnlineOnly = true
     @State private var search = ""
+    @State private var sort: Sort = .name
     @State private var editor: CloudDriveEditor.Mode?
 
+    private enum Sort: Hashable {
+        case name, size
+    }
+
     var body: some View {
-        let files = model.cloudDrive?.files ?? []
-        let folders = model.cloudDrive?.folders ?? []
+        let scan = model.cloudDrive
+        let folder = scan?.nearestFolder(to: folderPath)
+        let path = folder?.relativePath ?? ""
         let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
-        let visible = files.filter {
+        let searching = !query.isEmpty
+        let folders = searching
+            ? (scan?.folders ?? []).filter { $0.relativePath.localizedCaseInsensitiveContains(query) }
+            : scan?.foldersByParent[path] ?? []
+        let scope = searching ? scan?.files ?? [] : scan?.filesByFolder[path] ?? []
+        let filtered = scope.filter {
             (showOnlineOnly || $0.state != .onlineOnly) &&
-                (query.isEmpty || $0.relativePath.localizedCaseInsensitiveContains(query))
+                (!searching || $0.relativePath.localizedCaseInsensitiveContains(query))
         }
-        let chosen = visible.filter { selected.contains($0.id) }
+        let files = sort == .size ? filtered : filtered.sorted {
+            let order = $0.name.localizedStandardCompare($1.name)
+            if order == .orderedSame { return $0.relativePath < $1.relativePath }
+            return order == .orderedAscending
+        }
+        let selectable = files.filter(\.canOrganize)
+        let chosen = selectable.filter { selected.contains($0.id) }
         let downloads = chosen.filter(\.canEvict)
-        let canOrganize = !model.cloudDriveBusy && !model.useSample
-        let canOrganizeSelection = canOrganize && !chosen.isEmpty && chosen.allSatisfy(\.canOrganize)
+        let canEdit = !model.cloudDriveBusy && !model.useSample
+
         VStack(alignment: .leading, spacing: 16) {
             PageHeader(.cloudDrive, subtitle: "整理云端文件，查看它们在这台 Mac 上占用的空间。") {
                 Button("刷新") { Task { await model.loadCloudDrive() } }
                     .disabled(model.cloudDriveBusy)
             }
 
-            if let scan = model.cloudDrive {
-                TextField("搜索文件名或路径", text: $search)
-                    .textFieldStyle(.roundedBorder)
+            if let scan {
+                HStack(spacing: 12) {
+                    TextField("搜索整个 iCloud Drive", text: $search)
+                        .textFieldStyle(.roundedBorder)
+                    Picker("排序方式", selection: $sort) {
+                        Text("按名称").tag(Sort.name)
+                        Text("按本机占用").tag(Sort.size)
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                }
                 HStack {
-                    Text("已扫描文件的本机占用 \(size(scan.allocatedBytes))")
-                        .font(.headline)
+                    if searching {
+                        Text("全盘搜索结果").font(.headline)
+                    } else {
+                        CloudDrivePathBar(path: path, open: openFolder)
+                    }
                     Spacer()
                     Toggle("显示仅在云端的文件", isOn: $showOnlineOnly)
+                        .fixedSize()
                 }
                 if scan.unreadable > 0 {
                     Label("有 \(scan.unreadable) 项无法读取，统计可能不完整。", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.secondary)
                 }
-                if visible.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView(showOnlineOnly ? String(localized: "没有找到 iCloud Drive 文件")
-                                               : String(localized: "没有本机下载的文件"), systemImage: "icloud")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
+                if !folders.isEmpty || !files.isEmpty {
+                    fileList(folders: folders, files: files, searching: searching, canEdit: canEdit)
+                } else if searching {
+                    ContentUnavailableView.search(text: query)
                 } else {
-                    List(visible) { file in
-                        HStack(spacing: 12) {
-                            Toggle(isOn: Binding(get: { selected.contains(file.id) }, set: {
-                                if $0 { selected.insert(file.id) } else { selected.remove(file.id) }
-                            })) { Text(file.relativePath) }
-                                .labelsHidden()
-                                .disabled((!file.canEvict && !file.canOrganize) || model.cloudDriveBusy)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(file.relativePath).lineLimit(1).truncationMode(.middle)
-                                    .help(file.relativePath)
-                                Text(file.state.title).font(.caption).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Text(size(file.allocatedBytes)).monospacedDigit().foregroundStyle(.secondary)
-                        }
-                    }
+                    ContentUnavailableView(
+                        showOnlineOnly ? String(localized: "此文件夹为空") : String(localized: "没有本机下载的文件"),
+                        systemImage: "folder"
+                    )
                 }
             } else if let error = model.cloudDriveError {
                 ContentUnavailableView("无法读取 iCloud Drive", systemImage: "icloud.slash", description: Text(error))
@@ -72,36 +87,40 @@ struct CloudDriveView: View {
             }
 
             Spacer(minLength: 0)
-            if let result = model.cloudDriveRemoval {
-                if !result.removed.isEmpty {
-                    Text("已移除 \(result.removed.count) 项下载。").foregroundStyle(.secondary)
-                }
-                failures(result.failed, title: String(localized: "有 \(result.failed.count) 项未移除"))
-            }
-            if let result = model.cloudDriveOrganization {
-                if result.completed > 0 {
-                    Text("已整理 \(result.completed) 项。").foregroundStyle(.secondary)
-                }
-                failures(result.failed, title: String(localized: "有 \(result.failed.count) 项未整理"))
-            }
+            operationResults
             HStack {
-                if model.cloudDriveBusy && model.cloudDrive != nil { ProgressView().controlSize(.small) }
-                Button("新建文件夹…") { editor = .createFolder }
-                    .disabled(!canOrganize || folders.isEmpty)
-                Button("重命名…") {
-                    if let file = chosen.first { editor = .rename(file) }
+                if model.cloudDriveBusy && scan != nil { ProgressView().controlSize(.small) }
+                if !selectable.isEmpty {
+                    let all = selectable.count == chosen.count
+                    Button(all ? String(localized: "取消全选") : String(localized: "全选可整理文件")) {
+                        selected = all ? [] : Set(selectable.map(\.id))
+                    }
+                    .disabled(!canEdit)
                 }
-                .disabled(!canOrganizeSelection || chosen.count != 1)
-                Button("移动到…") { editor = .move(chosen) }
-                    .disabled(!canOrganizeSelection || folders.isEmpty)
                 Spacer()
-                if !chosen.isEmpty {
+                if scan != nil && chosen.isEmpty {
+                    Text("当前列表的本机占用 \(size(files.reduce(0) { $0 + $1.allocatedBytes }))")
+                        .foregroundStyle(.secondary)
+                } else if !chosen.isEmpty {
                     Text("已选 \(chosen.count) 项 · \(size(chosen.reduce(0) { $0 + $1.allocatedBytes }))")
                         .foregroundStyle(.secondary)
                 }
+            }
+            HStack {
+                Button("新建文件夹…") {
+                    if let folder { editor = .createFolder(folder) }
+                }
+                .disabled(!canEdit || folder == nil || searching)
+                Button("重命名…") {
+                    if let file = chosen.first { editor = .rename(file) }
+                }
+                .disabled(!canEdit || chosen.count != 1)
+                Button("移动到…") { editor = .move(chosen) }
+                    .disabled(!canEdit || chosen.isEmpty || scan?.folders.isEmpty != false)
+                Spacer()
                 Button("移除下载…") { confirming = true }
                     .buttonStyle(.borderedProminent)
-                    .disabled(downloads.isEmpty || !canOrganize)
+                    .disabled(downloads.isEmpty || !canEdit)
             }
         }
         .padding(32)
@@ -109,13 +128,20 @@ struct CloudDriveView: View {
             if model.cloudDrive == nil { await model.loadCloudDrive() }
         }
         .onChange(of: model.cloudDriveBusy) { _, busy in
-            if !busy { selected.removeAll() }
+            if !busy {
+                selected.removeAll()
+                if let scan = model.cloudDrive {
+                    folderPath = scan.nearestFolder(to: folderPath)?.relativePath ?? ""
+                }
+            }
         }
         .onChange(of: search) { selected.removeAll() }
         .onChange(of: showOnlineOnly) { selected.removeAll() }
         .sheet(item: $editor) { mode in
-            CloudDriveEditor(mode: mode, folders: folders) { change in
-                Task { await model.organizeCloudDrive(change) }
+            if let scan {
+                CloudDriveEditor(mode: mode, scan: scan, startPath: path) { change in
+                    Task { await model.organizeCloudDrive(change) }
+                }
             }
         }
         .alert("移除 iCloud Drive 下载？", isPresented: $confirming, presenting: downloads) { files in
@@ -123,6 +149,78 @@ struct CloudDriveView: View {
             Button("取消", role: .cancel) {}
         } message: { files in
             Text("将移除此 Mac 上的 \(files.count) 项下载。文件仍保存在 iCloud Drive 中，需要时可以重新下载。")
+        }
+    }
+
+    private func openFolder(_ path: String) {
+        folderPath = path
+        search = ""
+        selected.removeAll()
+    }
+
+    private func fileList(folders: [CloudDriveFolder], files: [CloudDriveFile], searching: Bool, canEdit: Bool) -> some View {
+        List {
+            if !folders.isEmpty {
+                Section("文件夹") {
+                    ForEach(folders) { folder in
+                        CloudDriveFolderRow(folder: folder, showPath: searching) { openFolder(folder.relativePath) }
+                    }
+                }
+            }
+            if !files.isEmpty {
+                Section("文件") {
+                    ForEach(files) { file in
+                        HStack(spacing: 12) {
+                            Toggle(isOn: Binding(get: { selected.contains(file.id) }, set: {
+                                if $0 { selected.insert(file.id) } else { selected.remove(file.id) }
+                            })) { Text(file.relativePath) }
+                                .labelsHidden()
+                                .disabled(!file.canOrganize || !canEdit)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(file.name).lineLimit(1).truncationMode(.middle)
+                                if searching {
+                                    Button(file.parentPath.isEmpty ? "iCloud Drive" : file.parentPath) {
+                                        openFolder(file.parentPath)
+                                    }
+                                    .buttonStyle(.link)
+                                    .font(.caption)
+                                    .lineLimit(1).truncationMode(.middle)
+                                    .help("前往所在文件夹")
+                                }
+                                Text(file.state.title).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(size(file.allocatedBytes)).monospacedDigit().foregroundStyle(.secondary)
+                        }
+                        .help(file.relativePath)
+                        .contextMenu {
+                            if searching {
+                                Button("前往所在文件夹") { openFolder(file.parentPath) }
+                            }
+                            Button("重命名…") { editor = .rename(file) }
+                                .disabled(!file.canOrganize || !canEdit)
+                            Button("移动到…") { editor = .move([file]) }
+                                .disabled(!file.canOrganize || !canEdit)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var operationResults: some View {
+        if let result = model.cloudDriveRemoval {
+            if !result.removed.isEmpty {
+                Text("已移除 \(result.removed.count) 项下载。").foregroundStyle(.secondary)
+            }
+            failures(result.failed, title: String(localized: "有 \(result.failed.count) 项未移除"))
+        }
+        if let result = model.cloudDriveOrganization {
+            if result.completed > 0 {
+                Text("已整理 \(result.completed) 项。").foregroundStyle(.secondary)
+            }
+            failures(result.failed, title: String(localized: "有 \(result.failed.count) 项未整理"))
         }
     }
 
@@ -144,13 +242,89 @@ struct CloudDriveView: View {
     }
 
     private func size(_ bytes: Int) -> String {
-        ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+        guard bytes > 0 else { return "0 B" }
+        return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+    }
+}
+
+private struct CloudDrivePathBar: View {
+    let path: String
+    let open: (String) -> Void
+
+    var body: some View {
+        let components = path.split(separator: "/")
+        HStack(spacing: 8) {
+            Button {
+                open(CloudDriveScan.parent(of: path))
+            } label: {
+                Label("返回上一级文件夹", systemImage: "chevron.up")
+                    .labelStyle(.iconOnly)
+            }
+            .help("返回上一级文件夹")
+            .disabled(path.isEmpty)
+
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    if path.isEmpty {
+                        Text("iCloud Drive").fontWeight(.semibold)
+                    } else {
+                        Button("iCloud Drive") { open("") }
+                        ForEach(components.indices, id: \.self) { index in
+                            Image(systemName: "chevron.right").font(.caption2)
+                                .foregroundStyle(.secondary).accessibilityHidden(true)
+                            if index == components.count - 1 {
+                                Text(components[index]).fontWeight(.semibold)
+                            } else {
+                                Button(String(components[index])) {
+                                    open(components.prefix(index + 1).joined(separator: "/"))
+                                }
+                            }
+                        }
+                    }
+                }
+                .buttonStyle(.link)
+            }
+            .defaultScrollAnchor(.trailing, for: .initialOffset)
+            .defaultScrollAnchor(.leading, for: .alignment)
+            .scrollIndicators(.hidden)
+        }
+        .help(path.isEmpty ? "iCloud Drive" : path)
+    }
+}
+
+private struct CloudDriveFolderRow: View {
+    let folder: CloudDriveFolder
+    let showPath: Bool
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            HStack {
+                Label {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(folder.name)
+                        if showPath && !folder.parentPath.isEmpty {
+                            Text(folder.parentPath).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .lineLimit(1).truncationMode(.middle)
+                } icon: {
+                    Image(systemName: "folder.fill").foregroundStyle(.blue)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption)
+                    .foregroundStyle(.secondary).accessibilityHidden(true)
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .help(folder.relativePath)
     }
 }
 
 private struct CloudDriveEditor: View {
     enum Mode: Identifiable {
-        case createFolder, rename(CloudDriveFile), move([CloudDriveFile])
+        case createFolder(CloudDriveFolder), rename(CloudDriveFile), move([CloudDriveFile])
 
         var id: String {
             switch self {
@@ -171,29 +345,36 @@ private struct CloudDriveEditor: View {
 
     @Environment(\.dismiss) private var dismiss
     let mode: Mode
-    let folders: [CloudDriveFolder]
+    let scan: CloudDriveScan
+    let startPath: String
     let apply: (CloudDriveOrganization.Change) -> Void
     @State private var name = ""
-    @State private var folderID: CloudDriveFolder.ID?
+    @State private var folderPath = ""
     @State private var search = ""
 
     var body: some View {
-        let folder = folders.first { $0.id == folderID }
+        let target = scan.folder(at: folderPath)
+        let change = change(target: target)
         VStack(alignment: .leading, spacing: 14) {
             Text(mode.title).font(.title2.bold())
             switch mode {
-            case .createFolder:
+            case .createFolder(let folder):
+                Text("目标文件夹 \(folderTitle(folder))").foregroundStyle(.secondary)
                 TextField("文件夹名称", text: $name)
-                folderList
             case .rename(let file):
                 Text(file.relativePath).foregroundStyle(.secondary)
                 TextField("文件名称", text: $name)
             case .move(let files):
-                Text("要移动 \(files.count) 个文件").foregroundStyle(.secondary)
+                let count = target.map { target in files.filter { $0.parentPath != target.relativePath }.count } ?? files.count
+                if count == 0 {
+                    Text("请选择其他文件夹。").foregroundStyle(.secondary)
+                } else {
+                    Text("要移动 \(count) 个文件").foregroundStyle(.secondary)
+                }
                 folderList
-            }
-            if let folder {
-                Text("目标文件夹 \(folderTitle(folder))").foregroundStyle(.secondary)
+                if let target {
+                    Text("目标文件夹 \(folderTitle(target))").foregroundStyle(.secondary)
+                }
             }
             Text("更改会同步到使用同一 Apple 账户的设备。").font(.callout).foregroundStyle(.secondary)
             HStack {
@@ -201,56 +382,64 @@ private struct CloudDriveEditor: View {
                 Button("取消", role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button(mode.title) {
-                    if let change = change(folder: folder) {
+                    if let change {
                         dismiss()
                         apply(change)
                     }
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(change(folder: folder) == nil)
+                .disabled(change == nil)
             }
         }
         .padding(24)
         .frame(width: 500)
         .onAppear {
-            switch mode {
-            case .rename(let file): name = file.url.lastPathComponent
-            case .createFolder: folderID = folders.first { $0.relativePath.isEmpty }?.id
-            case .move: break
-            }
+            if case .rename(let file) = mode { name = file.name }
+            folderPath = scan.nearestFolder(to: startPath)?.relativePath ?? ""
         }
     }
 
     private var folderList: some View {
-        let visible = folders.filter { search.isEmpty || folderTitle($0).localizedCaseInsensitiveContains(search) }
+        let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+        let visible = query.isEmpty ? scan.foldersByParent[folderPath] ?? []
+            : scan.folders.filter { folderTitle($0).localizedCaseInsensitiveContains(query) }
         return VStack(alignment: .leading, spacing: 8) {
             TextField("搜索目标文件夹", text: $search)
-            List(visible, selection: $folderID) { folder in
-                Label(folderTitle(folder), systemImage: "folder")
-                    .lineLimit(1).truncationMode(.middle)
-                    .help(folderTitle(folder))
-                    .tag(folder.id)
+            CloudDrivePathBar(path: folderPath, open: openFolder)
+            List(visible) { folder in
+                CloudDriveFolderRow(folder: folder, showPath: !query.isEmpty) { openFolder(folder.relativePath) }
+            }
+            .overlay {
+                if visible.isEmpty {
+                    Text(query.isEmpty ? String(localized: "没有子文件夹") : String(localized: "没有匹配的文件夹"))
+                        .foregroundStyle(.secondary)
+                }
             }
             .frame(height: 220)
         }
+    }
+
+    private func openFolder(_ path: String) {
+        folderPath = path
+        search = ""
     }
 
     private func folderTitle(_ folder: CloudDriveFolder) -> String {
         folder.relativePath.isEmpty ? String(localized: "iCloud Drive 根目录") : folder.relativePath
     }
 
-    private func change(folder: CloudDriveFolder?) -> CloudDriveOrganization.Change? {
+    private func change(target: CloudDriveFolder?) -> CloudDriveOrganization.Change? {
         switch mode {
-        case .createFolder:
-            guard let folder, CloudDriveOrganization.validName(name) else { return nil }
+        case .createFolder(let folder):
+            guard CloudDriveOrganization.validName(name) else { return nil }
             return .createFolder(name: name, in: folder)
         case .rename(let file):
-            guard name != file.url.lastPathComponent, CloudDriveOrganization.validName(name) else { return nil }
+            guard name != file.name, CloudDriveOrganization.validName(name) else { return nil }
             return .rename(file, name: name)
         case .move(let files):
-            guard let folder, files.contains(where: { $0.url.deletingLastPathComponent().path != folder.url.path })
-            else { return nil }
-            return .move(files, to: folder)
+            guard let target else { return nil }
+            let moving = files.filter { $0.parentPath != target.relativePath }
+            return moving.isEmpty ? nil : .move(moving, to: target)
         }
     }
 }
