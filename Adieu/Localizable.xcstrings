@@ -1,6 +1,58 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "“%@”的名字 FAT32、exFAT 格式的盘不认（不能含 \\ / : * ? \" < > |，不能以空格、点结尾）。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”的名字 FAT32、exFAT 格式的盘不认（不能含 \\ / : * ? \" < > |，不能以空格、点结尾）。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」的名稱 FAT32、exFAT 格式的磁碟不接受（不能含 \\ / : * ? \" < > |，不能以空格、句點結尾）。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” has a name that FAT32 and exFAT disks don’t accept (no \\ / : * ? \" < > |, and it can’t end with a space or a period)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「%@」の名前は FAT32・exFAT のディスクでは使えません（\\ / : * ? \" < > | を含めず、空白やピリオドで終わらない名前にしてください）。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”의 이름은 FAT32·exFAT 디스크에서 쓸 수 없습니다(\\ / : * ? \" < > | 불가, 공백이나 마침표로 끝날 수 없음)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los discos FAT32 y exFAT no aceptan el nombre de “%@” (sin \\ / : * ? \" < > |, ni terminar en espacio o punto)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les disques FAT32 et exFAT n’acceptent pas le nom de « %@ » (pas de \\ / : * ? \" < > |, ni d’espace ou de point à la fin)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FAT32- und exFAT-Volumes akzeptieren den Namen von „%@“ nicht (kein \\ / : * ? \" < > |, kein Leerzeichen oder Punkt am Ende)."
+          }
+        }
+      }
+    },
     "常用位置": {
       "localizations": {
         "zh-Hans": {
@@ -7277,58 +7329,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%@“ ist größer als 4 GB und passt nicht auf ein FAT32-Laufwerk."
-          }
-        }
-      }
-    },
-    "“%@”的名字在这块盘上不能用（含 \\ * ? \" < > | 或以空格、点结尾）。": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "“%@”的名字在这块盘上不能用（含 \\ * ? \" < > | 或以空格、点结尾）。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「%@」的名稱在這個磁碟上不能用（含 \\ * ? \" < > | 或以空格、點結尾）。"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The name “%@” isn't allowed on this disk (it contains \\ * ? \" < > | or ends with a space or period)."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「%@」という名前はこのディスクでは使えません（\\ * ? \" < > | を含むか、空白やピリオドで終わっています）。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "“%@” 이름은 이 디스크에서 쓸 수 없습니다(\\ * ? \" < > |를 포함하거나 공백·마침표로 끝남)."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El nombre “%@” no se admite en este disco (contiene \\ * ? \" < > | o termina en espacio o punto)."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le nom « %@ » n'est pas autorisé sur ce disque (il contient \\ * ? \" < > | ou se termine par une espace ou un point)."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Name „%@“ ist auf diesem Laufwerk nicht erlaubt (enthält \\ * ? \" < > | oder endet mit Leerzeichen oder Punkt)."
           }
         }
       }

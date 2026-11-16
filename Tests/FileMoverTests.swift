@@ -153,6 +153,13 @@ struct FileMoverTests {
                                     protected: [apfs.appending(path: "keep").path])
         try check(!FileMover.exists(apfs.appending(path: "gone")) && gone.done.count == 1, "删掉外接盘上的文件夹")
         try check(FileMover.exists(apfs.appending(path: "keep/k.txt")) && gone.failed.count == 1, "保护名单里的不删")
+        // 10b. 已有的名字：APFS 上带冒号、星号的照样能放，FAT32 不行
+        try check(FileMover.fits("a:b*c.png", fsType: "apfs") && !FileMover.fits("a:b*c.png", fsType: "msdos"), "已有名字按目标格式判断")
+        try check(!FileMover.fits("x.", fsType: "exfat") && FileMover.fits(".hidden", fsType: "apfs"), "FAT 不认点结尾")
+        try write(src.appending(path: "odd/图 4-81：.r:*列表.png"), "o")
+        let odd = try FileMover.plan([src.appending(path: "odd")], to: apfs, mode: .copy, places: places, protected: [])
+        try check(odd.skipped.isEmpty && odd.items.count == 1, "APFS 目标不跳过带冒号的文件")
+
         // 11. 常用位置：加入、取消；盘不在了就打不开
         let fav = MoverModel()
         fav.refreshPlaces()

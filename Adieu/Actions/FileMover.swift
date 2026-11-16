@@ -185,6 +185,15 @@ enum FileMover {
         return true
     }
 
+    /// 已有的文件、文件夹搬过去名字能不能用。和 `validName`（检查你新起的名字）不同：
+    /// APFS、HFS+ 上本来就存在的名字（含 `:` `*` 等）原样能放，只有 FAT32、exFAT 不认一些字符
+    static func fits(_ name: String, fsType: String) -> Bool {
+        guard ["msdos", "exfat"].contains(fsType) else { return true }
+        if name.rangeOfCharacter(from: CharacterSet(charactersIn: "\\/:*?\"<>|")) != nil { return false }
+        if name.rangeOfCharacter(from: .controlCharacters) != nil { return false }
+        return !(name.hasSuffix(" ") || name.hasSuffix(".")) && name.utf16.count <= 255
+    }
+
     /// 只在云端、还没下载到这台 Mac 的文件（iCloud、OneDrive 等的占位文件）
     static let datalessFlag: UInt32 = 0x4000_0000
 
@@ -225,8 +234,11 @@ enum FileMover {
                         problems.append(String(localized: "“\(url.lastPathComponent)”超过 4 GB，FAT32 格式的盘放不下。"))
                     }
                 }
-                if !validName(url.lastPathComponent, fsType: fsType) && url.lastPathComponent.first != "." {
-                    problems.append(String(localized: "“\(url.lastPathComponent)”的名字在这块盘上不能用（含 \\ * ? \" < > | 或以空格、点结尾）。"))
+                if !fits(url.lastPathComponent, fsType: fsType) {
+                    // 写出在这一项里的位置，深层的文件也找得到
+                    let inside = url.path.dropFirst(item.path.count).drop { $0 == "/" }
+                    let shown = inside.isEmpty ? name : name + "/" + inside
+                    problems.append(String(localized: "“\(shown)”的名字 FAT32、exFAT 格式的盘不认（不能含 \\ / : * ? \" < > |，不能以空格、点结尾）。"))
                 }
             }
             if let first = problems.first {
