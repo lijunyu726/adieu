@@ -25,8 +25,12 @@ struct AdieuApp: App {
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                     model.didBecomeActive()
                 }
+                // 已有主窗口时，adieu:// 链接（小组件）交给它，不再开第二个
+                .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
         }
         .defaultSize(width: 1280, height: 820)
+        // 没有主窗口时（只在菜单栏），adieu:// 链接开一个
+        .handlesExternalEvents(matching: ["*"])
         .commands {
             CommandGroup(after: .appInfo) {
                 Button("显示欢迎页") { model.showOnboarding = true }

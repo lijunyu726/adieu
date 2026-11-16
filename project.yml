@@ -39,6 +39,10 @@ targets:
         LSApplicationCategoryType: public.app-category.utilities
         LSMinimumSystemVersion: "26.0"
         NSHumanReadableCopyright: "Adieu"
+        # 小组件点开用 adieu://open
+        CFBundleURLTypes:
+          - CFBundleURLName: com.ljy.adieu
+            CFBundleURLSchemes: [adieu]
         NSAppleEventsUsageDescription: "Adieu 要通过“系统事件”列出“登录时打开”的应用，你关掉哪个它才能帮你关。不会控制别的东西。"
     settings:
       base:

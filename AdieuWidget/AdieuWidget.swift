@@ -177,6 +177,8 @@ struct AdieuWidget: Widget {
         StaticConfiguration(kind: "AdieuDisk", provider: DiskProvider()) { entry in
             DiskWidgetView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
+                // 点小组件打开 Adieu 的主窗口（窗口关着、只在菜单栏时也会打开）
+                .widgetURL(URL(string: "adieu://open"))
         }
         .configurationDisplayName("磁盘空间")
         .description("还剩多少、空间用在哪、能腾出多少。")
