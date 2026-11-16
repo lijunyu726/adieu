@@ -280,12 +280,14 @@ struct UninstallSheet: View {
                 Label(String(localized: "\(runningNames) 还开着。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来卸载。"),
                       systemImage: "exclamationmark.triangle")
                     .font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(.orange.opacity(0.1), in: .rect(cornerRadius: 8))
             }
             if needsPassword {
                 Label(String(localized: "\(app.name) 归系统管理员所有（App Store 装的应用常这样），点“卸载”后系统会请你输入一次开机密码。"), systemImage: "lock")
                     .font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(Theme.brand.opacity(0.08), in: .rect(cornerRadius: 8))
             }
@@ -294,22 +296,29 @@ struct UninstallSheet: View {
                 Label(String(localized: "其中 \(personal.count) 项是个人数据（共 \(personal.compactMap(\.size).reduce(0, +).gbText)），可能有聊天记录、文档和账号，删了找不回来。想保留就取消，回到详情里不勾它们。"),
                       systemImage: "exclamationmark.triangle")
                     .font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(.orange.opacity(0.1), in: .rect(cornerRadius: 8))
             }
-            VStack(spacing: 0) {
-                ForEach(parts) { p in
-                    HStack(spacing: 8) {
-                        FileIcon(path: p.path, size: 18)
-                        Text(Copy.text(p.label))
-                        Spacer()
-                        Text(p.size.gbText).foregroundStyle(.secondary).monospacedDigit()
+            // 项目多时（Office 这类有二十多项）清单在框里滚动，不把按钮挤出窗口
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(parts) { p in
+                        HStack(spacing: 8) {
+                            FileIcon(path: p.path, size: 18)
+                            Text(Copy.text(p.label)).lineLimit(1).truncationMode(.middle)
+                            Spacer()
+                            Text(p.size.gbText).foregroundStyle(.secondary).monospacedDigit()
+                        }
+                            .font(.callout).padding(.vertical, 6)
+                        Divider()
                     }
-                        .font(.callout).padding(.vertical, 6)
-                    Divider()
                 }
+                .padding(.horizontal, 12)
             }
-            .padding(.horizontal, 12)
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxHeight: 300)
+            .fixedSize(horizontal: false, vertical: true)
             .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 10))
             HStack {
                 Button("取消") { dismiss() }.keyboardShortcut(.cancelAction).frame(maxWidth: .infinity)
