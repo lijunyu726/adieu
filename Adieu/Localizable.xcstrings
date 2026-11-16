@@ -1,6 +1,110 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "把这段提示发给你用的 agent（Claude Code、Codex、Cursor 等），它会自己把 Adieu 配置好。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把这段提示发给你用的 agent（Claude Code、Codex、Cursor 等），它会自己把 Adieu 配置好。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把這段提示傳給你用的 agent（Claude Code、Codex、Cursor 等），它會自己把 Adieu 設定好。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send this prompt to the agent you use (Claude Code, Codex, Cursor and so on) and it will set up Adieu by itself."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このプロンプトを使っているエージェント（Claude Code、Codex、Cursor など）に送ると、Adieu を自分で設定します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 프롬프트를 사용하는 에이전트(Claude Code, Codex, Cursor 등)에 보내면 Adieu를 스스로 설정합니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envía este texto al agente que uses (Claude Code, Codex, Cursor, etc.) y configurará Adieu por sí mismo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyez ce texte à l’agent que vous utilisez (Claude Code, Codex, Cursor, etc.) : il configurera Adieu tout seul."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schicke diesen Text an deinen Agenten (Claude Code, Codex, Cursor usw.), dann richtet er Adieu selbst ein."
+          }
+        }
+      }
+    },
+    "复制提示": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制提示"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拷貝提示"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Prompt"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロンプトをコピー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프롬프트 복사"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar texto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le texte"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text kopieren"
+          }
+        }
+      }
+    },
     "来自连接到 Adieu 的 agent（%@）": {
       "localizations": {
         "zh-Hans": {
@@ -2857,58 +2961,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Umbenennen"
-          }
-        }
-      }
-    },
-    "Cursor、Claude 桌面版等（配置文件）": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor、Claude 桌面版等（配置文件）"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor、Claude 桌面版等（設定檔）"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor, Claude desktop app, etc. (config file)"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor、Claude デスクトップ版など（設定ファイル）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor, Claude 데스크톱 앱 등(설정 파일)"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor, la app de escritorio de Claude, etc. (archivo de configuración)"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor, l’app de bureau Claude, etc. (fichier de configuration)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cursor, Claude-Desktop-App usw. (Konfigurationsdatei)"
           }
         }
       }

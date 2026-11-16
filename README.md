@@ -119,13 +119,13 @@ Adieu 扫描 `~/.agents/skills`、`~/.codex/skills`、`~/.claude/skills` 和 `~/
 
 ### 让 agent 调用 Adieu（MCP）
 
-在「设置 → 通用」打开 **允许 agent 连接**（默认关），下面会列出接入命令，例如 Claude Code：
+在「设置 → 通用」打开 **允许 agent 连接**（默认关），下面会出现一段配置提示。点「复制提示」，发给你用的 agent（Claude Code、Codex、Cursor、Claude 桌面版等），它会按自己的方式把 Adieu 登记成 MCP 服务器、自检一遍，再告诉你改了什么、要不要重启。也可以自己登记，例如 Claude Code：
 
 ```bash
-claude mcp add adieu -- /Applications/Adieu.app/Contents/MacOS/adieu-mcp
+claude mcp add --scope user adieu -- /Applications/Adieu.app/Contents/MacOS/adieu-mcp
 ```
 
-Codex 用 `codex mcp add adieu -- …`；Cursor、Claude 桌面版等在 MCP 配置文件里把 `command` 写成同一个路径。Adieu 没开时，agent 第一次调用会在后台把它打开。
+Adieu 没开时，agent 第一次调用会在后台把它打开。
 
 agent 能用 Adieu 的全部功能，分三档：
 

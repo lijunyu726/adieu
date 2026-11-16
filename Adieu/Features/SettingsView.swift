@@ -311,15 +311,36 @@ private struct AboutView: View {
 private struct AgentAccessSection: View {
     @Environment(AppModel.self) private var model
     @AppStorage(AgentTools.settingKey) private var enabled = false
-    @State private var copied: String?
+    @State private var copied = false
 
     private var helper: String { Bundle.main.bundleURL.appending(path: "Contents/MacOS/adieu-mcp").path }
 
-    private var commands: [(String, String)] {
-        let quoted = helper.contains(" ") ? "\"\(helper)\"" : helper
-        return [("Claude Code", "claude mcp add adieu -- \(quoted)"),
-                ("Codex", "codex mcp add adieu -- \(quoted)"),
-                (String(localized: "Cursor、Claude 桌面版等（配置文件）"), "\"adieu\": { \"command\": \"\(helper)\" }")]
+    /// 发给任意 agent 的配置提示：让它按自己客户端的官方方式登记 adieu-mcp。用英文写，各家 agent 都读得懂
+    private var prompt: String {
+        let quoted = "'\(helper)'"
+        return """
+        Please add Adieu as an MCP server for yourself (the AI agent or app reading this).
+
+        Adieu is a macOS disk cleaner. It ships a local stdio MCP server:
+          command: \(helper)
+          arguments: none
+          environment variables: none
+          server name to use: adieu
+
+        1. Work out which MCP client you are, and register a stdio server named "adieu" with that command in your own official way, at user level so it works in every project. For example:
+           - Claude Code: claude mcp add --scope user adieu -- \(quoted)
+           - Codex CLI: codex mcp add adieu -- \(quoted)
+           - Cursor: ~/.cursor/mcp.json
+           - Claude Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json
+           - Anything else: your MCP settings or config file, with an entry like {"command": "\(helper)"}
+        2. If an "adieu" server already exists, update it rather than adding a second one. When editing a JSON config file, keep every other server and setting. Make a backup copy first.
+        3. Check that it works: run
+           printf '%s\\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"setup","version":"1"}}}' | \(quoted)
+           It should print one JSON line whose result.serverInfo.name is "adieu". This check does not touch any files.
+        4. Tell me what you changed, and whether you need to be restarted to load the new server.
+
+        While setting up, do not call any Adieu tool that moves, renames or deletes files.
+        """
     }
 
     var body: some View {
@@ -327,21 +348,25 @@ private struct AgentAccessSection: View {
             Toggle("允许 agent 连接", isOn: $enabled)
                 .onChange(of: enabled) { _, _ in model.agent.apply() }
             if enabled {
-                ForEach(commands, id: \.0) { title, command in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(title).font(.caption).foregroundStyle(.secondary)
-                        HStack {
-                            Text(command).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
-                                .lineLimit(2).truncationMode(.middle)
-                            Spacer()
-                            Button(copied == title ? String(localized: "已复制") : String(localized: "复制")) {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(command, forType: .string)
-                                copied = title
-                            }
-                            .controlSize(.small)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("把这段提示发给你用的 agent（Claude Code、Codex、Cursor 等），它会自己把 Adieu 配置好。")
+                            .font(.callout).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                        Button(copied ? String(localized: "已复制") : String(localized: "复制提示")) {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(prompt, forType: .string)
+                            copied = true
                         }
                     }
+                    ScrollView {
+                        Text(prompt).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(8)
+                    }
+                    .frame(height: 140)
+                    .background(Color.primary.opacity(0.04), in: .rect(cornerRadius: 8))
                 }
             }
         } header: {
