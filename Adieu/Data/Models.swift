@@ -451,6 +451,8 @@ struct CloudDriveFile: Identifiable, Sendable {
     }
 
     var id: String { url.path }
+    var name: String { url.lastPathComponent }
+    var parentPath: String { CloudDriveScan.parent(of: relativePath) }
     let url: URL
     let relativePath: String
     let state: State
@@ -462,6 +464,8 @@ struct CloudDriveFile: Identifiable, Sendable {
 
 struct CloudDriveFolder: Identifiable, Sendable {
     var id: String { url.path }
+    var name: String { relativePath.isEmpty ? "iCloud Drive" : url.lastPathComponent }
+    var parentPath: String { CloudDriveScan.parent(of: relativePath) }
     let url: URL
     let relativePath: String
     let identity: String
@@ -469,7 +473,34 @@ struct CloudDriveFolder: Identifiable, Sendable {
 
 struct CloudDriveScan: Sendable {
     let files: [CloudDriveFile]
+    let folders: [CloudDriveFolder]
     let unreadable: Int
-    var folders: [CloudDriveFolder] = []
-    var allocatedBytes: Int { files.reduce(0) { $0 + $1.allocatedBytes } }
+    let filesByFolder: [String: [CloudDriveFile]]
+    let foldersByParent: [String: [CloudDriveFolder]]
+    private let foldersByPath: [String: CloudDriveFolder]
+
+    init(files: [CloudDriveFile], unreadable: Int, folders: [CloudDriveFolder] = []) {
+        self.files = files
+        self.folders = folders
+        self.unreadable = unreadable
+        filesByFolder = Dictionary(grouping: files, by: \.parentPath)
+        foldersByParent = Dictionary(grouping: folders.filter { !$0.relativePath.isEmpty }, by: \.parentPath)
+        foldersByPath = Dictionary(uniqueKeysWithValues: folders.map { ($0.relativePath, $0) })
+    }
+
+    func folder(at path: String) -> CloudDriveFolder? { foldersByPath[path] }
+
+    func nearestFolder(to path: String) -> CloudDriveFolder? {
+        var candidate = path
+        while !candidate.isEmpty {
+            if let folder = folder(at: candidate) { return folder }
+            candidate = Self.parent(of: candidate)
+        }
+        return folder(at: "")
+    }
+
+    static func parent(of path: String) -> String {
+        guard let separator = path.lastIndex(of: "/") else { return "" }
+        return String(path[..<separator])
+    }
 }

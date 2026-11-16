@@ -157,6 +157,20 @@ struct AppScannerTests {
         let refreshed = try CloudDriveScanner.scan(root: folder)
         precondition(refreshed.folders.map(\.relativePath) == ["", "Projects"])
 
+        // 同名文件属各自目录，空文件夹也应能浏览和作为移动目标。
+        let nested = child.appending(path: "Empty")
+        try fm.createDirectory(at: nested, withIntermediateDirectories: false)
+        try Data("root".utf8).write(to: folder.appending(path: "report.txt"))
+        try Data("project".utf8).write(to: child.appending(path: "report.txt"))
+        let browser = try CloudDriveScanner.scan(root: folder)
+        precondition(browser.foldersByParent[""]?.map(\.relativePath) == ["Projects"])
+        precondition(browser.foldersByParent["Projects"]?.map(\.relativePath) == ["Projects/Empty"])
+        precondition(browser.filesByFolder[""]?.map(\.relativePath) == ["report.txt"])
+        precondition(browser.filesByFolder["Projects"]?.map(\.relativePath) == ["Projects/report.txt"])
+        precondition(browser.filesByFolder["Projects/Empty"] == nil)
+        precondition(browser.nearestFolder(to: "Projects/Removed/Deep")?.relativePath == "Projects")
+        precondition(browser.nearestFolder(to: "Missing")?.relativePath == "")
+
         let backup = root.appending(path: "old-cloud-organization")
         try fm.moveItem(at: folder, to: backup)
         try fm.createSymbolicLink(at: folder, withDestinationURL: backup)
