@@ -1,6 +1,110 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "将删除 %lld 项，大小还在计算。不进废纸篓，删完立刻腾出空间。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将删除 %lld 项，大小还在计算。不进废纸篓，删完立刻腾出空间。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將刪除 %lld 項，大小還在計算。不進垃圾桶，刪完立刻騰出空間。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld items will be deleted; sizes are still being calculated. They skip the Trash, so the space is freed right away."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 項目を削除します。サイズはまだ計算中です。ゴミ箱を経由せず、すぐに空き容量になります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목을 삭제합니다. 크기는 아직 계산 중입니다. 휴지통을 거치지 않으며 바로 공간이 확보됩니다."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminarán %lld elementos; los tamaños aún se están calculando. No pasan por la Papelera, así que el espacio se libera al momento."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld éléments seront supprimés ; les tailles sont encore en cours de calcul. Ils ne passent pas par la corbeille : l'espace est libéré tout de suite."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Objekte werden gelöscht; die Größen werden noch berechnet. Sie landen nicht im Papierkorb, der Platz wird sofort frei."
+          }
+        }
+      }
+    },
+    "其中 %lld 项是个人数据，可能有聊天记录、文档和账号，删了找不回来。想保留就取消，回到详情里不勾它们。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其中 %lld 项是个人数据，可能有聊天记录、文档和账号，删了找不回来。想保留就取消，回到详情里不勾它们。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其中 %lld 項是個人資料，可能有聊天記錄、文件和帳號，刪了找不回來。想保留就取消，回到詳情裡不勾選它們。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of them are personal data and may include chat history, documents, and accounts. Deleted data can't be recovered. To keep them, cancel and uncheck them in the details."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このうち %lld 項目は個人データで、チャット履歴、書類、アカウントが含まれる場合があります。削除すると元に戻せません。残したい場合はキャンセルし、詳細でチェックを外してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그중 %lld개 항목은 개인 데이터로, 채팅 기록·문서·계정이 있을 수 있으며 삭제하면 되돌릴 수 없습니다. 남기려면 취소하고 세부 정보에서 선택을 해제하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld de ellos son datos personales y pueden incluir historial de chat, documentos y cuentas. Lo borrado no se puede recuperar. Para conservarlos, cancela y desmárcalos en los detalles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld d'entre eux sont des données personnelles et peuvent contenir des conversations, des documents et des comptes. Une fois supprimés, ils sont irrécupérables. Pour les garder, annulez et décochez-les dans les détails."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld davon sind persönliche Daten und können Chatverläufe, Dokumente und Konten enthalten. Gelöschtes lässt sich nicht wiederherstellen. Um sie zu behalten, brich ab und entferne in den Details die Häkchen."
+          }
+        }
+      }
+    },
     "这个技能是从别处链接过来的，文件在 %@。为了不改动源文件，请到源目录里修改调用方式。": {
       "localizations": {
         "zh-Hans": {

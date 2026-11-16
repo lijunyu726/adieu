@@ -43,7 +43,9 @@ struct AppsView: View {
             if UserDefaults.standard.bool(forKey: "AdieuUninstall"), uninstalling == nil, let first = filtered.first { uninstalling = first }
         }
         .sheet(item: $uninstalling) { app in
-            UninstallSheet(app: app, parts: app.parts.filter { isOn(app, $0) })
+            // 用最新的那份：打开时大小可能还没算完，算完后要跟着更新；卸载完列表里没了，就留着打开时那份
+            let current = model.apps.first { $0.id == app.id } ?? app
+            UninstallSheet(app: current, parts: current.parts.filter { isOn(current, $0) })
                 .environment(model)
         }
         .alert(quitPrompt.map { String(localized: "\($0.names) 没有退出") } ?? "",
@@ -252,6 +254,8 @@ struct UninstallSheet: View {
     @State private var disabledInputMethod = false
 
     private var total: Double { parts.compactMap(\.size).reduce(0, +) }
+    /// 还有项目的大小没算出来，这时不报合计，免得写成“共 0 MB”
+    private var measuring: Bool { parts.contains { $0.size == nil } }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -275,7 +279,8 @@ struct UninstallSheet: View {
         VStack(spacing: 14) {
             AppIcon(app: app, size: 64)
             Text("卸载 \(app.name)？").font(.headline)
-            Text(String(localized: "将删除 \(parts.count) 项、共 \(total.gbText)，不进废纸篓，删完立刻腾出空间。"))
+            Text(measuring ? String(localized: "将删除 \(parts.count) 项，大小还在计算。不进废纸篓，删完立刻腾出空间。")
+                           : String(localized: "将删除 \(parts.count) 项、共 \(total.gbText)，不进废纸篓，删完立刻腾出空间。"))
                 .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
             if let runningNames {
                 Label(String(localized: "\(runningNames) 还开着。强制退出的话，没保存的内容会丢掉；想先保存，就取消，自己退出它之后再来卸载。"),
@@ -294,7 +299,9 @@ struct UninstallSheet: View {
             }
             let personal = parts.filter(\.isPersonalData)
             if !personal.isEmpty {
-                Label(String(localized: "其中 \(personal.count) 项是个人数据（共 \(personal.compactMap(\.size).reduce(0, +).gbText)），可能有聊天记录、文档和账号，删了找不回来。想保留就取消，回到详情里不勾它们。"),
+                Label(personal.contains { $0.size == nil }
+                      ? String(localized: "其中 \(personal.count) 项是个人数据，可能有聊天记录、文档和账号，删了找不回来。想保留就取消，回到详情里不勾它们。")
+                      : String(localized: "其中 \(personal.count) 项是个人数据（共 \(personal.compactMap(\.size).reduce(0, +).gbText)），可能有聊天记录、文档和账号，删了找不回来。想保留就取消，回到详情里不勾它们。"),
                       systemImage: "exclamationmark.triangle")
                     .font(.callout).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
