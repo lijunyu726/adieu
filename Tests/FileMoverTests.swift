@@ -146,6 +146,13 @@ struct FileMoverTests {
         await mover.undo(record)
         try check(FileMover.exists(src.appending(path: "undo/u.txt")), "同盘撤销改回去")
         try check(mover.records.first { $0.id == record.id }?.undone == true, "记成已撤销")
+        // 10. 搬家页删除：外接盘上的文件夹删掉并有记录；保护名单里的拒绝
+        try write(apfs.appending(path: "gone/g.txt"), "g")
+        try write(apfs.appending(path: "keep/k.txt"), "k")
+        let gone = FileMover.delete([apfs.appending(path: "gone"), apfs.appending(path: "keep")], sizes: [:],
+                                    protected: [apfs.appending(path: "keep").path])
+        try check(!FileMover.exists(apfs.appending(path: "gone")) && gone.done.count == 1, "删掉外接盘上的文件夹")
+        try check(FileMover.exists(apfs.appending(path: "keep/k.txt")) && gone.failed.count == 1, "保护名单里的不删")
         print("FileMoverTests 通过")
     }
 

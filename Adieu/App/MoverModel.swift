@@ -325,6 +325,9 @@ final class MoverModel {
         MoveLog.save(records)
     }
 
+    /// 删除（在界面层交给 AppModel.perform）完成后刷新两栏
+    func refresh() { afterChange() }
+
     private func afterChange() {
         refreshPlaces()
         left.reload()

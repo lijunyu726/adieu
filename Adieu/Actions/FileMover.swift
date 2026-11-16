@@ -377,6 +377,29 @@ enum FileMover {
         if let operationError { throw operationError }
     }
 
+    /// 搬家页的删除：iCloud Drive 里的放开对 iCloud 根的保护、经文件协调删，其余同普通删除。
+    /// 返回统一删除流程的结果，好记进“最近”、权限不够的再弹系统密码
+    static func delete(_ urls: [URL], sizes: [String: Double], protected: [String]) -> TrashService.Outcome {
+        var out = TrashService.Outcome()
+        for url in urls {
+            let isLink = (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+            let run = { TrashService.delete([url], sizes: sizes, protected: inCloud(url) ? cloudProtected(protected) : protected,
+                                            symbolicLinkOnly: isLink) }
+            var result = TrashService.Outcome()
+            if inCloud(url) {
+                var error: NSError?
+                NSFileCoordinator(filePresenter: nil).coordinate(writingItemAt: url, options: .forDeleting, error: &error) { _ in result = run() }
+                if let error { out.failed.append((url.lastPathComponent, error.localizedDescription)); continue }
+            } else {
+                result = run()
+            }
+            out.done += result.done
+            out.failed += result.failed
+            out.needsAdmin += result.needsAdmin
+        }
+        return out
+    }
+
     private static func removeOriginal(_ item: URL, protected: [String]) throws { try remove(item, protected: protected) }
     private static func removeExisting(_ item: URL, protected: [String]) throws { try remove(item, protected: protected) }
 

@@ -92,6 +92,8 @@
 - 处理分级 `Safety`（稳妥 / 看一眼 / 别手删）只是提示，不决定默认勾选，默认勾选仍按证据等级。“这些大户在别处处理”（`SpaceScanner.hotspots`）只列 ≥ 0.5 GB 的，只给处理办法和“在访达中显示”，不提供删除：这些目录内部有引用关系（备份之间共用文件、照片图库、Docker.raw），直接删会坏。Docker.raw 是稀疏文件，大小按实际分配算，另写逻辑大小。待装系统更新按快照名含 `os.update` / `MSUPrepareUpdate` 和 `AssetsV2/com_apple_MobileAsset_MacSoftwareUpdate` 判断
 - iCloud Drive 页（PR #8，xuyusapphire，2026-11-16 合并）按文件夹浏览；合并后补了每个文件夹的本机占用（`CloudDriveScan.folderBytes`，含各层子文件夹，"" 是整个 iCloud Drive）和顶部总占用：这一页的本意是看空间，按文件夹浏览后深层的大下载不显眼了。这一页做轻量整理和移除下载，大批量、跨盘的整理在搬家页，两页之间有入口
 - MCP（2026-11-16）：`adieu-mcp`（`AdieuMCP/main.swift`，命令行目标，打包进 `Contents/MacOS`）只做 stdio 和本机套接字之间的转发，所有逻辑在 Adieu 里（`Adieu/Agent/`）：这样删除能用同一套确认、保护名单、“最近”记录，也能在 Adieu 窗口里弹清单。工具清单 `AgentShared/AgentCatalog.swift` 两个目标共用。套接字 `~/Library/Application Support/Adieu/agent.sock`，建时 umask 0177 再 chmod 0600，每个连接用 `getpeereid` 核对是同一用户；一行 JSON 请求、一行回复。设置“允许 agent 连接”（`agentAccess`）默认关，关着时不开套接字；示例数据模式不开。三档：只读直接做；改动先回预览和 8 位确认编号（10 分钟，绑定工具名和参数；执行前重新算预览，去掉大小、是否在运行这类会自己变的字段后比较，对不上就不执行、给新预览）；删除在此之上还要用户在 Adieu 窗口的 `AgentConfirmView` 里点“删除”（10 分钟不点算取消）。这一步是安全的关键，agent 无法替用户点，不要为了方便去掉。输入法、正在运行的应用不让 agent 卸载。测 MCP：Debug 版重签后带 `-agentAccess YES` 启动，用 Python 往 `Contents/MacOS/adieu-mcp` 的标准输入写 JSON-RPC；测试文件放 `scratch/`，`moves.json` 测试时可用 `MoveLog.override` 指到临时位置
+- 搬家页的删除走 `AppModel.perform`（`TrashRequest.fromMover`），底层用 `FileMover.delete`：iCloud Drive 里的放开对 iCloud 根的保护并经文件协调删，其余等同普通删除；这样记进全应用的“最近”、权限不够弹系统密码。删除确认不管设置怎样都弹，列每项绝对路径和大小
+- 小组件点开：`.widgetURL(adieu://open)`，主程序在 Info 里注册 `adieu` 链接；`WindowGroup` 用 `handlesExternalEvents(matching: ["*"])`、`RootView` 用 `handlesExternalEvents(preferring:allowing:)`，有主窗口就调到前面、没有（只在菜单栏）就开一个。不加的话，点小组件只激活应用，窗口关着时什么也不出来
 - 编译整个 Adieu 目录的测试脚本（`test-agent-skills.sh`、`test-worktree-model.sh`）源文件要包括 `AgentShared`
 
 ## 开源与配套站点

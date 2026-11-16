@@ -82,6 +82,7 @@ private struct PaneView: View {
     @State private var naming: Naming?
     @State private var name = ""
     @State private var batch: [FolderItem] = []
+    @State private var deleting: [FolderItem] = []
     @State private var dropping = false
 
     private enum Naming: Equatable { case folder, rename(FolderItem) }
@@ -115,6 +116,13 @@ private struct PaneView: View {
                 .foregroundStyle(.secondary)
             }
             trail
+            if let folder = pane.folder {
+                Text(folder.path)
+                    .font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
+                    .lineLimit(1).truncationMode(.middle)
+                    .textSelection(.enabled)
+                    .help(folder.path)
+            }
             TextField("在这个文件夹里搜索", text: $pane.query)
                 .textFieldStyle(.roundedBorder)
             list
@@ -130,6 +138,9 @@ private struct PaneView: View {
                     }
                 }
                 .disabled(pane.chosen.isEmpty || pane.place?.readOnly == true || mover.busy)
+                Button("删除…", role: .destructive) { deleting = pane.chosen }
+                    .disabled(pane.chosen.isEmpty || pane.place?.readOnly == true || mover.busy)
+                    .keyboardShortcut(.delete, modifiers: .command)
                 Spacer()
                 if !pane.chosen.isEmpty {
                     Text("已选 \(pane.chosen.count) 项").font(.caption).foregroundStyle(.secondary)
@@ -153,6 +164,9 @@ private struct PaneView: View {
             mover.prepare(.move, items: items, to: folder)
             return true
         } isTargeted: { dropping = $0 }
+        .sheet(isPresented: Binding(get: { !deleting.isEmpty }, set: { if !$0 { deleting = [] } })) {
+            MoverDelete(items: deleting) { deleting = [] }
+        }
         .sheet(isPresented: Binding(get: { !batch.isEmpty }, set: { if !$0 { batch = [] } })) {
             BatchRename(items: batch) { prefix, suffix in
                 mover.batchRename(batch, in: pane, prefix: prefix, suffix: suffix)
@@ -235,6 +249,15 @@ private struct PaneView: View {
                 if ids.count == 1, let item = pane.shown.first(where: { ids.contains($0.id) }) {
                     if item.isFolder { Button("打开") { pane.open(item.url) } }
                     Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
+                    Button("拷贝路径") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(item.url.path, forType: .string)
+                    }
+                }
+                if !ids.isEmpty, pane.place?.readOnly != true {
+                    Divider()
+                    Button("删除…", role: .destructive) { deleting = pane.shown.filter { ids.contains($0.id) } }
+                        .disabled(model.mover.busy)
                 }
             } primaryAction: { ids in
                 // 双击：文件夹就进去，文件交给默认应用打开
@@ -257,14 +280,14 @@ private struct MoveConfirm: View {
 
     var body: some View {
         let mover = model.mover
-        let names = plan.items.map(\.lastPathComponent)
         VStack(alignment: .leading, spacing: 14) {
             Text(plan.mode == .move ? "移动 \(plan.items.count) 项" : "复制 \(plan.items.count) 项")
                 .font(.title3.bold())
-            VStack(alignment: .leading, spacing: 4) {
-                Text(names.prefix(6).joined(separator: "、") + (names.count > 6 ? String(localized: " 等") : ""))
-                    .lineLimit(3)
-                Text("到 \(plan.destination.path)").foregroundStyle(.secondary).lineLimit(2).truncationMode(.middle)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("从").font(.caption).foregroundStyle(.secondary)
+                PathList(paths: plan.items.map(\.path))
+                Text("到").font(.caption).foregroundStyle(.secondary)
+                PathList(paths: [plan.destination.path])
             }
             if plan.crossVolume {
                 Label(plan.mode == .move
@@ -323,7 +346,7 @@ private struct MoveConfirm: View {
             }
         }
         .padding(24)
-        .frame(width: 480)
+        .frame(width: 560)
         .alert("替换那里原有的 \(plan.conflicts.count) 项？", isPresented: $confirmingReplace) {
             Button("取消", role: .cancel) {}
             Button("替换", role: .destructive) {
@@ -413,6 +436,22 @@ private struct RecentMoves: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(title(record)).lineLimit(1).truncationMode(.middle)
+                            ForEach(record.pairs.prefix(3), id: \.to) { pair in
+                                Group {
+                                    if record.kind == .folder {
+                                        Text(pair.to)
+                                    } else {
+                                        Text("\(pair.from) → \(pair.to)")
+                                    }
+                                }
+                                .font(.system(.caption2, design: .monospaced)).foregroundStyle(.secondary)
+                                .lineLimit(2).truncationMode(.middle)
+                                .textSelection(.enabled)
+                                .help(record.kind == .folder ? pair.to : "\(pair.from) → \(pair.to)")
+                            }
+                            if record.pairs.count > 3 {
+                                Text("还有 \(record.pairs.count - 3) 项。").font(.caption2).foregroundStyle(.secondary)
+                            }
                             Text(record.date, format: .relative(presentation: .named)).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -426,7 +465,7 @@ private struct RecentMoves: View {
                         }
                     }
                 }
-                .frame(width: 380, height: 300)
+                .frame(width: 620, height: 380)
                 .alert("撤销会删掉新的那份", isPresented: Binding(get: { confirming != nil }, set: { if !$0 { confirming = nil } })) {
                     Button("取消", role: .cancel) { confirming = nil }
                     Button("删除并撤销", role: .destructive) {
@@ -449,6 +488,81 @@ private struct RecentMoves: View {
             let old = r.pairs.first.map { URL(filePath: $0.from).lastPathComponent } ?? ""
             return String(localized: "\(old) 改名为 \(first)")
         case .folder: return String(localized: "新建文件夹 \(first)")
+        }
+    }
+}
+
+/// 一组绝对路径：等宽字体、可选中复制，多了在框里滚动
+private struct PathList: View {
+    let paths: [String]
+    var sizes: [String: Double] = [:]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(paths, id: \.self) { path in
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(path).font(.system(.callout, design: .monospaced))
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 8)
+                        if let size = sizes[path] { Text(size.gbText).font(.callout).monospacedDigit().foregroundStyle(.secondary) }
+                    }
+                }
+            }
+            .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(maxHeight: 160)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(Color.primary.opacity(0.04), in: .rect(cornerRadius: 8))
+    }
+}
+
+/// 搬家页的删除确认：列出每项的绝对路径和大小，不管设置怎样都先确认
+private struct MoverDelete: View {
+    @Environment(AppModel.self) private var model
+    let items: [FolderItem]
+    let close: () -> Void
+    @State private var sizes: [String: Double] = [:]
+    @State private var measuring = true
+
+    var body: some View {
+        let cloud = items.contains { FileMover.inCloud($0.url) }
+        let total = sizes.values.reduce(0, +)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("删除 \(items.count) 项").font(.title3.bold())
+            PathList(paths: items.map(\.url.path), sizes: sizes)
+            Label(measuring ? String(localized: "正在计算大小…")
+                            : String(localized: "共 \(total.gbText)，直接删除，不进废纸篓，删了不能放回，“撤销”也找不回来。"),
+                  systemImage: "exclamationmark.triangle")
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+            if cloud {
+                Label("其中有 iCloud Drive 里的文件：删了你的其他设备上也会一起没有。", systemImage: "icloud")
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            HStack {
+                Spacer()
+                Button("取消", action: close).keyboardShortcut(.cancelAction)
+                Button("删除", role: .destructive) {
+                    // 走全应用统一的删除流程：记进“最近”，权限不够弹系统密码
+                    let mover = model.mover
+                    model.perform(.init(title: String(localized: "在搬家页删除 \(items.count) 项"), source: String(localized: "搬家"),
+                                        urls: items.map(\.url), sizes: sizes, fromMover: true) { _ in mover.refresh() })
+                    close()
+                }
+                .buttonStyle(.borderedProminent).tint(.red)
+            }
+        }
+        .padding(24)
+        .frame(width: 560)
+        .task {
+            let urls = items.map(\.url)
+            sizes = await blocking { Dictionary(urls.map { ($0.path, AppScanner.allocatedSize($0) ?? 0) }, uniquingKeysWith: { a, _ in a }) }
+            measuring = false
         }
     }
 }

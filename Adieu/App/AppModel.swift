@@ -86,6 +86,8 @@ final class AppModel {
         var worktree: WorktreeItem? = nil
         var worktreeMode: WorktreeRemovalMode = .safe
         var trashItems: [TrashService.TrashItem]? = nil
+        /// 搬家页发起的：iCloud Drive 里的也能删（`FileMover.delete`）
+        var fromMover = false
         var onDone: (@MainActor (HistoryEntry?) -> Void)? = nil
     }
 
@@ -294,6 +296,9 @@ final class AppModel {
             let protected = protectedPaths
             result = await blocking { TrashService.emptyTrash(ready, protected: protected) }
             deleting.subtract(paths)
+        } else if request.fromMover {
+            let urls = request.urls, sizes = request.sizes, protected = protectedPaths
+            result = await blocking { FileMover.delete(urls, sizes: sizes, protected: protected) }
         } else {
             result = await delete(request.urls, sizes: request.sizes, worktree: request.worktree, worktreeMode: request.worktreeMode)
         }
