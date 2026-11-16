@@ -242,7 +242,8 @@ struct CloudDriveView: View {
     }
 
     private func size(_ bytes: Int) -> String {
-        ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
+        guard bytes > 0 else { return "0 B" }
+        return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
     }
 }
 
@@ -283,7 +284,8 @@ private struct CloudDrivePathBar: View {
                 }
                 .buttonStyle(.link)
             }
-            .defaultScrollAnchor(.trailing)
+            .defaultScrollAnchor(.trailing, for: .initialOffset)
+            .defaultScrollAnchor(.leading, for: .alignment)
             .scrollIndicators(.hidden)
         }
         .help(path.isEmpty ? "iCloud Drive" : path)
