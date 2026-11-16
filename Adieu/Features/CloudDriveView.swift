@@ -220,6 +220,8 @@ struct CloudDriveView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .card(padding: 8)
     }
 
     @ViewBuilder
