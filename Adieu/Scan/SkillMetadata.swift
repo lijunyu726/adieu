@@ -54,16 +54,28 @@ struct SkillMetadata {
         let bounds = try yamlBounds()
         if agent == .codex {
             let key = "allow_implicit_invocation"
-            let value = mode != .explicit
-            if let policy = try policyBlock(in: bounds) {
-                try setBoolean(key, value: value, indent: policy.indent, in: policy.range)
+            if mode != .explicit {
+                // 改回自动时删掉这一项，不写 true：文件回到没设置过的样子
+                guard let policy = try policyBlock(in: bounds) else { return lines.joined(separator: separator) }
+                try removeField(key, indent: policy.indent, in: policy.range)
+                let updated = try yamlBounds()
+                if let rest = try policyBlock(in: updated), lines[rest.range].allSatisfy(isTrivia),
+                   let header = try field("policy", indent: 0, in: updated) {
+                    lines.remove(at: header.index)
+                }
+            } else if let policy = try policyBlock(in: bounds) {
+                try setBoolean(key, value: false, indent: policy.indent, in: policy.range)
             } else {
                 let insert = lines.first == "---" ? 1 : 0
                 if lines.count == 1 && lines[0].trimmingCharacters(in: .whitespaces) == "{}" { lines = [""] }
-                lines.insert(contentsOf: ["policy:", "  \(key): \(value)"], at: insert)
+                lines.insert(contentsOf: ["policy:", "  \(key): false"], at: insert)
             }
         } else {
-            try setBoolean("disable-model-invocation", value: mode == .explicit, indent: 0, in: bounds)
+            if mode == .explicit {
+                try setBoolean("disable-model-invocation", value: true, indent: 0, in: bounds)
+            } else {
+                try removeField("disable-model-invocation", indent: 0, in: bounds)
+            }
             if mode == .explicit {
                 let updated = try yamlBounds()
                 if try boolean("user-invocable", indent: 0, in: updated) == false {
@@ -146,6 +158,16 @@ struct SkillMetadata {
         default: throw EditError.unsupported(url)
         }
     }
+
+    /// 去掉一个布尔项（连同它的注释），用于改回默认值
+    private mutating func removeField(_ key: String, indent: Int, in range: Range<Int>) throws {
+        guard let field = try field(key, indent: indent, in: range) else { return }
+        _ = try boolean(key, indent: indent, in: range)
+        lines.remove(at: field.index)
+    }
+
+    /// 除了空行和注释什么都没有，比如自动建的策略文件改回自动以后
+    var isEmpty: Bool { lines.allSatisfy(isTrivia) }
 
     private mutating func setBoolean(_ key: String, value: Bool, indent: Int, in range: Range<Int>) throws {
         let prefix = String(repeating: " ", count: indent)

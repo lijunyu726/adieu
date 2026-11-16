@@ -12,6 +12,7 @@ struct AgentSkillSettings: Sendable {
         case changed(URL)
         case conflict(URL)
         case linked(URL)
+        case external(URL)
         case invalidName(String)
         case recovery(String, [String])
 
@@ -21,6 +22,7 @@ struct AgentSkillSettings: Sendable {
             case .changed(let url): String(localized: "文件在保存前发生了变化：\(url.path)")
             case .conflict(let url): String(localized: "已有同名文件：\(url.path)")
             case .linked(let url): String(localized: "此目录被其他技能链接引用：\(url.path)")
+            case .external(let url): String(localized: "这个技能是从别处链接过来的，文件在 \(url.path)。为了不改动源文件，请到源目录里修改调用方式。")
             case .invalidName(let name): String(localized: "目标 agent 无法使用此技能名称：\(name)")
             case .recovery(let reason, let paths):
                 String(localized: "\(reason)\n部分改动需要手动恢复：\(paths.joined(separator: ", "))")
@@ -96,6 +98,10 @@ struct AgentSkillSettings: Sendable {
             } else {
                 result.failed += files.map { ($0.entry.path, String(localized: "有技能链接未移除，已保留此文件。")) }
             }
+            // 删干净了，Claude Code 设置里给它记的调用方式也去掉
+            if result.failed.isEmpty, current.installations.contains(where: { $0.agents.contains(.claudeCode) }) {
+                try? ClaudeSkillOverrides.set(current.id, to: nil, in: scanner.claudeSettings)
+            }
             return result
         }
     }
@@ -149,7 +155,15 @@ struct AgentSkillSettings: Sendable {
             try fm.createDirectory(at: stage, withIntermediateDirectories: true)
             staged.append(stage)
             let temp = stage.appending(path: "skill")
-            if source.isBundle {
+            if Self.isLink(source.entry) {
+                // 源头是链接（比如指向自己的 Git 仓库）：新位置也建链接指向同一处，不复制出一份各改各的
+                if source.isBundle || isFlat {
+                    try fm.createSymbolicLink(at: temp, withDestinationURL: source.isBundle ? source.content : source.instruction)
+                } else {
+                    try fm.createDirectory(at: temp, withIntermediateDirectories: false)
+                    try fm.createSymbolicLink(at: temp.appending(path: "SKILL.md"), withDestinationURL: source.instruction)
+                }
+            } else if source.isBundle {
                 try fm.copyItem(at: source.content, to: temp)
             } else if isFlat {
                 try fm.copyItem(at: source.instruction, to: temp)
@@ -197,6 +211,16 @@ struct AgentSkillSettings: Sendable {
         case .codex:
             if source.declaredName == nil { throw ChangeError.invalidName(name) }
         }
+    }
+
+    static func isLink(_ url: URL) -> Bool {
+        (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil
+    }
+
+    /// 文件不在这个 agent 的技能目录里（技能是链接过来的）
+    private static func isExternal(_ file: URL, of entry: AgentSkill.Installation) -> Bool {
+        let root = entry.activePath.deletingLastPathComponent().resolvingSymlinksInPath().path
+        return !file.resolvingSymlinksInPath().path.hasPrefix(root + "/")
     }
 
     private func verifyCanPark(_ entry: AgentSkill.Installation, allSkills: [AgentSkill], excluding: Set<String> = []) throws {
@@ -250,18 +274,32 @@ struct AgentSkillSettings: Sendable {
     private struct Edit {
         let path: URL
         let before: Data?
-        let after: Data
+        let after: Data?
     }
 
     private func setInvocation(_ mode: SkillInvocation, for agent: SkillAgent, skill: AgentSkill) throws {
         let entries = skill.activeInstallations(for: agent)
         guard !entries.isEmpty, mode != .unavailable else { throw ChangeError.missing }
+        if agent == .claudeCode {
+            // Claude Code 用官方的 skillOverrides，不碰技能文件。
+            // 只有技能文件自己写了“仅点名”、又要改回自动时，才需要改文件（下面同样不改链接过来的）
+            let fileModes = entries.map { (try? AgentSkillScanner.metadata(at: $0.instruction, frontmatter: true).mode(for: agent)) ?? .automatic }
+            if mode == .explicit {
+                if !fileModes.allSatisfy({ $0 == .explicit }) {
+                    try ClaudeSkillOverrides.set(skill.id, to: ClaudeSkillOverrides.explicit, in: scanner.claudeSettings)
+                }
+                return
+            }
+            try ClaudeSkillOverrides.set(skill.id, to: nil, in: scanner.claudeSettings)
+            guard fileModes.contains(.explicit) else { return }
+        }
         var seen: Set<URL> = []
         var edits: [Edit] = []
         for entry in entries {
             let path = agent == .codex ? AgentSkillScanner.policyFile(entry.content) : entry.instruction
             let file = path.resolvingSymlinksInPath()
             guard seen.insert(file).inserted else { continue }
+            if Self.isExternal(file, of: entry) { throw ChangeError.external(file.deletingLastPathComponent()) }
             let before: Data?
             if exists(path) {
                 guard file.isRegularSkillFile else { throw SkillMetadata.EditError.unsupported(file) }
@@ -274,7 +312,10 @@ struct AgentSkillSettings: Sendable {
             var yaml = SkillMetadata(old ?? "", at: file, frontmatter: agent != .codex)
             if try yaml.mode(for: agent) == mode { continue }
             let after = try yaml.setMode(mode, for: agent)
-            edits.append(.init(path: file, before: before, after: Data(after.utf8)))
+            // Codex 的策略文件改回自动后什么都不剩，就删掉它，回到没设置过的样子
+            let empty = agent == .codex && SkillMetadata(after, at: file, frontmatter: false).isEmpty
+            if empty && before == nil { continue }
+            edits.append(.init(path: file, before: before, after: empty ? nil : Data(after.utf8)))
         }
 
         var finished: [Edit] = []
@@ -312,8 +353,9 @@ struct AgentSkillSettings: Sendable {
                 try after.write(to: edit.path, options: .atomic)
             }
         } else {
-            // 只回退本次操作新建的元数据文件，原有文件始终按原内容写回。
+            // 删掉空了的策略文件，或回退本次新建的文件；它所在的 agents 文件夹空了也一起去掉
             try fm.removeItem(at: edit.path)
+            rmdir(edit.path.deletingLastPathComponent().path)
         }
     }
 }

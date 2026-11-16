@@ -159,6 +159,46 @@ struct AgentSkillTests {
             try check(read(sharedSource).contains("name: source"), "其他技能引用的文件应保留")
         }
 
+        // 链接过来的技能（指向自己的仓库）：改调用方式不能改到源文件
+        let settingsFile = home.appending(path: ".claude/settings.json")
+        try write("{\n  \"model\": \"opus\",\n  \"env\": {\"TOKEN\": \"x/y\"}\n}\n", to: ".claude/settings.json")
+        try check(chmod(settingsFile.path, 0o600) == 0, "应能设置测试设置文件的权限")
+        let linkedSource = try read("library/linked/SKILL.md")
+        try settings.apply(.invocation(.claudeCode, .explicit), to: "linked")
+        try check(read("library/linked/SKILL.md") == linkedSource, "Claude Code 点名设置不能改源文件")
+        try check(ClaudeSkillOverrides.read(settingsFile)["linked"] == "user-invocable-only", "应写入 skillOverrides")
+        try check(skill("linked").mode(for: .claudeCode) == .explicit, "应从 skillOverrides 读回点名设置")
+        let saved = try require(JSONSerialization.jsonObject(with: Data(contentsOf: settingsFile)) as? [String: Any], "设置文件应是 JSON")
+        try check(saved["model"] as? String == "opus" && (saved["env"] as? [String: String])?["TOKEN"] == "x/y", "应保留其他设置")
+        let mode = try require(fm.attributesOfItem(atPath: settingsFile.path)[.posixPermissions] as? NSNumber, "需要文件权限")
+        try check(mode.intValue == 0o600, "应保留设置文件的权限")
+        try settings.apply(.invocation(.claudeCode, .automatic), to: "linked")
+        try check(read(".claude/settings.json").contains("skillOverrides") == false, "改回自动应去掉 skillOverrides")
+        try check(skill("linked").mode(for: .claudeCode) == .automatic, "改回自动后应读回自动")
+        try check(read("library/linked/SKILL.md") == linkedSource, "来回切换后源文件应不变")
+
+        try select([.claudeCode, .codex], "linked")
+        let codexLink = home.appending(path: ".codex/skills/linked")
+        try check(fm.destinationOfSymbolicLink(atPath: codexLink.path) == home.appending(path: "library/linked").resolvingSymlinksInPath().path,
+                  "给链接技能多开一个 agent 时应建链接，不复制")
+        do {
+            try settings.apply(.invocation(.codex, .explicit), to: "linked")
+            throw TestFailure("链接过来的技能不能为 Codex 改源目录")
+        } catch AgentSkillSettings.ChangeError.external {
+            try check(!fm.fileExists(atPath: home.appending(path: "library/linked/agents").path), "不能在源目录里建策略文件")
+        }
+
+        // 改回自动：删掉设置项，不写 true/false
+        try settings.apply(.invocation(.codex, .automatic), to: "flat")
+        try check(!fm.fileExists(atPath: home.appending(path: ".codex/skills/flat/agents").path), "自动建的策略文件改回自动后应删掉")
+        try settings.apply(.invocation(.codex, .automatic), to: "shared")
+        let restoredPolicy = try read(".codex/skills/shared/agents/openai.yaml")
+        try check(restoredPolicy == "interface:\n  display_name: Shared\n", "改回自动应去掉策略项并保留其他内容")
+        let before = try read(".dsh/skills/reverse/SKILL.md")
+        try settings.apply(.invocation(.deepSeekHarness, .explicit), to: "reverse")
+        try settings.apply(.invocation(.deepSeekHarness, .automatic), to: "reverse")
+        try check(read(".dsh/skills/reverse/SKILL.md") == before, "来回切换后技能文件应回到原样")
+
         print("Agent skill checks passed")
     }
 

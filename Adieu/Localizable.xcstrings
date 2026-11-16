@@ -1,6 +1,110 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "这个技能是从别处链接过来的，文件在 %@。为了不改动源文件，请到源目录里修改调用方式。": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个技能是从别处链接过来的，文件在 %@。为了不改动源文件，请到源目录里修改调用方式。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個技能是從別處連結過來的，檔案位於 %@。為了不改動原始檔案，請到原始目錄修改呼叫方式。"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This skill is linked from elsewhere; its files are in %@. To leave the source untouched, change how it's invoked in the source folder."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このスキルは別の場所からリンクされています（ファイルは %@ にあります）。元のファイルを変更しないよう、呼び出し方法は元のフォルダで変更してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 스킬은 다른 곳에서 링크된 것으로, 파일은 %@에 있습니다. 원본 파일을 바꾸지 않도록 호출 방식은 원본 폴더에서 변경하세요."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta habilidad está enlazada desde otro lugar; sus archivos están en %@. Para no modificar el original, cambia la forma de invocarla en la carpeta de origen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette compétence est liée depuis un autre emplacement ; ses fichiers se trouvent dans %@. Pour ne pas modifier l'original, changez son mode d'appel dans le dossier source."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Skill ist von einem anderen Ort verlinkt; seine Dateien liegen in %@. Damit das Original unverändert bleibt, ändere die Aufrufart im Quellordner."
+          }
+        }
+      }
+    },
+    "读不懂 Claude Code 的设置文件，没有改动：%@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读不懂 Claude Code 的设置文件，没有改动：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法讀懂 Claude Code 的設定檔，未做任何更改：%@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read the Claude Code settings file, so nothing was changed: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code の設定ファイルを読み取れないため、変更していません：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code 설정 파일을 읽을 수 없어 변경하지 않았습니다. %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer el archivo de ajustes de Claude Code, así que no se cambió nada: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de lire le fichier de réglages de Claude Code, rien n'a été modifié : %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Einstellungsdatei von Claude Code konnte nicht gelesen werden, daher wurde nichts geändert: %@"
+          }
+        }
+      }
+    },
     "请输入有效的名称。": {
       "localizations": {
         "zh-Hans": {

@@ -84,6 +84,7 @@
 
 - 图标（蒲公英：种子是小方块，被风吹走）和安装窗口背景（浅蓝渐变，左右两个白框对应 settings.py 里的图标位置）都是图像生成（codex）出的实色图，不用透明玻璃风格（和界面不统一，用户否决过）；用户明确不要代码绘制的图标。图标用 `.icon` 格式，图层是一整张满版图（主体在中间约 76% 内），关掉了图层自身的玻璃、投影和半透明，圆角、边缘高光由系统加。改图标后用 `NSWorkspace.icon(forFile:)` 渲染出来看实际效果
 - 安装窗口布局用 dmgbuild 直接写 .DS_Store，不用 AppleScript 驱动访达（后者要自动化权限、在无界面环境会失败）；图标坐标要对准背景里的两块空位
+- Agent 技能（来自 PR #7，2026-11-16 修过软链接问题）：用户的很多技能是软链接，指向自己的 Git 仓库（clip、hack、teach-clip 等）。改调用方式不能顺着链接写源文件：Claude Code 只写 `settings.json` 的 `skillOverrides`（`ClaudeSkillOverrides`，官方开关，和 `/skills` 菜单同一个；写入时保留原文件权限，读写之间文件变了就不覆盖）；Codex / DeepSeek Harness 要改文件时，文件不在该 agent 技能目录里就拒绝（`ChangeError.external`）。改回自动是删掉那一项，不写 `false`/`true`，Codex 策略文件空了就删掉。给链接技能多开一个 agent 时建链接，不复制。测试见 `scripts/test-agent-skills.sh`
 
 ## 开源与配套站点
 

@@ -16,15 +16,20 @@ struct AgentSkillScanner: Sendable {
     }
 
     private let configuredLocations: [Location]
+    /// Claude Code 的用户设置。“仅点名调用”写在这里的 skillOverrides，不改技能文件
+    let claudeSettings: URL
 
     init(home: URL = FileManager.default.homeDirectoryForCurrentUser,
          environment: [String: String] = ProcessInfo.processInfo.environment) {
-        func root(_ variable: String, _ fallback: String) -> URL {
+        func base(_ variable: String, _ fallback: String) -> URL {
             let value = environment[variable]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let expanded = (value as NSString).expandingTildeInPath
-            let base = expanded.hasPrefix("/") ? URL(filePath: expanded, directoryHint: .isDirectory) : home.appending(path: fallback)
-            return base.appending(path: "skills", directoryHint: .isDirectory).standardizedFileURL
+            return expanded.hasPrefix("/") ? URL(filePath: expanded, directoryHint: .isDirectory) : home.appending(path: fallback)
         }
+        func root(_ variable: String, _ fallback: String) -> URL {
+            base(variable, fallback).appending(path: "skills", directoryHint: .isDirectory).standardizedFileURL
+        }
+        claudeSettings = base("CLAUDE_CONFIG_DIR", ".claude").appending(path: "settings.json").standardizedFileURL
 
         let dshShared = root("DSH_AGENTS_HOME", ".agents")
         let shared = home.appending(path: ".agents/skills", directoryHint: .isDirectory).standardizedFileURL
@@ -57,6 +62,7 @@ struct AgentSkillScanner: Sendable {
 
     func scan() throws -> [AgentSkill] {
         var skills: [String: [AgentSkill.Installation]] = [:]
+        let overrides = (try? ClaudeSkillOverrides.read(claudeSettings)) ?? [:]
         for location in locations {
             let active = try contents(location.root)
             let parked = try parkedEntries(location)
@@ -86,7 +92,8 @@ struct AgentSkillScanner: Sendable {
                     if agents.contains(.claudeCode), folder.lowercased() == "synced" { continue }
                     let metadata = try? Self.metadata(at: instruction, frontmatter: true)
                     let modes = Dictionary(uniqueKeysWithValues: agents.map { agent in
-                        (agent, (try? Self.invocation(agent, bundle: resolved, metadata: metadata)) ?? .unavailable)
+                        if agent == .claudeCode, overrides[id] == ClaudeSkillOverrides.explicit { return (agent, SkillInvocation.explicit) }
+                        return (agent, (try? Self.invocation(agent, bundle: resolved, metadata: metadata)) ?? .unavailable)
                     })
                     skills[id, default: []].append(.init(entry: entry, activePath: activePath, content: resolved, instruction: instruction,
                                                          agents: agents, isActive: isActive, isBundle: isBundle,
