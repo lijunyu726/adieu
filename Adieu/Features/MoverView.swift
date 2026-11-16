@@ -96,6 +96,21 @@ private struct PaneView: View {
                         Label(place.name, systemImage: place.symbol)
                     }
                 }
+                Section("常用位置") {
+                    if mover.favorites.isEmpty {
+                        Text("点路径旁的 ☆ 把文件夹加进来")
+                    }
+                    ForEach(mover.favorites, id: \.self) { path in
+                        let here = mover.reachable(path)
+                        Button { mover.open(favorite: path, in: pane) } label: {
+                            Label(here ? FileManager.default.displayName(atPath: path)
+                                       : String(localized: "\(URL(filePath: path).lastPathComponent)（不在）"),
+                                  systemImage: "star.fill")
+                        }
+                        .disabled(!here)
+                        .help(path)
+                    }
+                }
             } label: {
                 Label(pane.place?.name ?? String(localized: "选择位置"), systemImage: pane.place?.symbol ?? "laptopcomputer")
             }
@@ -117,11 +132,21 @@ private struct PaneView: View {
             }
             trail
             if let folder = pane.folder {
-                Text(folder.path)
-                    .font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
-                    .lineLimit(1).truncationMode(.middle)
-                    .textSelection(.enabled)
-                    .help(folder.path)
+                HStack(spacing: 6) {
+                    Text(folder.path)
+                        .font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary)
+                        .lineLimit(1).truncationMode(.middle)
+                        .textSelection(.enabled)
+                        .help(folder.path)
+                    Spacer(minLength: 4)
+                    let starred = mover.isFavorite(folder)
+                    Button { mover.toggleFavorite(folder) } label: {
+                        Image(systemName: starred ? "star.fill" : "star")
+                            .foregroundStyle(starred ? Color.yellow : Color.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(starred ? String(localized: "从常用位置移除") : String(localized: "加入常用位置"))
+                }
             }
             TextField("在这个文件夹里搜索", text: $pane.query)
                 .textFieldStyle(.roundedBorder)
@@ -247,7 +272,12 @@ private struct PaneView: View {
             }
             .contextMenu(forSelectionType: FolderItem.ID.self) { ids in
                 if ids.count == 1, let item = pane.shown.first(where: { ids.contains($0.id) }) {
-                    if item.isFolder { Button("打开") { pane.open(item.url) } }
+                    if item.isFolder {
+                        Button("打开") { pane.open(item.url) }
+                        Button(model.mover.isFavorite(item.url) ? String(localized: "从常用位置移除") : String(localized: "加入常用位置")) {
+                            model.mover.toggleFavorite(item.url)
+                        }
+                    }
                     Button("在访达中显示") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
                     Button("拷贝路径") {
                         NSPasteboard.general.clearContents()

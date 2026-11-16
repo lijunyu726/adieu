@@ -153,6 +153,17 @@ struct FileMoverTests {
                                     protected: [apfs.appending(path: "keep").path])
         try check(!FileMover.exists(apfs.appending(path: "gone")) && gone.done.count == 1, "删掉外接盘上的文件夹")
         try check(FileMover.exists(apfs.appending(path: "keep/k.txt")) && gone.failed.count == 1, "保护名单里的不删")
+        // 11. 常用位置：加入、取消；盘不在了就打不开
+        let fav = MoverModel()
+        fav.refreshPlaces()
+        let favFolder = apfs.appending(path: "fav")
+        try fm.createDirectory(at: favFolder, withIntermediateDirectories: true)
+        if fav.isFavorite(favFolder) { fav.toggleFavorite(favFolder) }
+        fav.toggleFavorite(favFolder)
+        try check(fav.isFavorite(favFolder) && fav.favorites.last == favFolder.path, "加入常用位置")
+        try check(!fav.reachable(base.appending(path: "nope").path), "不存在的打不开")
+        fav.toggleFavorite(favFolder)
+        try check(!fav.isFavorite(favFolder), "取消常用位置")
         print("FileMoverTests 通过")
     }
 

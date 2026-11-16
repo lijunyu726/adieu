@@ -90,7 +90,10 @@ final class MoverModel {
     /// 上次中断留下的临时半成品
     private(set) var leftovers: [URL] = []
     var notice: String?
+    /// 常用位置（绝对路径），按加入顺序
+    private(set) var favorites: [String] = UserDefaults.standard.stringArray(forKey: MoverModel.favoritesKey) ?? []
     @ObservationIgnored private let cancelFlag = CancelFlag()
+    static let favoritesKey = "moverFavorites"
 
     var busy: Bool { progress != nil }
 
@@ -139,6 +142,30 @@ final class MoverModel {
             right.place = mac
             right.open(mac.root.appending(path: "Documents"))
         }
+    }
+
+    func isFavorite(_ url: URL) -> Bool { favorites.contains(url.standardizedFileURL.path) }
+
+    func toggleFavorite(_ url: URL) {
+        let path = url.standardizedFileURL.path
+        if let i = favorites.firstIndex(of: path) { favorites.remove(at: i) } else { favorites.append(path) }
+        UserDefaults.standard.set(favorites, forKey: Self.favoritesKey)
+    }
+
+    /// 常用位置现在能不能打开（外接盘拔了、文件夹被删了就不能）
+    func reachable(_ path: String) -> Bool {
+        var isDir: ObjCBool = false
+        return FileManager.default.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue
+            && Places.containing(URL(filePath: path), in: places) != nil
+    }
+
+    /// 在这一栏打开常用位置
+    func open(favorite path: String, in pane: MoverPane) {
+        refreshPlaces()
+        let url = URL(filePath: path)
+        guard reachable(path), let place = Places.containing(url, in: places) else { return }
+        pane.place = place
+        pane.open(url)
     }
 
     func choose(_ place: Place, for pane: MoverPane) {
