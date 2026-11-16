@@ -6,7 +6,8 @@ struct AppsView: View {
     /// 用户改过勾选状态的部件，key 为 "应用ID:部件ID"
     @State private var overrides: [String: Bool] = [:]
     @State private var uninstalling: AppItem?
-    @State private var search = ""
+    /// 启动参数 `-AdieuSearch <名字>` 预先搜好（调试与截图用，配合 -AdieuUninstall 打开指定应用的卸载确认）
+    @State private var search = UserDefaults.standard.string(forKey: "AdieuSearch") ?? ""
     /// “只清理数据”时应用还开着，问用户要不要强制退出
     @State private var quitPrompt: QuitPrompt?
 
