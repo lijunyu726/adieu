@@ -85,6 +85,7 @@
 - 图标（蒲公英：种子是小方块，被风吹走）和安装窗口背景（浅蓝渐变，左右两个白框对应 settings.py 里的图标位置）都是图像生成（codex）出的实色图，不用透明玻璃风格（和界面不统一，用户否决过）；用户明确不要代码绘制的图标。图标用 `.icon` 格式，图层是一整张满版图（主体在中间约 76% 内），关掉了图层自身的玻璃、投影和半透明，圆角、边缘高光由系统加。改图标后用 `NSWorkspace.icon(forFile:)` 渲染出来看实际效果
 - 安装窗口布局用 dmgbuild 直接写 .DS_Store，不用 AppleScript 驱动访达（后者要自动化权限、在无界面环境会失败）；图标坐标要对准背景里的两块空位
 - Agent 技能（来自 PR #7，2026-11-16 修过软链接问题）：用户的很多技能是软链接，指向自己的 Git 仓库（clip、hack、teach-clip 等）。改调用方式不能顺着链接写源文件：Claude Code 只写 `settings.json` 的 `skillOverrides`（`ClaudeSkillOverrides`，官方开关，和 `/skills` 菜单同一个；写入时保留原文件权限，读写之间文件变了就不覆盖）；Codex / DeepSeek Harness 要改文件时，文件不在该 agent 技能目录里就拒绝（`ChangeError.external`）。改回自动是删掉那一项，不写 `false`/`true`，Codex 策略文件空了就删掉。给链接技能多开一个 agent 时建链接，不复制。测试见 `scripts/test-agent-skills.sh`
+- 搬家页（`FileMover`、`MoverModel`、`Places`，2026-11-16）：跨盘移动不用 `FileManager.moveItem`（中途失败可能已删一部分原件），自己按“复制到 `.adieu-moving-…` 临时名字 → `FileMover.summary` 核对普通文件数、字节数、链接数、文件夹数 → `renamex_np(RENAME_EXCL)` 改成正式名字 → `TrashService.delete` 删原件”走；临时名字记在 UserDefaults `AdieuPendingMoves`，中断后下次提示清理。同盘复制先试 `clonefile`。能搬的范围特意和 `TrashService.check` 一致（主目录至少 2 层且不在资源库、`/Volumes/盘/x`），否则跨盘移动会复制成功却删不掉原件。目标盘剩余空间留 min(200 MB, 容量 2%) 余量，小 U 盘不能一刀切留 200 MB。撤销记录在 `moves.json`（最近 50 次），撤销前核对目标的 `fileIdentity`，变了就不动。测试 `scripts/test-file-mover.sh` 会临时创建并挂载两个 40 MB 磁盘映像（APFS、FAT32，`-nobrowse`，测完卸掉）；隐藏卷不在 `Places.list()` 里，测试手动补
 
 ## 开源与配套站点
 

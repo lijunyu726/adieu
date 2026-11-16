@@ -5,7 +5,7 @@ import SwiftUI
 enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
     case home
     case apps, leftovers, launch
-    case installers, captures, bigFiles, stale, cloudDrive
+    case installers, captures, bigFiles, stale, cloudDrive, mover
     case devTools
 
     var id: String { rawValue }
@@ -21,6 +21,7 @@ enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
         case .bigFiles: String(localized: "大文件")
         case .stale: String(localized: "久未打开")
         case .cloudDrive: "iCloud Drive"
+        case .mover: String(localized: "搬家")
         case .devTools: String(localized: "开发工具")
         }
     }
@@ -36,6 +37,7 @@ enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
         case .bigFiles: "doc.badge.ellipsis"
         case .stale: "clock"
         case .cloudDrive: "icloud"
+        case .mover: "arrow.left.arrow.right"
         case .devTools: "terminal"
         }
     }
@@ -52,6 +54,7 @@ enum AppSection: String, Hashable, CaseIterable, Identifiable, Sendable {
         case .bigFiles: .orange
         case .stale: .gray
         case .cloudDrive: .blue
+        case .mover: .indigo
         case .devTools: .green
         }
     }
@@ -127,6 +130,7 @@ struct RootView: View {
         case .leftovers: LeftoversView()
         case .launch: LaunchItemsView()
         case .cloudDrive: CloudDriveView()
+        case .mover: MoverView()
         case .devTools: DevSpaceView()
         case .installers, .captures, .bigFiles, .stale:
             if let category = model.category(section) {
@@ -175,7 +179,7 @@ private struct Sidebar: View {
     private let groups: [(String?, [AppSection])] = [
         (nil, [.home]),
         ("应用", [.apps, .leftovers, .launch]),
-        ("文件", [.installers, .captures, .bigFiles, .stale, .cloudDrive]),
+        ("文件", [.installers, .captures, .bigFiles, .stale, .cloudDrive, .mover]),
         ("开发", [.devTools])
     ]
 

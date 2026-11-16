@@ -103,6 +103,7 @@ final class AppModel {
 
     let worktrees: WorktreeCatalog
     let agentSkills: AgentSkillCatalog
+    let mover = MoverModel()
 
     init() {
         worktrees = WorktreeCatalog(sample: useSample ? Sample.worktreeProjects : nil)
